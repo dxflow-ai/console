@@ -1,0 +1,87 @@
+name: release
+
+# Build the console UI and publish it as a versioned, checksummed zip that the
+# engine repo fetches (pinned by version + SHA-256) and go:embeds. The zip's
+# contents sit at the archive root so that the engine's web/fetch-console.sh can
+# `unzip` it straight into web/.output/public (consumed by go:embed).
+on:
+    push:
+        tags:
+            - "v*"
+    workflow_dispatch:
+        inputs:
+            tag:
+                description: "Release tag to build (e.g. v1.2.3)"
+                required: true
+
+permissions:
+    contents: write
+
+jobs:
+    release:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Resolve tag
+              id: tag
+              run: echo "tag=${{ github.event.inputs.tag || github.ref_name }}" >> "$GITHUB_OUTPUT"
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                  version: 9
+
+            - name: Setup Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+                  cache: pnpm
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Build static console
+              run: pnpm generate
+
+            - name: Package console bundle
+              id: package
+              env:
+                  TAG: ${{ steps.tag.outputs.tag }}
+              run: |
+                  set -euo pipefail
+                  if [ ! -d .output/public ]; then
+                      echo "expected build output at .output/public" >&2
+                      exit 1
+                  fi
+                  asset="console-${TAG}.zip"
+                  # Zip the *contents* of .output/public (files at archive root),
+                  # so `unzip -d web/.output/public` in the engine lands them correctly.
+                  ( cd .output/public && zip -qr "${GITHUB_WORKSPACE}/${asset}" . )
+                  sha256sum "${asset}" | awk '{print $1}' > "${asset}.sha256"
+                  echo "asset=${asset}" >> "$GITHUB_OUTPUT"
+                  echo "sha256=$(cat "${asset}.sha256")" >> "$GITHUB_OUTPUT"
+                  echo "Built ${asset} (sha256 $(cat "${asset}.sha256"))"
+
+            - name: Publish release
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  TAG: ${{ steps.tag.outputs.tag }}
+                  ASSET: ${{ steps.package.outputs.asset }}
+                  SHA256: ${{ steps.package.outputs.sha256 }}
+              run: |
+                  set -euo pipefail
+                  notes="Console bundle for the engine to pin and embed.
+
+                  Pin in \`engine/web/console.pin\`:
+                  \`\`\`
+                  VERSION=${TAG}
+                  SHA256=${SHA256}
+                  \`\`\`"
+                  if gh release view "${TAG}" >/dev/null 2>&1; then
+                      gh release upload "${TAG}" "${ASSET}" "${ASSET}.sha256" --clobber
+                  else
+                      gh release create "${TAG}" "${ASSET}" "${ASSET}.sha256" \
+                          --title "${TAG}" --notes "${notes}"
+                  fi
