@@ -1,0 +1,99 @@
+name: 🐛 Bug Report
+description: Report something in the dxflow console (web UI) that isn't working as expected.
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+    - type: markdown
+      attributes:
+          value: |
+              Thanks for the report! This tracker is for the **console (web UI)** only.
+              For engine, install, or licensing problems, please use the [community tracker](https://github.com/dxflow-ai/community/issues).
+    - type: checkboxes
+      id: preflight
+      attributes:
+          label: Before you start
+          options:
+              - label: I have searched the [existing issues](https://github.com/dxflow-ai/console/issues) and this hasn't been reported yet.
+                required: true
+              - label: This is a console (UI) issue, not an engine/install issue.
+                required: true
+    - type: dropdown
+      id: area
+      attributes:
+          label: Feature area
+          description: Which part of the console is affected?
+          options:
+              - Engine overview / monitoring (CPU, memory, disk, network)
+              - Workflows (list, create, YAML editor, steps, events)
+              - Artifacts / file browser (upload, download, rename)
+              - Shell / terminal sessions
+              - Accounts
+              - Authentication / sign-in
+              - Licensing
+              - Navigation / layout / general UI
+              - Other / not sure
+      validations:
+          required: true
+    - type: textarea
+      id: description
+      attributes:
+          label: Description
+          description: A clear and concise description of what the bug is.
+      validations:
+          required: true
+    - type: textarea
+      id: reproduction
+      attributes:
+          label: Steps to reproduce
+          description: How can we reproduce the behavior?
+          placeholder: |
+              1. Go to '...'
+              2. Click on '...'
+              3. See error
+      validations:
+          required: true
+    - type: textarea
+      id: expected
+      attributes:
+          label: Expected behavior
+          description: What did you expect to happen instead?
+      validations:
+          required: true
+    - type: textarea
+      id: screenshots
+      attributes:
+          label: Screenshots
+          description: If applicable, add screenshots or a screen recording to help explain the problem.
+      validations:
+          required: false
+    - type: input
+      id: engine-version
+      attributes:
+          label: Engine version
+          description: Output of `dxflow --version` (the console is served by the engine).
+          placeholder: e.g. v1.2.3
+      validations:
+          required: true
+    - type: input
+      id: browser
+      attributes:
+          label: Browser
+          description: Browser and version where you saw the issue.
+          placeholder: e.g. Chrome 120, Safari 17
+      validations:
+          required: true
+    - type: textarea
+      id: console-errors
+      attributes:
+          label: Browser console errors
+          description: Paste any errors from the browser devtools console. Automatically formatted as code.
+          render: shell
+      validations:
+          required: false
+    - type: textarea
+      id: context
+      attributes:
+          label: Additional context
+          description: Anything else that might help.
+      validations:
+          required: false

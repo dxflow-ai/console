@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+    - name: 📚 Documentation
+      url: https://dxflow.ai/docs
+      about: Read the official docs — your question may already be answered.
+    - name: 🐛 Engine or install issues
+      url: https://github.com/dxflow-ai/community/issues
+      about: Bugs with the dxflow engine, installation, or licensing belong in the community tracker.
+    - name: 🌐 Website
+      url: https://dxflow.ai
+      about: Learn more about dxflow.
