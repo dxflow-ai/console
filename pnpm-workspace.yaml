@@ -1,0 +1,11 @@
+onlyBuiltDependencies:
+    - esbuild
+ignoredBuiltDependencies:
+    - "@parcel/watcher"
+    - "@tailwindcss/oxide"
+    - maplibre-gl
+    - vue-demi
+allowBuilds:
+    esbuild: true
+minimumReleaseAgeExclude:
+    - "@diphyx/*"
