@@ -1,0 +1,10 @@
+html {
+    scroll-behavior: smooth !important;
+
+    ::selection,
+    ::-moz-selection,
+    ::-webkit-selection {
+        background: color-mix(in oklab, var(--ui-primary) 50%, transparent);
+        color: var(--ui-text);
+    }
+}
