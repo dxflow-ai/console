@@ -1,11 +1,5 @@
 <template>
-    <Animate
-        :state="provided"
-        :attributes="{
-            opacity: [0, 1],
-        }"
-        class="h-screen"
-    >
+    <div :class="provided ? 'animate-fade' : 'opacity-0'" class="h-screen">
         <DashboardLayout
             :primary-items="primaryItems"
             :secondary-items="secondaryItems"
@@ -72,7 +66,7 @@
                 <slot />
             </template>
         </DashboardLayout>
-    </Animate>
+    </div>
     <UiModal
         :open="unauthorized"
         :ui="{
@@ -90,11 +84,11 @@
 </template>
 
 <script lang="ts" setup>
-import Animate from "~/components/Animate.vue";
-import DashboardLayout from "~/components/DashboardLayout.vue";
-import AuthCard from "~/components/AuthCard.vue";
+import { sleep } from "radash";
+import { enableStandby, disableStandby } from "~/components/Standby.vue";
 
-const auth = useAuth();
+const session = useSession();
+const { execute: executeSignout } = useStoreAction(sessionStore, "signout");
 const route = useRoute();
 
 const { styles } = useScale();
@@ -114,8 +108,14 @@ const confirmSignout = useConfirmToast({
     description() {
         return "Are you sure you want to sign out?";
     },
-    confirm() {
-        return auth.signout();
+    async confirm() {
+        enableStandby();
+
+        await sleep(750);
+        await executeSignout();
+
+        await sleep(250);
+        disableStandby();
     },
 });
 
@@ -266,49 +266,19 @@ const shellItems: NavigationItem[][] = [
     ],
 ];
 
-const accountItems: NavigationItem[][] = [
-    [
-        {
-            label: "Account",
-            type: "label",
-        },
-        {
-            label: "Accounts",
-            icon: "i-mingcute:storage-line",
-            to: "/console/account/",
-        },
-    ],
-    [
-        {
-            label: "Guide",
-            type: "label",
-        },
-        {
-            label: "Account Management",
-            icon: "i-mingcute:book-2-line",
-            to: "https://dxflow.ai/docs/licensing",
-            external: true,
-            target: "_blank",
-            ui: {
-                link: "text-xs",
-            },
-        },
-    ],
-];
 const routeItems: Record<string, NavigationItem[][]> = {
     engine: engineItems,
     workflow: workflowItems,
     artifact: artifactItems,
     shell: shellItems,
-    account: accountItems,
 };
 
 const provided = computed(() => {
-    return auth.provided.value;
+    return session.provided.value;
 });
 
 const unauthorized = computed(() => {
-    return !auth.authorized.value;
+    return !session.authorized.value;
 });
 
 const aiEffectState = computed(() => {
@@ -339,10 +309,6 @@ const enginePingColor = computed(() => {
     return "amber";
 });
 
-const hasAccountController = computed(() => {
-    return engineState.parameter.controllers.includes("ACCOUNT");
-});
-
 const routeCategory = computed(() => {
     if (route.path.startsWith("/console/workflow/")) {
         return "workflow";
@@ -354,10 +320,6 @@ const routeCategory = computed(() => {
 
     if (route.path.startsWith("/console/shell/")) {
         return "shell";
-    }
-
-    if (route.path.startsWith("/console/account/")) {
-        return "account";
     }
 
     return "engine";
@@ -390,14 +352,6 @@ const primaryItems = computed<NavigationItem[][]>(() => {
             class: "animate-fade-down animate-duration-200 animate-delay-400",
         },
     ];
-    if (hasAccountController.value) {
-        items.push({
-            label: "Account",
-            icon: "i-mingcute:group-line",
-            to: "/console/account/",
-            class: "animate-fade-down animate-duration-200 animate-delay-500",
-        });
-    }
 
     return [items];
 });
@@ -407,16 +361,11 @@ const secondaryItems = computed<NavigationItem[][]>(() => {
 });
 
 const mobileSidebarItems = computed<NavigationItem[][]>(() => {
-    const items = [engineItems[0], workflowItems[0], artifactItems[0], shellItems[0]];
-    if (hasAccountController.value) {
-        items.push(accountItems[0]);
-    }
-
-    return items;
+    return [engineItems[0], workflowItems[0], artifactItems[0], shellItems[0]];
 });
 
 watchDebounced(
-    auth.authorized,
+    session.authorized,
     (value) => {
         if (value) {
             load();

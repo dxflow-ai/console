@@ -10,13 +10,13 @@
         </div>
         <div class="flex flex-col items-center justify-center gap-3">
             <div class="text-lg font-bold">
-                <TypeAnimate :value="title" />
+                <span>{{ title }}</span>
             </div>
             <div class="animate-fade">
                 <div class="flex items-center text-sm opacity-65 gap-1">
                     <template v-if="provided">
                         <span>Expired</span>
-                        <RelativeTime :timestamp="auth.payload.value.expiration" />
+                        <RelativeTime :timestamp="expiration" />
                     </template>
                     <template v-else>
                         <span>Using Your Private Key</span>
@@ -24,41 +24,25 @@
                 </div>
             </div>
             <div class="flex mt-3 flex-col items-center gap-2">
-                <Animate
-                    :attributes="{
-                        y: [20, 0],
-                        opacity: [0, 1],
-                    }"
-                    :transition="{
-                        delay: 250,
-                        ease: 'backInOut',
-                    }"
-                >
-                    <UiButton :disabled="signing" size="sm" @click="signin()">
-                        <template v-if="provided">
-                            <span>Sign-In Again</span>
-                        </template>
-                        <template v-else>
-                            <span>Sign-In</span>
-                        </template>
-                        <Loading :active="signing" />
-                    </UiButton>
-                </Animate>
+                <UiButton :loading="signing" size="sm" class="animate-fade-up animate-delay-250ms" @click="signin()">
+                    <template v-if="provided">
+                        <span>Sign-In Again</span>
+                    </template>
+                    <template v-else>
+                        <span>Sign-In</span>
+                    </template>
+                </UiButton>
                 <template v-if="provided">
-                    <Animate
-                        :attributes="{
-                            y: [20, 0],
-                            opacity: [0, 1],
-                        }"
-                        :transition="{
-                            delay: 500,
-                            ease: 'backInOut',
-                        }"
+                    <UiButton
+                        :disabled="signing"
+                        variant="soft"
+                        size="sm"
+                        color="neutral"
+                        class="animate-fade-up animate-delay-500"
+                        @click="signout()"
                     >
-                        <UiButton :disabled="signing" variant="soft" size="sm" color="neutral" @click="signout()">
-                            <span>Sign-Out</span>
-                        </UiButton>
-                    </Animate>
+                        <span>Sign-Out</span>
+                    </UiButton>
                 </template>
             </div>
         </div>
@@ -66,12 +50,16 @@
 </template>
 
 <script lang="ts" setup>
-import Animate from "~/components/Animate.vue";
-import Loading from "~/components/Loading.vue";
-import RelativeTime from "~/components/RelativeTime.vue";
-import TypeAnimate from "~/components/TypeAnimate.vue";
+import { sleep } from "radash";
+import { enableStandby, disableStandby } from "~/components/Standby.vue";
 
-const auth = useAuth();
+const { provided, expiration } = useSession();
+const { loading: signingByFile, execute: executeSigninByFile } = useStoreAction(sessionStore, "signinByFile");
+const { loading: signingByDatabase, execute: executeSigninByDatabase } = useStoreAction(
+    sessionStore,
+    "signinByDatabase",
+);
+const { execute: executeSignout } = useStoreAction(sessionStore, "signout");
 
 const fileDialog = useFileDialog({
     multiple: false,
@@ -79,56 +67,45 @@ const fileDialog = useFileDialog({
     accept: ".pem,.key",
 });
 
-const signing = ref(false);
-const provided = ref(auth.provided.value);
+const signing = computed(() => {
+    return signingByFile.value || signingByDatabase.value;
+});
 
 const title = computed(() => {
-    if (!auth.provided.value) {
+    if (!provided.value) {
         return "Sign In";
     }
 
     return "Sign In Again";
 });
 
-watchDebounced(
-    () => {
-        return auth.provided.value;
-    },
-    (value) => {
-        provided.value = value;
-    },
-    {
-        debounce: 250,
-    },
-);
-
 async function signinByFile(file: File) {
-    signing.value = true;
+    try {
+        await executeSigninByFile({ payload: { file } });
 
-    const signinError = await auth.signinByFile(file);
-
-    signing.value = false;
-
-    if (signinError) {
-        dangerToast("Failed to sign-in", signinError);
+        enableStandby();
+        await sleep(750);
+        disableStandby();
+    } catch (error) {
+        dangerToast("Failed to sign-in", error as Error);
     }
 }
 
 async function signinByDatabase() {
-    signing.value = true;
+    try {
+        await executeSigninByDatabase();
 
-    const signinError = await auth.signinByDatabase();
-
-    signing.value = false;
-
-    if (signinError) {
-        dangerToast("Failed to sign-in", signinError);
+        enableStandby();
+        await sleep(750);
+        disableStandby();
+    } catch (error) {
+        dangerToast("Failed to sign-in", error as Error);
         signout();
     }
 }
 
 async function signin() {
-    if (auth.provided.value) {
+    if (provided.value) {
         return signinByDatabase();
     }
 
@@ -136,7 +113,7 @@ async function signin() {
 }
 
 function signout() {
-    auth.signout();
+    executeSignout();
 }
 
 fileDialog.onChange((files) => {
