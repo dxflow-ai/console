@@ -14,10 +14,6 @@ export default defineNuxtConfig({
                     sizes: "512x512",
                     href: "/favicon.png",
                 },
-                {
-                    rel: "manifest",
-                    href: "/site.webmanifest",
-                },
             ],
             meta: [
                 {
@@ -39,11 +35,9 @@ export default defineNuxtConfig({
         },
     },
     css: ["~/assets/tailwind.css", "~/assets/custom.scss"],
-    modules: ["@diphyx/harlemify", "@nuxt/ui", "@vueuse/nuxt", "@vueuse/motion/nuxt", "@nuxtjs/device"],
+    modules: ["@diphyx/harlemify", "@nuxt/ui", "@vueuse/nuxt", "@nuxtjs/device"],
     harlemify: {
-        action: {
-            timeout: 5000,
-        },
+        logger: -999,
     },
     ui: {
         prefix: "ui",
@@ -63,9 +57,8 @@ export default defineNuxtConfig({
         },
     },
     icon: {
-        mode: "css",
-        cssLayer: "base",
-        provider: "iconify",
+        mode: "svg",
+        provider: "server",
         customCollections: [
             {
                 prefix: "custom",
@@ -73,12 +66,11 @@ export default defineNuxtConfig({
             },
         ],
         clientBundle: {
-            scan: {
-                globInclude: ["**/*.{vue,ts,md}"],
-            },
-            includeCustomCollections: true,
+            scan: true,
         },
-        fetchTimeout: 7500,
+        serverBundle: {
+            collections: ["mingcute"],
+        },
     },
     runtimeConfig: {
         public: {
@@ -96,10 +88,6 @@ export default defineNuxtConfig({
     },
     telemetry: {
         enabled: false,
-    },
-    components: {
-        global: false,
-        dirs: [],
     },
     imports: {
         dirs: ["~/types", "~/stores"],
