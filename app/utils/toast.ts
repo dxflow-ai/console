@@ -1,30 +1,22 @@
 import { sleep } from "radash";
 
-import type { ButtonProps } from "@nuxt/ui";
-
-const closePropeties: Partial<ButtonProps> = {
-    size: "xs",
-    ui: {
-        leadingIcon: "relative top-0.5 size-3",
-    },
-};
-
 function resolveDescription(value: any, fallback: string) {
     const description = String(value?.message || value || "")
         .trim()
         .replace(/^\[(.*?)\]/gi, "$1")
         .replace(/^[^a-z]/gi, "");
+
     return description || fallback;
 }
 
 export async function dangerToast(title: string, description?: any) {
     const { add } = useToast();
+
     add({
         title,
         description: resolveDescription(description, "An unexpected error occurred"),
         color: "red",
         icon: "i-mingcute:alert-line",
-        close: closePropeties,
     });
 
     await sleep(250);
@@ -40,49 +32,64 @@ export interface UseConfirmToastOptions<T = any> {
     cancel?: (payload: T) => void | Promise<void>;
 }
 
-const shortcuts: Record<string, ReturnType<typeof defineShortcuts>> = {};
 export function useConfirmToast<T = any>(options: UseConfirmToastOptions<T>) {
     const toast = useToast();
-    function open(payload: T = {} as T) {
-        if (shortcuts[options.id]) {
+
+    const opened = ref(false);
+
+    let payload = {} as T;
+
+    function close() {
+        if (!opened.value) {
             return;
         }
 
-        function cancelHandler() {
-            const shortcut = shortcuts[options.id];
-            if (shortcut) {
-                shortcut();
+        opened.value = false;
+        toast.remove(options.id);
+    }
 
-                delete shortcuts[options.id];
-            }
-
-            toast.remove(options.id);
-
-            if (options.cancel) {
-                options.cancel(payload);
-            }
+    function cancel() {
+        if (!opened.value) {
+            return;
         }
 
-        function confirmHandler() {
-            const shortcut = shortcuts[options.id];
-            if (shortcut) {
-                shortcut();
+        close();
+        options.cancel?.(payload);
+    }
 
-                delete shortcuts[options.id];
-            }
-
-            toast.remove(options.id);
-            options.confirm(payload);
+    function confirm() {
+        if (!opened.value) {
+            return;
         }
 
-        shortcuts[options.id] = defineShortcuts({
-            escape() {
-                cancelHandler();
-            },
-            enter() {
-                confirmHandler();
-            },
-        });
+        close();
+        options.confirm(payload);
+    }
+
+    defineShortcuts(
+        computed(() => {
+            if (!opened.value) {
+                return {};
+            }
+
+            return {
+                escape() {
+                    cancel();
+                },
+                enter() {
+                    confirm();
+                },
+            };
+        }),
+    );
+
+    function open(nextPayload: T = {} as T) {
+        if (opened.value) {
+            return;
+        }
+
+        payload = nextPayload;
+        opened.value = true;
 
         toast.add({
             id: options.id,
@@ -98,29 +105,18 @@ export function useConfirmToast<T = any>(options: UseConfirmToastOptions<T>) {
                     variant: "ghost",
                     color: options.color,
                     onClick() {
-                        cancelHandler();
+                        cancel();
                     },
                 },
                 {
                     label: "Confirm",
                     color: options.color,
                     onClick() {
-                        confirmHandler();
+                        confirm();
                     },
                 },
             ],
         });
-    }
-
-    function close() {
-        const shortcut = shortcuts[options.id];
-        if (shortcut) {
-            shortcut();
-
-            delete shortcuts[options.id];
-        }
-
-        toast.remove(options.id);
     }
 
     return {
