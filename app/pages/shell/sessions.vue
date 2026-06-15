@@ -1,14 +1,7 @@
 <template>
     <HeaderLine>
         <template #tags>
-            <UiBadge
-                :ui="{
-                    base: 'rounded-full',
-                }"
-                size="sm"
-                variant="outline"
-                color="teal"
-            >
+            <UiBadge size="sm" variant="outline" color="teal">
                 <span>Tags</span>
             </UiBadge>
         </template>
@@ -17,69 +10,48 @@
         </template>
         <template #actions>
             <UiTooltip
+                text="Prune Sessions"
                 :delay-duration="750"
                 :content="{
                     side: 'left',
                 }"
-                text="Prune Sessions"
             >
                 <UiButton
-                    :loading="pruning"
-                    :ui="{
-                        base: 'rounded-full',
-                    }"
+                    icon="i-mingcute:broom-line"
                     size="sm"
                     variant="outline"
                     color="neutral"
+                    :loading="pruning"
                     @click="confirmPrune.open()"
                     square
-                >
-                    <template v-if="!pruning">
-                        <UiIcon name="i-mingcute:broom-line" />
-                    </template>
-                </UiButton>
+                />
             </UiTooltip>
             <UiTooltip
+                text="Create Session"
                 :delay-duration="750"
                 :content="{
                     side: 'left',
                 }"
-                text="Create Session"
             >
                 <UiButton
-                    :loading="creating"
-                    :ui="{
-                        base: 'rounded-full',
-                    }"
+                    icon="i-mingcute:add-line"
                     size="sm"
                     variant="outline"
                     color="neutral"
+                    :loading="creating"
                     @click="createAction()"
                     square
-                >
-                    <template v-if="!creating">
-                        <UiIcon name="i-mingcute:add-line" />
-                    </template>
-                </UiButton>
+                />
             </UiTooltip>
         </template>
         <template #options>
-            <UiBadge
-                :ui="{
-                    base: 'rounded-full gap-1 text-nowrap',
-                }"
-                variant="soft"
-                color="neutral"
-            >
-                <small class="text-muted">Total</small>
-                <small class="font-bold">{{ orderedShells.length }}</small>
-            </UiBadge>
+            <StatBadge label="Total" :value="orderedShells.length" />
         </template>
     </HeaderLine>
     <UiCard
         id="element"
         :ui="{
-            root: 'relative flex flex-1 flex-col rounded-none ring-0 animate-fade animate-delay-800',
+            root: 'flex flex-1 flex-col',
             body: 'flex flex-1 h-full flex-col p-0!',
         }"
     >
@@ -89,124 +61,71 @@
             :data="orderedShells"
             :loading="loading"
             :ui="{
-                root: 'rounded-none',
-                thead: 'before:absolute before:w-full before:h-px before:bottom-0 before:left-0 before:bg-accented/50',
-                tbody: 'divide-none',
-                th: 'bg-elevated first:rounded-tl-sm last:rounded-tr-sm',
-                td: 'border-b border-b-(--ui-border)/25',
-                separator: 'hidden',
                 empty: 'hidden',
             }"
             sticky
         >
             <template #identity-header>
-                <div class="flex items-center gap-2">
-                    <UiIcon name="i-mingcute:terminal-line" class="size-3.5" />
-                    <span>Identity</span>
-                </div>
+                <TableColumnHeader icon="i-mingcute:terminal-line" label="Identity" />
             </template>
             <template #identity-cell="{ row }">
                 <div class="flex items-center gap-2 select-none">
-                    <div class="relative flex size-3.5 items-center justify-center">
-                        <UiCheckbox
-                            :model-value="row.getIsSelected()"
-                            :ui="{
-                                base: 'rounded-xs pointer-events-none',
-                                icon: 'size-3',
-                            }"
-                            size="sm"
-                        />
-                        <div class="absolute -inset-2 rounded-md cursor-pointer" @click="row.toggleSelected()" />
-                    </div>
+                    <TableRowSelect :selected="row.getIsSelected()" @toggle="row.toggleSelected()" />
                     <span>{{ row.original.identity }}</span>
                 </div>
             </template>
             <template #state-header>
-                <div class="flex items-center gap-2">
-                    <UiIcon name="i-mingcute:tag-line" class="size-3.5" />
-                    <span>State</span>
-                </div>
+                <TableColumnHeader icon="i-mingcute:tag-line" label="State" />
             </template>
             <template #state-cell="{ row }">
                 <ShellStateBadge :state="row.original.state" />
             </template>
             <template #path-header>
-                <div class="flex items-center gap-2">
-                    <UiIcon name="i-mingcute:lightning-line" class="size-3.5" />
-                    <span>Path</span>
-                </div>
+                <TableColumnHeader icon="i-mingcute:lightning-line" label="Path" />
             </template>
             <template #path-cell="{ row }">
-                <div class="text-xs opacity-75 max-w-72">
+                <div class="text-xs text-muted max-w-72">
                     <TruncateText :value="row.original.path" :start="24" :end="32" />
                 </div>
             </template>
             <template #created_at-header>
-                <div class="flex items-center gap-2">
-                    <UiIcon name="i-mingcute:calendar-2-line" class="size-3.5" />
-                    <span>Created At</span>
-                </div>
+                <TableColumnHeader icon="i-mingcute:calendar-2-line" label="Created At" />
             </template>
             <template #created_at-cell="{ row }">
-                <div class="text-xs opacity-75">
+                <div class="text-xs text-muted">
                     <DateLabel
-                        :timestamp="row.original.created_at"
                         class="text-xs"
                         month="short"
                         day="numeric"
                         hour="numeric"
                         minute="numeric"
+                        :timestamp="row.original.created_at"
                     />
                 </div>
             </template>
             <template #actions-header>
-                <div
-                    :class="selectedIdentities.length ? 'animate-fade' : 'opacity-0 pointer-events-none'"
-                    class="flex items-center justify-end"
-                >
-                    <UiButton
-                        :loading="removingBatch"
-                        :ui="{
-                            base: 'flex items-center justify-center gap-1.5',
-                        }"
-                        size="xs"
-                        variant="soft"
-                        color="red"
-                        @click="confirmRemoveBatch.open()"
-                    >
-                        <span>Remove</span>
-                        <template v-if="!removingBatch">
-                            <UiIcon name="i-mingcute:delete-3-line" class="size-3.5" />
-                        </template>
-                    </UiButton>
-                </div>
+                <TableRemoveAction
+                    :visible="!!selectedIdentities.length"
+                    :loading="removingBatch"
+                    @click="confirmRemoveBatch.open()"
+                />
             </template>
             <template #actions-cell="{ row }">
                 <div class="flex items-center justify-end gap-1.5">
                     <UiButton
-                        :ui="{
-                            base: 'flex items-center justify-center gap-1.5',
-                        }"
+                        label="View"
+                        leading-icon="i-mingcute:upload-2-line"
                         size="xs"
                         variant="soft"
                         color="primary"
                         @click="openDrawer(row.original)"
-                    >
-                        <UiIcon name="i-mingcute:upload-2-line" class="size-3.5" />
-                        <span>View</span>
-                    </UiButton>
+                    />
                     <MoreOptions :key="moreOptionsKey" :items="getActions(row.original)" />
                 </div>
             </template>
         </UiTable>
         <template v-if="empty">
-            <div class="flex flex-col flex-1 items-center justify-center gap-4">
-                <EmptyPlaceholder />
-                <div class="flex flex-col items-center gap-1 animate-fade">
-                    <span class="text-sm">No Sessions Available</span>
-                    <span class="text-xs opacity-50">Create a new one</span>
-                </div>
-            </div>
+            <EmptyPlaceholder title="No Sessions Available" description="Create a new one" />
         </template>
     </UiCard>
     <UiDrawer
@@ -221,20 +140,25 @@
     >
         <template #header>
             <div class="flex items-center gap-2">
-                <UiIcon name="i-mingcute:terminal-line" class="size-6 text-primary-500" />
+                <UiIcon name="i-mingcute:terminal-line" class="size-6 text-primary" />
                 <div class="flex items-center gap-4">
-                    <span class="text-xl font-black">{{ displayed?.identity }}</span>
+                    <span class="text-xl font-bold">{{ displayed?.identity }}</span>
                 </div>
             </div>
             <div class="flex items-center gap-2">
-                <UiButton size="xs" variant="ghost" color="neutral" @click="closeDrawer()" square>
-                    <UiIcon name="i-mingcute:close-line" class="size-3.5" />
-                </UiButton>
+                <UiButton
+                    icon="i-mingcute:close-line"
+                    size="xs"
+                    variant="ghost"
+                    color="neutral"
+                    @click="closeDrawer()"
+                    square
+                />
             </div>
         </template>
         <template #body>
             <template v-if="displayed">
-                <Terminal :identity="displayed.identity" class="h-[64dvh] rounded-sm" />
+                <Terminal class="h-[64dvh] rounded-sm" :identity="displayed.identity" />
             </template>
         </template>
     </UiDrawer>
@@ -249,6 +173,7 @@ import type { TableColumn } from "@nuxt/ui";
 definePageMeta({
     name: "shell-sessions",
     layout: "console",
+    middleware: "guard",
 });
 
 const { data: orderedShells } = useStoreView(shellStore, "list");

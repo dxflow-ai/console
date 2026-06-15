@@ -3,12 +3,12 @@
         <template #tags>
             <template v-for="item in navbarItems" :key="item.label">
                 <UiBadge
-                    :ui="{
-                        base: 'rounded-full cursor-pointer',
-                    }"
                     size="sm"
                     variant="outline"
                     color="teal"
+                    :ui="{
+                        base: 'cursor-pointer',
+                    }"
                     @click="item.onClick?.()"
                 >
                     <span>{{ item.label }}</span>
@@ -19,92 +19,42 @@
             <span class="font-bold text-2xl text-nowrap">Artifacts</span>
         </template>
         <template #actions>
-            <UiPopover
+            <UiDropdownMenu
                 :key="newArtifactKey"
-                :ui="{
-                    content: 'p-1',
-                }"
+                :items="newArtifactItems"
                 :content="{
                     side: 'left',
                     align: 'start',
                     sideOffset: 4,
                 }"
+                arrow
             >
                 <UiTooltip
+                    text="New Artifact"
                     :delay-duration="750"
                     :content="{
                         side: 'left',
                     }"
-                    text="New Artifact"
                 >
                     <UiButton
-                        :loading="creating || uploading"
-                        :ui="{
-                            base: 'rounded-full',
-                        }"
+                        icon="i-mingcute:add-line"
                         size="sm"
                         variant="outline"
                         color="neutral"
+                        :loading="creating || uploading"
                         square
-                    >
-                        <template v-if="!(creating || uploading)">
-                            <UiIcon name="i-mingcute:add-line" />
-                        </template>
-                    </UiButton>
+                    />
                 </UiTooltip>
-                <template #content>
-                    <div class="relative flex flex-col min-w-32 min-h-6 gap-0.5">
-                        <UiButton
-                            :loading="uploading"
-                            :ui="{
-                                base: 'flex w-full h-6 items-center gap-1 rounded-[calc(var(--ui-radius)*1.25)] disabled:opacity-50',
-                            }"
-                            size="xs"
-                            variant="ghost"
-                            color="neutral"
-                            @click="fileDialog.open()"
-                        >
-                            <template v-if="!uploading">
-                                <UiIcon name="i-mingcute:folder-upload-line" class="size-3" />
-                            </template>
-                            <span>Upload Artifacts</span>
-                        </UiButton>
-                        <UiButton
-                            :loading="creating"
-                            :ui="{
-                                base: 'flex w-full h-6 items-center gap-1 rounded-[calc(var(--ui-radius)*1.25)] disabled:opacity-50',
-                            }"
-                            size="xs"
-                            variant="ghost"
-                            color="neutral"
-                            @click="createDirectory()"
-                        >
-                            <template v-if="!creating">
-                                <UiIcon name="i-mingcute:folder-line" class="size-3" />
-                            </template>
-                            <span>Create Directory</span>
-                        </UiButton>
-                    </div>
-                </template>
-            </UiPopover>
+            </UiDropdownMenu>
         </template>
         <template #options>
-            <UiBadge
-                :ui="{
-                    base: 'rounded-full gap-1 text-nowrap',
-                }"
-                variant="soft"
-                color="neutral"
-            >
-                <small class="text-muted">Total</small>
-                <small class="font-bold">{{ orderedArtifacts.length }}</small>
-            </UiBadge>
+            <StatBadge label="Total" :value="orderedArtifacts.length" />
         </template>
     </HeaderLine>
     <UiCard
         id="element"
         :ui="{
-            root: 'relative flex flex-1 flex-col rounded-none ring-0 animate-fade animate-delay-800',
+            root: 'flex flex-1 flex-col',
             body: 'flex flex-1 h-full flex-col p-0!',
         }"
     >
@@ -114,37 +64,19 @@
             :data="orderedArtifacts"
             :loading="loading"
             :ui="{
-                root: 'rounded-none',
-                thead: 'before:absolute before:w-full before:h-px before:bottom-0 before:left-0 before:bg-accented/50',
-                tbody: 'divide-none',
-                th: 'bg-elevated first:rounded-tl-sm last:rounded-tr-sm',
-                td: 'border-b border-b-(--ui-border)/25',
-                separator: 'hidden',
                 empty: 'hidden',
             }"
             sticky
         >
             <template #name-header>
-                <div class="flex items-center gap-2">
-                    <UiIcon name="i-mingcute:file-line" class="size-3.5" />
-                    <span>Name</span>
-                </div>
+                <TableColumnHeader icon="i-mingcute:file-line" label="Name" />
             </template>
             <template #name-cell="{ row }">
                 <div class="flex items-center gap-2 select-none">
-                    <div class="relative flex size-3.5 items-center justify-center">
-                        <UiCheckbox
-                            :model-value="row.getIsSelected()"
-                            :ui="{
-                                base: 'rounded-xs pointer-events-none',
-                                icon: 'size-3',
-                            }"
-                            size="sm"
-                        />
-                        <div class="absolute -inset-2 rounded-md cursor-pointer" @click="row.toggleSelected()" />
+                    <TableRowSelect :selected="row.getIsSelected()" @toggle="row.toggleSelected()">
                         <div
-                            :class="editing == row.original.identity ? 'animate-fade' : 'opacity-0 pointer-events-none'"
                             class="absolute flex -inset-1 items-center justify-center bg-(--ui-bg)/0 text-emerald-500 rounded-full"
+                            :class="editing == row.original.identity ? 'opacity-100' : 'opacity-0 pointer-events-none'"
                         >
                             <UiIcon
                                 :name="
@@ -155,24 +87,24 @@
                                 :class="['size-4', { 'animate-spin': renaming == row.original.identity }]"
                             />
                         </div>
-                    </div>
+                    </TableRowSelect>
                     <div
+                        class="w-full"
                         :class="{
                             'font-bold': row.original.permission[0] == 'd',
                         }"
-                        class="w-full"
                     >
                         <template v-if="editing == row.original.identity">
                             <UiInput
                                 v-model="renameInput"
+                                size="md"
+                                variant="none"
                                 :placeholder="row.original.name"
                                 :disabled="editing != row.original.identity"
                                 :ui="{
                                     root: 'w-full',
                                     base: 'p-0 text-(--ui-text-muted) rounded-none disabled:pointer-events-none !opacity-100',
                                 }"
-                                size="md"
-                                variant="none"
                                 @blur="rename(row.original)"
                                 @focus="({ target }: any) => target.select()"
                                 @keydown.enter="({ target }: any) => target.blur()"
@@ -187,116 +119,75 @@
                 </div>
             </template>
             <template #permission-header>
-                <div class="flex items-center gap-2">
-                    <UiIcon name="i-mingcute:lock-line" class="size-3.5" />
-                    <span>Permission</span>
-                </div>
+                <TableColumnHeader icon="i-mingcute:lock-line" label="Permission" />
             </template>
             <template #permission-cell="{ row }">
                 <ArtifactPermissionBadge :permission="row.original.permission" />
             </template>
             <template #size-header>
-                <div class="flex items-center gap-2">
-                    <UiIcon name="i-mingcute:storage-line" class="size-3.5" />
-                    <span>Size</span>
-                </div>
+                <TableColumnHeader icon="i-mingcute:storage-line" label="Size" />
             </template>
             <template #size-cell="{ row }">
-                <div class="text-xs opacity-75">
-                    {{ prettyBytes(row.original.size) }}
+                <div class="text-xs text-muted">
+                    <span>{{ prettyBytes(row.original.size) }}</span>
                 </div>
             </template>
             <template #modified_at-header>
-                <div class="flex items-center gap-2">
-                    <UiIcon name="i-mingcute:calendar-2-line" class="size-3.5" />
-                    <span>Modified At</span>
-                </div>
+                <TableColumnHeader icon="i-mingcute:calendar-2-line" label="Modified At" />
             </template>
             <template #modified_at-cell="{ row }">
-                <div class="text-xs opacity-75">
+                <div class="text-xs text-muted">
                     <DateLabel
-                        :timestamp="row.original.modified_at"
                         class="text-xs"
                         month="short"
                         day="numeric"
                         hour="numeric"
                         minute="numeric"
+                        :timestamp="row.original.modified_at"
                     />
                 </div>
             </template>
             <template #actions-header>
-                <div
-                    :class="selectedIdentities.length ? 'animate-fade' : 'opacity-0 pointer-events-none'"
-                    class="flex items-center justify-end"
-                >
-                    <UiButton
-                        :loading="removingBatch"
-                        :ui="{
-                            base: 'flex items-center justify-center gap-1.5',
-                        }"
-                        size="xs"
-                        variant="soft"
-                        color="red"
-                        @click="confirmRemoveBatch.open()"
-                    >
-                        <span>Remove</span>
-                        <template v-if="!removingBatch">
-                            <UiIcon name="i-mingcute:delete-3-line" class="size-3.5" />
-                        </template>
-                    </UiButton>
-                </div>
+                <TableRemoveAction
+                    :visible="!!selectedIdentities.length"
+                    :loading="removingBatch"
+                    @click="confirmRemoveBatch.open()"
+                />
             </template>
             <template #actions-cell="{ row }">
                 <div class="flex items-center justify-end gap-1.5">
                     <template v-if="row.original.permission[0] == 'd'">
                         <UiButton
-                            :disabled="loading && directory.endsWith(row.original.name)"
+                            label="Open"
+                            leading-icon="i-mingcute:arrow-right-line"
                             size="xs"
                             variant="soft"
                             color="primary"
+                            :disabled="loading && directory.endsWith(row.original.name)"
                             @click="changeDirectory(directory, row.original)"
-                        >
-                            <UiIcon name="i-mingcute:arrow-right-line" class="size-3.5" />
-                            <span>Open</span>
-                        </UiButton>
+                        />
                     </template>
                     <template v-else>
                         <UiButton
-                            :color="downloaded.includes(row.original.identity) ? 'green' : 'primary'"
-                            :loading="downloading == row.original.identity"
-                            :ui="{
-                                base: 'flex items-center justify-center gap-1.5',
-                            }"
                             size="xs"
                             variant="soft"
+                            :loading="downloading == row.original.identity"
+                            :color="downloaded.includes(row.original.identity) ? 'green' : 'primary'"
+                            :label="downloaded.includes(row.original.identity) ? 'Saved' : 'Download'"
+                            :icon="
+                                downloaded.includes(row.original.identity)
+                                    ? 'i-mingcute:cloud-line'
+                                    : 'i-mingcute:download-line'
+                            "
                             @click="download(row.original)"
-                        >
-                            <template v-if="downloaded.includes(row.original.identity)">
-                                <template v-if="downloading != row.original.identity">
-                                    <UiIcon name="i-mingcute:cloud-line" class="size-3.5" />
-                                </template>
-                                <span>Saved</span>
-                            </template>
-                            <template v-else>
-                                <template v-if="downloading != row.original.identity">
-                                    <UiIcon name="i-mingcute:download-line" class="size-3.5" />
-                                </template>
-                                <span>Download</span>
-                            </template>
-                        </UiButton>
+                        />
                     </template>
                     <MoreOptions :key="moreOptionsKey" :items="getActions(row.original)" />
                 </div>
             </template>
         </UiTable>
         <template v-if="empty">
-            <div class="flex flex-col flex-1 items-center justify-center gap-4">
-                <EmptyPlaceholder />
-                <div class="flex flex-col items-center gap-1 animate-fade">
-                    <span class="text-sm">No Artifacts Available</span>
-                    <span class="text-xs opacity-50">Create a new directory</span>
-                </div>
-            </div>
+            <EmptyPlaceholder title="No Artifacts Available" description="Create a new directory" />
         </template>
     </UiCard>
 </template>
@@ -308,11 +199,12 @@ import { sleep } from "radash";
 import { useRouteQuery } from "@vueuse/router";
 
 import type { DeepReadonly } from "vue";
-import type { TableColumn } from "@nuxt/ui";
+import type { DropdownMenuItem, TableColumn } from "@nuxt/ui";
 
 definePageMeta({
     name: "artifact-list",
     layout: "console",
+    middleware: "guard",
 });
 
 const { data: orderedArtifacts } = useStoreView(artifactStore, "list");
@@ -402,6 +294,29 @@ const newArtifactKey = ref(0);
 const moreOptionsKey = ref(0);
 
 const selected = ref<Record<number, boolean>>({});
+
+const newArtifactItems = computed<DropdownMenuItem[]>(() => {
+    return [
+        {
+            label: "Upload Artifacts",
+            icon: "i-mingcute:folder-upload-line",
+            loading: uploading.value,
+            disabled: uploading.value,
+            onSelect() {
+                fileDialog.open();
+            },
+        },
+        {
+            label: "Create Directory",
+            icon: "i-mingcute:folder-line",
+            loading: creating.value,
+            disabled: creating.value,
+            onSelect() {
+                createDirectory();
+            },
+        },
+    ];
+});
 
 const navbarItems = computed(() => {
     const output = [

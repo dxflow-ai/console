@@ -1,14 +1,7 @@
 <template>
     <HeaderLine>
         <template #tags>
-            <UiBadge
-                :ui="{
-                    base: 'rounded-full',
-                }"
-                size="sm"
-                variant="outline"
-                color="teal"
-            >
+            <UiBadge size="sm" variant="outline" color="teal">
                 <span>Workflows</span>
             </UiBadge>
         </template>
@@ -17,69 +10,48 @@
         </template>
         <template #actions>
             <UiTooltip
+                text="Prune Workflows"
                 :delay-duration="750"
                 :content="{
                     side: 'left',
                 }"
-                text="Prune Workflows"
             >
                 <UiButton
-                    :loading="pruning"
-                    :ui="{
-                        base: 'rounded-full',
-                    }"
+                    icon="i-mingcute:broom-line"
                     size="sm"
                     variant="outline"
                     color="neutral"
+                    :loading="pruning"
                     @click="confirmPrune.open()"
                     square
-                >
-                    <template v-if="!pruning">
-                        <UiIcon name="i-mingcute:broom-line" />
-                    </template>
-                </UiButton>
+                />
             </UiTooltip>
             <UiTooltip
+                text="Create Workflow"
                 :delay-duration="750"
                 :content="{
                     side: 'left',
                 }"
-                text="Create Workflow"
             >
                 <UiButton
-                    :loading="creating"
-                    :ui="{
-                        base: 'rounded-full',
-                    }"
+                    icon="i-mingcute:add-line"
                     size="sm"
                     variant="outline"
                     color="neutral"
+                    :loading="creating"
                     @click="openCreateDrawer()"
                     square
-                >
-                    <template v-if="!creating">
-                        <UiIcon name="i-mingcute:add-line" />
-                    </template>
-                </UiButton>
+                />
             </UiTooltip>
         </template>
         <template #options>
-            <UiBadge
-                :ui="{
-                    base: 'rounded-full gap-1 text-nowrap',
-                }"
-                variant="soft"
-                color="neutral"
-            >
-                <small class="text-muted">Total</small>
-                <small class="font-bold">{{ orderedWorkflows.length }}</small>
-            </UiBadge>
+            <StatBadge label="Total" :value="orderedWorkflows.length" />
         </template>
     </HeaderLine>
     <UiCard
         id="element"
         :ui="{
-            root: 'relative flex flex-1 flex-col rounded-none ring-0 animate-fade animate-delay-800',
+            root: 'flex flex-1 flex-col',
             body: 'flex flex-1 h-full flex-col p-0!',
         }"
     >
@@ -89,156 +61,86 @@
             :data="orderedWorkflows"
             :loading="loading"
             :ui="{
-                root: 'rounded-none',
-                thead: 'before:absolute before:w-full before:h-px before:bottom-0 before:left-0 before:bg-accented/50',
-                tbody: 'divide-none',
-                th: 'bg-elevated first:rounded-tl-sm last:rounded-tr-sm',
-                td: 'border-b border-b-(--ui-border)/25',
-                separator: 'hidden',
                 empty: 'hidden',
             }"
             sticky
         >
             <template #identity-header>
-                <div class="flex items-center gap-2">
-                    <UiIcon name="i-mingcute:git-branch-line" class="size-3.5" />
-                    <span>Identity</span>
-                </div>
+                <TableColumnHeader icon="i-mingcute:git-branch-line" label="Identity" />
             </template>
             <template #identity-cell="{ row }">
                 <div class="flex items-center gap-2 select-none">
-                    <div class="relative flex size-3.5 items-center justify-center">
-                        <UiCheckbox
-                            :model-value="row.getIsSelected()"
-                            :ui="{
-                                base: 'rounded-xs pointer-events-none',
-                                icon: 'size-3',
-                            }"
-                            size="sm"
-                        />
-                        <div class="absolute -inset-2 rounded-md cursor-pointer" @click="row.toggleSelected()" />
-                    </div>
+                    <TableRowSelect :selected="row.getIsSelected()" @toggle="row.toggleSelected()" />
                     <span class="font-mono text-sm">{{ row.original.identity }}</span>
                 </div>
             </template>
             <template #name-header>
-                <div class="flex items-center gap-2">
-                    <UiIcon name="i-mingcute:file-line" class="size-3.5" />
-                    <span>Name</span>
-                </div>
+                <TableColumnHeader icon="i-mingcute:file-line" label="Name" />
             </template>
             <template #name-cell="{ row }">
                 <span class="text-sm">{{ row.original.name }}</span>
             </template>
             <template #status-header>
-                <div class="flex items-center gap-2">
-                    <UiIcon name="i-mingcute:tag-line" class="size-3.5" />
-                    <span>Status</span>
-                </div>
+                <TableColumnHeader icon="i-mingcute:tag-line" label="Status" />
             </template>
             <template #status-cell="{ row }">
                 <WorkflowStatusBadge :status="row.original.status" />
             </template>
             <template #tags-header>
-                <div class="flex items-center gap-2">
-                    <UiIcon name="i-mingcute:tag-2-line" class="size-3.5" />
-                    <span>Tags</span>
-                </div>
+                <TableColumnHeader icon="i-mingcute:tag-2-line" label="Tags" />
             </template>
             <template #tags-cell="{ row }">
                 <div class="flex items-center gap-1">
                     <template v-for="tag in row.original.tags.slice(0, 3)" :key="tag">
-                        <UiBadge
-                            :ui="{
-                                base: 'rounded-full',
-                            }"
-                            size="xs"
-                            variant="soft"
-                            color="neutral"
-                        >
-                            {{ tag }}
+                        <UiBadge size="xs" variant="soft" color="neutral">
+                            <span>{{ tag }}</span>
                         </UiBadge>
                     </template>
                     <template v-if="row.original.tags.length > 3">
-                        <UiBadge
-                            :ui="{
-                                base: 'rounded-full',
-                            }"
-                            size="xs"
-                            variant="soft"
-                            color="neutral"
-                        >
+                        <UiBadge size="xs" variant="soft" color="neutral">
                             +{{ row.original.tags.length - 3 }}
                         </UiBadge>
                     </template>
                 </div>
             </template>
             <template #created_at-header>
-                <div class="flex items-center gap-2">
-                    <UiIcon name="i-mingcute:calendar-2-line" class="size-3.5" />
-                    <span>Created At</span>
-                </div>
+                <TableColumnHeader icon="i-mingcute:calendar-2-line" label="Created At" />
             </template>
             <template #created_at-cell="{ row }">
-                <div class="text-xs opacity-75">
+                <div class="text-xs text-muted">
                     <DateLabel
-                        :timestamp="row.original.created_at"
                         class="text-xs"
                         month="short"
                         day="numeric"
                         hour="numeric"
                         minute="numeric"
+                        :timestamp="row.original.created_at"
                     />
                 </div>
             </template>
             <template #actions-header>
-                <div
-                    :class="selectedIdentities.length ? 'animate-fade' : 'opacity-0 pointer-events-none'"
-                    class="flex items-center justify-end"
-                >
-                    <UiButton
-                        :loading="removingBatch"
-                        :ui="{
-                            base: 'flex items-center justify-center gap-1.5',
-                        }"
-                        size="xs"
-                        variant="soft"
-                        color="red"
-                        @click="confirmRemoveBatch.open()"
-                    >
-                        <span>Remove</span>
-                        <template v-if="!removingBatch">
-                            <UiIcon name="i-mingcute:delete-3-line" class="size-3.5" />
-                        </template>
-                    </UiButton>
-                </div>
+                <TableRemoveAction
+                    :visible="!!selectedIdentities.length"
+                    :loading="removingBatch"
+                    @click="confirmRemoveBatch.open()"
+                />
             </template>
             <template #actions-cell="{ row }">
                 <div class="flex items-center justify-end gap-1.5">
                     <UiButton
-                        :ui="{
-                            base: 'flex items-center justify-center gap-1.5',
-                        }"
+                        label="View"
+                        leading-icon="i-mingcute:eye-line"
                         size="xs"
                         variant="soft"
                         color="primary"
                         @click="openDetailDrawer(row.original)"
-                    >
-                        <UiIcon name="i-mingcute:eye-line" class="size-3.5" />
-                        <span>View</span>
-                    </UiButton>
+                    />
                     <MoreOptions :key="moreOptionsKey" :items="getActions(row.original)" />
                 </div>
             </template>
         </UiTable>
         <template v-if="empty">
-            <div class="flex flex-col flex-1 items-center justify-center gap-4">
-                <EmptyPlaceholder />
-                <div class="flex flex-col items-center gap-1 animate-fade">
-                    <span class="text-sm">No Workflows Available</span>
-                    <span class="text-xs opacity-50">Create a new workflow</span>
-                </div>
-            </div>
+            <EmptyPlaceholder title="No Workflows Available" description="Create a new workflow" />
         </template>
     </UiCard>
     <!-- Create Workflow Drawer -->
@@ -254,13 +156,18 @@
     >
         <template #header>
             <div class="flex items-center gap-2">
-                <UiIcon name="i-mingcute:git-branch-line" class="size-6 text-primary-500" />
-                <span class="text-xl font-black">Create Workflow</span>
+                <UiIcon name="i-mingcute:git-branch-line" class="size-6 text-primary" />
+                <span class="text-xl font-bold">Create Workflow</span>
             </div>
             <div class="flex items-center gap-2">
-                <UiButton size="xs" variant="ghost" color="neutral" @click="closeCreateDrawer()" square>
-                    <UiIcon name="i-mingcute:close-line" class="size-3.5" />
-                </UiButton>
+                <UiButton
+                    icon="i-mingcute:close-line"
+                    size="xs"
+                    variant="ghost"
+                    color="neutral"
+                    @click="closeCreateDrawer()"
+                    square
+                />
             </div>
         </template>
         <template #body>
@@ -268,38 +175,38 @@
                 <UiFormField label="Identity" hint="Optional unique identifier">
                     <UiInput
                         v-model="createForm.identity"
+                        placeholder="auto-generated if empty"
                         :ui="{
                             base: 'font-mono',
                         }"
-                        placeholder="auto-generated if empty"
                     />
                 </UiFormField>
                 <UiFormField label="Workflow Definition" hint="dxflow YAML workflow definition" required>
                     <UiTextarea
                         v-model="createForm.source"
+                        placeholder="name: my-workflow&#10;tags:&#10;  - example&#10;&#10;steps:&#10;  - name: step-1&#10;    platform: docker&#10;    mode: sequential&#10;    image: alpine:latest&#10;    command: [echo, hello]"
                         :rows="12"
                         :ui="{
                             base: 'font-mono text-xs',
                         }"
-                        placeholder="name: my-workflow&#10;tags:&#10;  - example&#10;&#10;steps:&#10;  - name: step-1&#10;    platform: docker&#10;    mode: sequential&#10;    image: alpine:latest&#10;    command: [echo, hello]"
                     />
                 </UiFormField>
                 <div class="flex items-center justify-end gap-2">
                     <UiButton
-                        :disabled="creating"
                         size="sm"
                         variant="outline"
                         color="neutral"
+                        :disabled="creating"
                         @click="closeCreateDrawer()"
                     >
                         <span>Cancel</span>
                     </UiButton>
                     <UiButton
-                        :loading="creating"
-                        :disabled="creating || !createForm.source"
                         size="sm"
                         variant="solid"
                         color="primary"
+                        :loading="creating"
+                        :disabled="creating || !createForm.source"
                         @click="createAction()"
                     >
                         <span>Create</span>
@@ -308,7 +215,7 @@
                 <template v-if="createMessages.length">
                     <UiCard
                         :ui="{
-                            root: 'ring-1 ring-neutral-200 dark:ring-neutral-800',
+                            root: 'ring ring-default',
                             body: 'p-3',
                         }"
                     >
@@ -335,18 +242,23 @@
     >
         <template #header>
             <div class="flex items-center gap-2">
-                <UiIcon name="i-mingcute:git-branch-line" class="size-6 text-primary-500" />
+                <UiIcon name="i-mingcute:git-branch-line" class="size-6 text-primary" />
                 <div class="flex items-center gap-4">
-                    <span class="text-xl font-black">{{ displayed?.identity }}</span>
+                    <span class="text-xl font-bold">{{ displayed?.identity }}</span>
                     <template v-if="displayed">
                         <WorkflowStatusBadge :status="displayed.status" />
                     </template>
                 </div>
             </div>
             <div class="flex items-center gap-2">
-                <UiButton size="xs" variant="ghost" color="neutral" @click="closeDetailDrawer()" square>
-                    <UiIcon name="i-mingcute:close-line" class="size-3.5" />
-                </UiButton>
+                <UiButton
+                    icon="i-mingcute:close-line"
+                    size="xs"
+                    variant="ghost"
+                    color="neutral"
+                    @click="closeDetailDrawer()"
+                    square
+                />
             </div>
         </template>
         <template #body>
@@ -361,12 +273,12 @@
                         <div class="flex flex-col gap-1">
                             <span class="text-xs text-muted">Created</span>
                             <DateLabel
-                                :timestamp="displayed.created_at"
                                 class="text-sm"
                                 month="short"
                                 day="numeric"
                                 hour="numeric"
                                 minute="numeric"
+                                :timestamp="displayed.created_at"
                             />
                         </div>
                         <div class="flex flex-col gap-1">
@@ -382,37 +294,31 @@
                     <div class="flex items-center gap-2">
                         <template v-if="canStart">
                             <UiButton
-                                :loading="starting === displayed.identity"
+                                icon="i-mingcute:play-line"
+                                label="Start"
                                 size="sm"
                                 variant="soft"
                                 color="green"
+                                :loading="starting === displayed.identity"
                                 @click="startAction(displayed)"
-                            >
-                                <template v-if="starting !== displayed.identity">
-                                    <UiIcon name="i-mingcute:play-line" class="size-4" />
-                                </template>
-                                <span>Start</span>
-                            </UiButton>
+                            />
                         </template>
                         <template v-if="canStop">
                             <UiButton
-                                :loading="stopping === displayed.identity"
+                                icon="i-mingcute:stop-line"
+                                label="Stop"
                                 size="sm"
                                 variant="soft"
                                 color="amber"
+                                :loading="stopping === displayed.identity"
                                 @click="stopAction(displayed)"
-                            >
-                                <template v-if="stopping !== displayed.identity">
-                                    <UiIcon name="i-mingcute:stop-line" class="size-4" />
-                                </template>
-                                <span>Stop</span>
-                            </UiButton>
+                            />
                         </template>
                     </div>
                     <!-- Steps -->
                     <UiCard
                         :ui="{
-                            root: 'ring-1 ring-neutral-200 dark:ring-neutral-800',
+                            root: 'ring ring-default',
                             header: 'p-3 pb-0',
                             body: 'p-3',
                         }"
@@ -421,17 +327,14 @@
                             <div class="flex items-center justify-between">
                                 <span class="text-sm font-bold">Steps</span>
                                 <UiButton
-                                    :loading="loadingSteps"
+                                    icon="i-mingcute:refresh-2-line"
                                     size="xs"
                                     variant="ghost"
                                     color="neutral"
+                                    :loading="loadingSteps"
                                     @click="loadSteps(displayed.identity)"
                                     square
-                                >
-                                    <template v-if="!loadingSteps">
-                                        <UiIcon name="i-mingcute:refresh-2-line" class="size-3.5" />
-                                    </template>
-                                </UiButton>
+                                />
                             </div>
                         </template>
                         <div class="flex flex-col gap-2 max-h-48 overflow-y-auto">
@@ -442,8 +345,8 @@
                                             <span class="text-xs font-mono opacity-50">#{{ step.index }}</span>
                                             <span class="text-sm">{{ step.name }}</span>
                                         </div>
-                                        <UiBadge :color="getStepStatusColor(step.status)" size="xs" variant="subtle">
-                                            {{ step.status }}
+                                        <UiBadge size="xs" variant="subtle" :color="getStepStatusColor(step.status)">
+                                            <span>{{ step.status }}</span>
                                         </UiBadge>
                                     </div>
                                 </template>
@@ -458,7 +361,7 @@
                     <!-- Events -->
                     <UiCard
                         :ui="{
-                            root: 'ring-1 ring-neutral-200 dark:ring-neutral-800',
+                            root: 'ring ring-default',
                             header: 'p-3 pb-0',
                             body: 'p-3',
                         }"
@@ -467,17 +370,14 @@
                             <div class="flex items-center justify-between">
                                 <span class="text-sm font-bold">Events</span>
                                 <UiButton
-                                    :loading="loadingEvents"
+                                    icon="i-mingcute:refresh-2-line"
                                     size="xs"
                                     variant="ghost"
                                     color="neutral"
+                                    :loading="loadingEvents"
                                     @click="loadEvents(displayed.identity)"
                                     square
-                                >
-                                    <template v-if="!loadingEvents">
-                                        <UiIcon name="i-mingcute:refresh-2-line" class="size-3.5" />
-                                    </template>
-                                </UiButton>
+                                />
                             </div>
                         </template>
                         <div class="flex flex-col gap-2 max-h-48 overflow-y-auto">
@@ -485,11 +385,11 @@
                                 <template v-for="(event, index) in displayedEvents" :key="index">
                                     <div class="flex items-start gap-2 p-2 rounded-md bg-elevated/50">
                                         <DateLabel
-                                            :timestamp="event.time"
-                                            class="text-xs opacity-50 shrink-0"
+                                            class="text-xs text-dimmed shrink-0"
                                             hour="numeric"
                                             minute="numeric"
                                             second="numeric"
+                                            :timestamp="event.time"
                                         />
                                         <span class="text-xs">{{ event.message }}</span>
                                     </div>
@@ -517,6 +417,7 @@ import type { TableColumn } from "@nuxt/ui";
 definePageMeta({
     name: "workflow-list",
     layout: "console",
+    middleware: "guard",
 });
 
 const { data: orderedWorkflows } = useStoreView(workflowStore, "list");
@@ -687,6 +588,7 @@ watch(orderedWorkflows, () => {
         const updated = orderedWorkflows.value.find((w) => {
             return w.identity === displayed.value?.identity;
         });
+
         if (updated) {
             displayed.value = updated;
         }
