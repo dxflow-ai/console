@@ -1,5 +1,21 @@
 export default defineNuxtConfig({
     ssr: false,
+    nitro: {
+        prerender: {
+            // SPA (ssr: false) renders no content, so the crawler can't discover the
+            // in-app routes. List them explicitly so each gets an index.html shell and
+            // a hard reload / deep link resolves instead of 404ing on a static host.
+            crawlLinks: false,
+            routes: [
+                "/",
+                "/login",
+                "/console/engine/overview/",
+                "/console/workflow/list/",
+                "/console/artifact/list/",
+                "/console/shell/sessions/",
+            ],
+        },
+    },
     app: {
         baseURL: "/",
         head: {
@@ -58,18 +74,12 @@ export default defineNuxtConfig({
     },
     icon: {
         mode: "svg",
-        provider: "server",
-        customCollections: [
-            {
-                prefix: "custom",
-                dir: "app/assets/icons",
-            },
-        ],
+        serverBundle: false,
         clientBundle: {
-            scan: true,
-        },
-        serverBundle: {
-            collections: ["mingcute"],
+            scan: {
+                globInclude: ["app/**/*.{vue,ts}"],
+                globExclude: ["node_modules", ".nuxt", ".output", "dist"],
+            },
         },
     },
     runtimeConfig: {
