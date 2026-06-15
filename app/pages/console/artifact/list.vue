@@ -143,9 +143,7 @@
                         />
                         <div class="absolute -inset-2 rounded-md cursor-pointer" @click="row.toggleSelected()" />
                         <div
-                            :class="
-                                editing == row.original.identity ? 'animate-fade' : 'opacity-0 pointer-events-none'
-                            "
+                            :class="editing == row.original.identity ? 'animate-fade' : 'opacity-0 pointer-events-none'"
                             class="absolute flex -inset-1 items-center justify-center bg-(--ui-bg)/0 text-emerald-500 rounded-full"
                         >
                             <UiIcon
