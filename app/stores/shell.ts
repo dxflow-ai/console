@@ -82,6 +82,7 @@ export const shellStore = createStore({
                         shell = chunk.payload;
                     }
                 });
+
                 if (readError) {
                     throw readError;
                 }
@@ -301,6 +302,7 @@ export const shellStore = createStore({
         const reset = handler(async ({ model }) => {
             model.list.reset();
         });
+
         return {
             get,
             create,

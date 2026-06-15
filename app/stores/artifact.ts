@@ -411,6 +411,7 @@ export const artifactStore = createStore({
         const reset = handler(async ({ model }) => {
             model.list.reset();
         });
+
         return {
             get,
             create,

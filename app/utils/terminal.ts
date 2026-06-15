@@ -51,6 +51,7 @@ const darkTheme: ITheme = {
     brightCyan: "#06b6d4",
     brightWhite: "#f1f5f9",
 };
+
 const themes: Record<string, ITheme> = {
     light: lightTheme,
     dark: darkTheme,
@@ -60,6 +61,7 @@ const primaryFont = "Inconsolata";
 
 const fallbackFonts =
     "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace";
+
 const config: ITerminalOptions = {
     theme: lightTheme,
     fontFamily: `"${primaryFont}", ${fallbackFonts}`,

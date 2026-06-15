@@ -165,7 +165,7 @@ export const engineStore = createStore({
 
         const getStat = handler<{ target: keyof EngineStat }>(
             async ({ model, view, payload }) => {
-                const { call, read } = newHttpRequest(`/engine/stat/last/${payload.target}/`);
+                const { call, read } = newHttpRequest(`/api/engine/stat/last/${payload.target}/`);
 
                 const callError = await call({
                     timeout: 2500,
@@ -278,6 +278,7 @@ export const engineStore = createStore({
                             [statType]: arr,
                         });
                     });
+
                     if (readError) {
                         if (liveStatState) {
                             liveStatRetryTimer = setTimeout(() => {
@@ -339,6 +340,7 @@ export const engineStore = createStore({
                             });
                         },
                     });
+
                     if (callError) {
                         clearTimeout(pingTimeoutTimer);
 
@@ -371,6 +373,7 @@ export const engineStore = createStore({
                         },
                         { timeout: 7500 },
                     );
+
                     if (readError) {
                         clearTimeout(pingTimeoutTimer);
 
@@ -448,6 +451,7 @@ export const engineStore = createStore({
             model.stat.reset();
             model.ping.reset();
         });
+
         return {
             getParameter,
             getAttribute,

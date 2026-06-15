@@ -69,6 +69,7 @@ export const workflowStore = createStore({
                         });
                     }
                 });
+
                 if (readError) {
                     throw readError;
                 }
@@ -99,6 +100,7 @@ export const workflowStore = createStore({
                     },
                     body: payload.source,
                 });
+
                 if (callError) {
                     throw callError;
                 }
@@ -125,6 +127,7 @@ export const workflowStore = createStore({
                         prepend: true,
                     });
                 });
+
                 if (readError) {
                     throw readError;
                 }
@@ -153,6 +156,7 @@ export const workflowStore = createStore({
                         identity: payload.identity,
                     },
                 });
+
                 if (callError) {
                     throw callError;
                 }
@@ -176,6 +180,7 @@ export const workflowStore = createStore({
                     workflow = chunk.payload;
                     model.list.patch(chunk.payload);
                 });
+
                 if (readError) {
                     throw readError;
                 }
@@ -204,6 +209,7 @@ export const workflowStore = createStore({
                         identity: payload.identity,
                     },
                 });
+
                 if (callError) {
                     throw callError;
                 }
@@ -227,6 +233,7 @@ export const workflowStore = createStore({
                     workflow = chunk.payload;
                     model.list.patch(chunk.payload);
                 });
+
                 if (readError) {
                     throw readError;
                 }
@@ -246,6 +253,7 @@ export const workflowStore = createStore({
                     method: "DELETE",
                     query: payload,
                 });
+
                 if (callError) {
                     throw callError;
                 }
@@ -277,6 +285,7 @@ export const workflowStore = createStore({
                         identities: payload.identities,
                     },
                 });
+
                 if (callError) {
                     throw callError;
                 }
@@ -296,6 +305,7 @@ export const workflowStore = createStore({
                         }
                     }
                 });
+
                 if (readError) {
                     throw readError;
                 }
@@ -314,6 +324,7 @@ export const workflowStore = createStore({
                 const callError = await call({
                     method: "DELETE",
                 });
+
                 if (callError) {
                     throw callError;
                 }
@@ -335,6 +346,7 @@ export const workflowStore = createStore({
                         }
                     }
                 });
+
                 if (readError) {
                     throw readError;
                 }
@@ -356,6 +368,7 @@ export const workflowStore = createStore({
                         identity: payload.identity,
                     },
                 });
+
                 if (callError) {
                     throw callError;
                 }
@@ -366,6 +379,7 @@ export const workflowStore = createStore({
                         steps.push(chunk.payload);
                     }
                 });
+
                 if (readError) {
                     throw readError;
                 }
@@ -392,6 +406,7 @@ export const workflowStore = createStore({
                         identity: payload.identity,
                     },
                 });
+
                 if (callError) {
                     throw callError;
                 }
@@ -402,6 +417,7 @@ export const workflowStore = createStore({
                         events.push(chunk.payload);
                     }
                 });
+
                 if (readError) {
                     throw readError;
                 }
@@ -441,6 +457,7 @@ export const workflowStore = createStore({
                         count: payload.count,
                     },
                 });
+
                 if (callError) {
                     throw callError;
                 }
@@ -451,6 +468,7 @@ export const workflowStore = createStore({
                         logs.push(chunk.payload);
                     }
                 });
+
                 if (readError) {
                     throw readError;
                 }
@@ -546,6 +564,7 @@ export const workflowStore = createStore({
                             const stepIndex = steps.findIndex((s) => {
                                 return s.index === signal.step_index;
                             });
+
                             if (stepIndex !== -1) {
                                 const updatedSteps = [...steps];
                                 updatedSteps[stepIndex] = {

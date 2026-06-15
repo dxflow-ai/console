@@ -157,6 +157,11 @@ export function newHttpRequest(url: string) {
                     }
                 },
             });
+
+            this.call = this.call.bind(this);
+            this.read = this.read.bind(this);
+            this.upload = this.upload.bind(this);
+            this.download = this.download.bind(this);
         }
 
         async call(options?: FetchOptions<"stream", any>, delay: number = 1200): Promise<MaybeError> {
