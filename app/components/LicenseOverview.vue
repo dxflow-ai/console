@@ -67,7 +67,3 @@
         </div>
     </UiCard>
 </template>
-
-<script lang="ts" setup>
-import DateLabel from "~/components/DateLabel.vue";
-</script>

@@ -30,12 +30,12 @@
                         <UiBadge size="sm" variant="soft" color="primary">
                             <span>Sent</span>
                             <span class="font-bold">{{ prettyBytes(network.sent, prettyBytesOptions) }}</span>
-                            <UiIcon name="i-lucide:arrow-up" />
+                            <UiIcon name="i-mingcute:arrow-up-line" />
                         </UiBadge>
                         <UiBadge size="sm" variant="soft" color="teal">
                             <span>Received</span>
                             <span class="font-bold">{{ prettyBytes(network.received, prettyBytesOptions) }}</span>
-                            <UiIcon name="i-lucide:arrow-down" />
+                            <UiIcon name="i-mingcute:arrow-down-line" />
                         </UiBadge>
                     </div>
                 </div>

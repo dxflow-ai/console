@@ -26,6 +26,7 @@
             <div class="relative flex flex-col min-w-22 min-h-6 gap-0.5">
                 <template v-for="(item, index) in visibleItems" :key="index">
                     <UiButton
+                        :loading="item.loading"
                         :color="item.color || 'neutral'"
                         :disabled="item.disabled || item.loading"
                         :ui="{
@@ -35,13 +36,10 @@
                         variant="ghost"
                         @click="item.onClick"
                     >
-                        <template v-if="item.icon">
+                        <template v-if="item.icon && !item.loading">
                             <UiIcon :name="item.icon" class="size-3" />
                         </template>
                         <span>{{ item.label }}</span>
-                        <template v-if="item.loading !== undefined">
-                            <Loading :active="item.loading" />
-                        </template>
                     </UiButton>
                 </template>
             </div>
@@ -50,7 +48,6 @@
 </template>
 
 <script lang="ts" setup>
-import Loading from "~/components/Loading.vue";
 import type { ButtonProps } from "@nuxt/ui";
 
 const props = defineProps({
