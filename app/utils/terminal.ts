@@ -1,4 +1,5 @@
 import { load } from "webfontloader";
+import { sleep } from "radash";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import { WebglAddon } from "@xterm/addon-webgl";
@@ -143,5 +144,6 @@ export function newTerminalWrapper() {
     }
 
     const terminalWrapper = new TerminalWrapper();
+
     return terminalWrapper;
 }

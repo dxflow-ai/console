@@ -38,7 +38,7 @@
                     text="New Artifact"
                 >
                     <UiButton
-                        :disabled="creating || uploading"
+                        :loading="creating || uploading"
                         :ui="{
                             base: 'rounded-full',
                         }"
@@ -47,14 +47,15 @@
                         color="neutral"
                         square
                     >
-                        <UiIcon name="i-lucide:plus" />
-                        <Loading :active="creating || uploading" />
+                        <template v-if="!(creating || uploading)">
+                            <UiIcon name="i-mingcute:add-line" />
+                        </template>
                     </UiButton>
                 </UiTooltip>
                 <template #content>
                     <div class="relative flex flex-col min-w-32 min-h-6 gap-0.5">
                         <UiButton
-                            :disabled="uploading"
+                            :loading="uploading"
                             :ui="{
                                 base: 'flex w-full h-6 items-center gap-1 rounded-[calc(var(--ui-radius)*1.25)] disabled:opacity-50',
                             }"
@@ -63,12 +64,13 @@
                             color="neutral"
                             @click="fileDialog.open()"
                         >
-                            <UiIcon name="i-mingcute:folder-upload-line" class="size-3" />
+                            <template v-if="!uploading">
+                                <UiIcon name="i-mingcute:folder-upload-line" class="size-3" />
+                            </template>
                             <span>Upload Artifacts</span>
-                            <Loading :active="uploading" />
                         </UiButton>
                         <UiButton
-                            :disabled="creating"
+                            :loading="creating"
                             :ui="{
                                 base: 'flex w-full h-6 items-center gap-1 rounded-[calc(var(--ui-radius)*1.25)] disabled:opacity-50',
                             }"
@@ -77,9 +79,10 @@
                             color="neutral"
                             @click="createDirectory()"
                         >
-                            <UiIcon name="i-mingcute:folder-line" class="size-3" />
+                            <template v-if="!creating">
+                                <UiIcon name="i-mingcute:folder-line" class="size-3" />
+                            </template>
                             <span>Create Directory</span>
-                            <Loading :active="creating" />
                         </UiButton>
                     </div>
                 </template>
@@ -139,19 +142,21 @@
                             size="sm"
                         />
                         <div class="absolute -inset-2 rounded-md cursor-pointer" @click="row.toggleSelected()" />
-                        <Animate
-                            :class="{
-                                'pointer-events-none': editing != row.original.identity,
-                            }"
-                            :state="editing == row.original.identity"
-                            :attributes="{
-                                opacity: [0, 1],
-                            }"
+                        <div
+                            :class="
+                                editing == row.original.identity ? 'animate-fade' : 'opacity-0 pointer-events-none'
+                            "
                             class="absolute flex -inset-1 items-center justify-center bg-(--ui-bg)/0 text-emerald-500 rounded-full"
                         >
-                            <UiIcon name="i-mingcute:text-2-line" class="size-4" />
-                            <Loading :active="renaming == row.original.identity" :size="7" :weight="1.5" transparent />
-                        </Animate>
+                            <UiIcon
+                                :name="
+                                    renaming == row.original.identity
+                                        ? 'i-mingcute:loading-3-fill'
+                                        : 'i-mingcute:text-2-line'
+                                "
+                                :class="['size-4', { 'animate-spin': renaming == row.original.identity }]"
+                            />
+                        </div>
                     </div>
                     <div
                         :class="{
@@ -222,18 +227,12 @@
                 </div>
             </template>
             <template #actions-header>
-                <Animate
-                    :class="{
-                        'pointer-events-none': !selectedIdentities.length,
-                    }"
-                    :state="!!selectedIdentities.length"
-                    :attributes="{
-                        opacity: [0, 1],
-                    }"
+                <div
+                    :class="selectedIdentities.length ? 'animate-fade' : 'opacity-0 pointer-events-none'"
                     class="flex items-center justify-end"
                 >
                     <UiButton
-                        :disabled="removingBatch"
+                        :loading="removingBatch"
                         :ui="{
                             base: 'flex items-center justify-center gap-1.5',
                         }"
@@ -243,10 +242,11 @@
                         @click="confirmRemoveBatch.open()"
                     >
                         <span>Remove</span>
-                        <UiIcon name="i-mingcute:delete-3-line" class="size-3.5" />
-                        <Loading :active="removingBatch" />
+                        <template v-if="!removingBatch">
+                            <UiIcon name="i-mingcute:delete-3-line" class="size-3.5" />
+                        </template>
                     </UiButton>
-                </Animate>
+                </div>
             </template>
             <template #actions-cell="{ row }">
                 <div class="flex items-center justify-end gap-1.5">
@@ -265,7 +265,7 @@
                     <template v-else>
                         <UiButton
                             :color="downloaded.includes(row.original.identity) ? 'green' : 'primary'"
-                            :disabled="downloading == row.original.identity"
+                            :loading="downloading == row.original.identity"
                             :ui="{
                                 base: 'flex items-center justify-center gap-1.5',
                             }"
@@ -274,14 +274,17 @@
                             @click="download(row.original)"
                         >
                             <template v-if="downloaded.includes(row.original.identity)">
-                                <UiIcon name="i-mingcute:cloud-line" class="size-3.5" />
+                                <template v-if="downloading != row.original.identity">
+                                    <UiIcon name="i-mingcute:cloud-line" class="size-3.5" />
+                                </template>
                                 <span>Saved</span>
                             </template>
                             <template v-else>
-                                <UiIcon name="i-mingcute:download-line" class="size-3.5" />
+                                <template v-if="downloading != row.original.identity">
+                                    <UiIcon name="i-mingcute:download-line" class="size-3.5" />
+                                </template>
                                 <span>Download</span>
                             </template>
-                            <Loading :active="downloading == row.original.identity" />
                         </UiButton>
                     </template>
                     <MoreOptions :key="moreOptionsKey" :items="getActions(row.original)" />
@@ -303,24 +306,19 @@
 <script lang="ts" setup>
 import prettyBytes from "pretty-bytes";
 import { saveAs } from "file-saver";
+import { sleep } from "radash";
+import { useRouteQuery } from "@vueuse/router";
 
+import type { DeepReadonly } from "vue";
 import type { TableColumn } from "@nuxt/ui";
-
-import Animate from "~/components/Animate.vue";
-import DateLabel from "~/components/DateLabel.vue";
-import EmptyPlaceholder from "~/components/EmptyPlaceholder.vue";
-import Loading from "~/components/Loading.vue";
-import MoreOptions from "~/components/MoreOptions.vue";
-import HeaderLine from "~/components/HeaderLine.vue";
-import ArtifactPermissionBadge from "~/components/ArtifactPermissionBadge.vue";
 
 definePageMeta({
     name: "artifact-list",
     layout: "console",
 });
 
-const { data: orderedArtifacts } = useStoreView(artifactStore, "ordered");
-const { execute: loadArtifacts, loading } = useStoreAction(artifactStore, "load");
+const { data: orderedArtifacts } = useStoreView(artifactStore, "list");
+const { execute: loadArtifacts, loading } = useStoreAction(artifactStore, "get");
 const { execute: resetArtifacts } = useStoreAction(artifactStore, "reset");
 
 const directory = useRouteQuery<string>("directory", ".", {
@@ -477,7 +475,7 @@ async function rename({ identity, name }: Pick<Artifact, "identity" | "name">) {
     const newIdentity = identity.slice(0, name.length * -1) + renameInput.value;
     if (identity !== newIdentity) {
         try {
-            await artifactStore.action.rename({ payload: { identity, new_identity: newIdentity } });
+            await artifactStore.action.renameById({ payload: { identity, new_identity: newIdentity } });
         } catch (error) {
             dangerToast(`Failed to rename '${name}'`, error as Error);
         }
@@ -545,7 +543,7 @@ async function deleteAction({ identity, name }: Pick<DeepReadonly<Artifact>, "id
     deleting.value = identity;
 
     try {
-        await artifactStore.action.remove({ payload: { identity } });
+        await artifactStore.action.removeById({ payload: { identity } });
     } catch (error) {
         dangerToast(`Failed to delete '${name}'`, error as Error);
     }
@@ -570,7 +568,7 @@ async function download({ identity, name }: Artifact) {
     downloading.value = identity;
 
     try {
-        const result = await artifactStore.action.download({ payload: { identity } });
+        const result = await artifactStore.action.downloadById({ payload: { identity } });
 
         await sleep(750);
         downloading.value = null;

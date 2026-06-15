@@ -49,7 +49,7 @@
                     color="neutral"
                     square
                 >
-                    <UiIcon name="i-lucide:power" />
+                    <UiIcon name="i-mingcute:power-line" />
                 </UiButton>
             </UiTooltip>
         </template>
@@ -99,16 +99,7 @@
 </template>
 
 <script lang="ts" setup>
-import HeaderLine from "~/components/HeaderLine.vue";
-import HostOverview from "~/components/HostOverview.vue";
-import LicenseOverview from "~/components/LicenseOverview.vue";
-import CpuOverview from "~/components/CpuOverview.vue";
-import MemoryOverview from "~/components/MemoryOverview.vue";
-import DiskOverview from "~/components/DiskOverview.vue";
-import NetworkOverview from "~/components/NetworkOverview.vue";
-import RelativeTime from "~/components/RelativeTime.vue";
-
-import { all } from "radash";
+import { all, sleep } from "radash";
 
 definePageMeta({
     name: "engine-overview",
@@ -119,10 +110,10 @@ const mounted = ref(true);
 async function load() {
     try {
         await all([
-            engineStore.action.loadStat({ payload: { target: "cpu" } }),
-            engineStore.action.loadStat({ payload: { target: "memory" } }),
-            engineStore.action.loadStat({ payload: { target: "disk" } }),
-            engineStore.action.loadStat({ payload: { target: "network" } }),
+            engineStore.action.getStat({ payload: { target: "cpu" } }),
+            engineStore.action.getStat({ payload: { target: "memory" } }),
+            engineStore.action.getStat({ payload: { target: "disk" } }),
+            engineStore.action.getStat({ payload: { target: "network" } }),
         ]);
     } catch (error) {
         dangerToast("Failed to load stats", error);

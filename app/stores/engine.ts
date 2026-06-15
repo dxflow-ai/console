@@ -1,6 +1,26 @@
 import { ActionConcurrent } from "@diphyx/harlemify/runtime";
 import { all } from "radash";
 
+async function tryTimeout<T extends any>({
+    duration,
+    handler,
+    reject,
+}: {
+    duration?: number;
+    handler: () => Promise<T> | T;
+    reject: () => void;
+}) {
+    const timeout = setTimeout(() => {
+        reject();
+    }, duration);
+
+    const output = await handler();
+
+    clearTimeout(timeout);
+
+    return output;
+}
+
 const STAT_LIMITS: Record<keyof EngineStat, number> = {
     cpu: 30,
     memory: 30,
@@ -15,8 +35,8 @@ let liveStatRetryTimer: ReturnType<typeof setTimeout> | null = null;
 let livePingState = false;
 let livePingController: AbortController | null = null;
 let livePingRetryTimer: ReturnType<typeof setTimeout> | null = null;
-
 let pingTimeoutTimer: ReturnType<typeof setTimeout> | null = null;
+
 export const engineStore = createStore({
     name: "engine",
     model({ one }) {
@@ -25,6 +45,7 @@ export const engineStore = createStore({
         const license = one(engineLicenseShape);
         const stat = one(engineStatShape);
         const ping = one(enginePingShape);
+
         return {
             parameter,
             attribute,
@@ -34,34 +55,44 @@ export const engineStore = createStore({
         };
     },
     view({ from }) {
-        const engineParameter = from("parameter");
-        const engineAttribute = from("attribute");
-        const engineLicense = from("license");
-        const engineStat = from("stat");
-        const enginePing = from("ping");
+        const parameter = from("parameter");
+        const attribute = from("attribute");
+        const license = from("license");
+        const stat = from("stat");
+        const ping = from("ping");
+
         return {
-            engineParameter,
-            engineAttribute,
-            engineLicense,
-            engineStat,
-            enginePing,
+            parameter,
+            attribute,
+            license,
+            stat,
+            ping,
         };
     },
     action({ handler }) {
-        const loadParameter = handler<unknown, EngineParameter | null>(
+        const getParameter = handler<unknown, EngineParameter | null>(
             async ({ model }) => {
-                const request = newHttpRequest("/api/engine/parameter/");
-                const callError = await request.call({ timeout: 2500 });
-                ensure(callError);
+                const { call, read } = newHttpRequest("/api/engine/parameter/");
+
+                const callError = await call({
+                    timeout: 2500,
+                });
+
+                if (callError) {
+                    throw callError;
+                }
 
                 let result: EngineParameter | null = null;
-                const readError = await request.read((chunk) => {
+                const readError = await read((chunk) => {
                     if (chunk.isEntity) {
                         result = chunk.payload;
                         model.parameter.set(chunk.payload);
                     }
                 });
-                ensure(readError);
+
+                if (readError) {
+                    throw readError;
+                }
 
                 return result;
             },
@@ -70,20 +101,29 @@ export const engineStore = createStore({
             },
         );
 
-        const loadAttribute = handler<unknown, EngineAttribute | null>(
+        const getAttribute = handler<unknown, EngineAttribute | null>(
             async ({ model }) => {
-                const request = newHttpRequest("/api/engine/attribute/");
-                const callError = await request.call({ timeout: 2500 });
-                ensure(callError);
+                const { call, read } = newHttpRequest("/api/engine/attribute/");
+
+                const callError = await call({
+                    timeout: 2500,
+                });
+
+                if (callError) {
+                    throw callError;
+                }
 
                 let result: EngineAttribute | null = null;
-                const readError = await request.read((chunk) => {
+                const readError = await read((chunk) => {
                     if (chunk.isEntity) {
                         result = chunk.payload;
                         model.attribute.set(chunk.payload);
                     }
                 });
-                ensure(readError);
+
+                if (readError) {
+                    throw readError;
+                }
 
                 return result;
             },
@@ -92,20 +132,29 @@ export const engineStore = createStore({
             },
         );
 
-        const loadLicense = handler<unknown, EngineLicense | null>(
+        const getLicense = handler<unknown, EngineLicense | null>(
             async ({ model }) => {
-                const request = newHttpRequest("/api/engine/license/");
-                const callError = await request.call({ timeout: 2500 });
-                ensure(callError);
+                const { call, read } = newHttpRequest("/api/engine/license/");
+
+                const callError = await call({
+                    timeout: 2500,
+                });
+
+                if (callError) {
+                    throw callError;
+                }
 
                 let result: EngineLicense | null = null;
-                const readError = await request.read((chunk) => {
+                const readError = await read((chunk) => {
                     if (chunk.isEntity) {
                         result = chunk.payload;
                         model.license.set(chunk.payload);
                     }
                 });
-                ensure(readError);
+
+                if (readError) {
+                    throw readError;
+                }
 
                 return result;
             },
@@ -114,19 +163,32 @@ export const engineStore = createStore({
             },
         );
 
-        const loadStat = handler<{ target: keyof EngineStat }>(
+        const getStat = handler<{ target: keyof EngineStat }>(
             async ({ model, view, payload }) => {
-                const request = newHttpRequest(`/engine/stat/last/${payload.target}/`);
-                const callError = await request.call({ timeout: 2500 });
-                ensure(callError);
+                const { call, read } = newHttpRequest(`/engine/stat/last/${payload.target}/`);
 
-                const readError = await request.read((chunk) => {
-                    if (!chunk.isEntity) return;
+                const callError = await call({
+                    timeout: 2500,
+                });
+
+                if (callError) {
+                    throw callError;
+                }
+
+                const readError = await read((chunk) => {
+                    if (!chunk.isEntity) {
+                        return;
+                    }
 
                     const statPoints = chunk.payload?.points;
-                    if (!statPoints) return;
+                    if (!statPoints) {
+                        return;
+                    }
 
-                    const currentStat = { ...engineStatShape.defaults(), ...view.engineStat.value };
+                    const currentStat = {
+                        ...engineStatShape.defaults(),
+                        ...view.stat.value,
+                    };
 
                     const limit = STAT_LIMITS[payload.target];
                     const arr = [...(currentStat[payload.target] || [])];
@@ -136,40 +198,48 @@ export const engineStore = createStore({
                         arr.splice(0, arr.length - limit);
                     }
 
-                    model.stat.patch({ [payload.target]: arr });
+                    model.stat.patch({
+                        [payload.target]: arr,
+                    });
                 });
-                ensure(readError);
+
+                if (readError) {
+                    throw readError;
+                }
             },
             {
-                // Each call targets an independent metric key and callers fire all four in
-                // parallel; SKIP would collapse them to one in-flight call and load only one
-                // metric, so allow concurrent execution.
                 concurrent: ActionConcurrent.ALLOW,
             },
         );
 
         const startStatLive = handler(
             async ({ model, view }) => {
-                if (liveStatState) return;
+                if (liveStatState) {
+                    return;
+                }
 
                 async function loop(delay = 2500) {
-                    if (!liveStatState) return;
+                    if (!liveStatState) {
+                        return;
+                    }
 
                     liveStatController = new AbortController();
 
-                    const request = newHttpRequest("/api/engine/stat/live/");
+                    const { call, read } = newHttpRequest("/api/engine/stat/live/");
+
                     const callError = await tryTimeout({
                         duration: 2500,
                         reject() {
                             liveStatController?.abort();
                         },
                         handler() {
-                            return request.call({
+                            return call({
                                 signal: liveStatController!.signal,
                                 query: { duration: 300 },
                             });
                         },
                     });
+
                     if (callError) {
                         if (liveStatState) {
                             liveStatRetryTimer = setTimeout(() => {
@@ -180,17 +250,23 @@ export const engineStore = createStore({
                         return;
                     }
 
-                    const readError = await request.read((chunk) => {
-                        if (!chunk.isEntity) return;
+                    const readError = await read((chunk) => {
+                        if (!chunk.isEntity) {
+                            return;
+                        }
 
                         const statType = chunk.payload?.type?.toLowerCase() as keyof EngineStat | undefined;
                         const statPoints = chunk.payload?.points;
-                        if (!statType || !statPoints) return;
+                        if (!statType || !statPoints) {
+                            return;
+                        }
 
                         const limit = STAT_LIMITS[statType];
-                        if (!limit) return;
+                        if (!limit) {
+                            return;
+                        }
 
-                        const currentStat = { ...engineStatShape.defaults(), ...view.engineStat.value };
+                        const currentStat = { ...engineStatShape.defaults(), ...view.stat.value };
                         const arr = [...(currentStat[statType] || [])];
                         arr.push(statPoints);
 
@@ -198,7 +274,9 @@ export const engineStore = createStore({
                             arr.splice(0, arr.length - limit);
                         }
 
-                        model.stat.patch({ [statType]: arr });
+                        model.stat.patch({
+                            [statType]: arr,
+                        });
                     });
                     if (readError) {
                         if (liveStatState) {
@@ -236,21 +314,26 @@ export const engineStore = createStore({
 
         const startPingLive = handler(
             async ({ model }) => {
-                if (livePingState) return;
+                if (livePingState) {
+                    return;
+                }
 
                 async function loop(delay = 2500) {
-                    if (!livePingState) return;
+                    if (!livePingState) {
+                        return;
+                    }
 
                     livePingController = new AbortController();
 
-                    const request = newHttpRequest("/api/engine/ping/");
+                    const { call, read } = newHttpRequest("/api/engine/ping/");
+
                     const callError = await tryTimeout({
                         duration: 2500,
                         reject() {
                             livePingController?.abort();
                         },
                         handler() {
-                            return request.call({
+                            return call({
                                 signal: livePingController!.signal,
                                 query: { count: 60, interval: 5000 },
                             });
@@ -260,7 +343,9 @@ export const engineStore = createStore({
                         clearTimeout(pingTimeoutTimer);
 
                         pingTimeoutTimer = setTimeout(() => {
-                            model.ping.patch({ timeout: true });
+                            model.ping.patch({
+                                timeout: true,
+                            });
                         }, 250);
 
                         if (livePingState) {
@@ -272,7 +357,7 @@ export const engineStore = createStore({
                         return;
                     }
 
-                    const readError = await request.read(
+                    const readError = await read(
                         (chunk) => {
                             if (chunk.isEntity) {
                                 const now = Date.now();
@@ -290,7 +375,9 @@ export const engineStore = createStore({
                         clearTimeout(pingTimeoutTimer);
 
                         pingTimeoutTimer = setTimeout(() => {
-                            model.ping.patch({ timeout: true });
+                            model.ping.patch({
+                                timeout: true,
+                            });
                         }, 250);
 
                         if (livePingState) {
@@ -362,10 +449,10 @@ export const engineStore = createStore({
             model.ping.reset();
         });
         return {
-            loadParameter,
-            loadAttribute,
-            loadLicense,
-            loadStat,
+            getParameter,
+            getAttribute,
+            getLicense,
+            getStat,
             startStatLive,
             stopStatLive,
             startPingLive,
@@ -375,7 +462,7 @@ export const engineStore = createStore({
     },
     compose({ action }) {
         async function loadAll() {
-            await all([action.loadParameter(), action.loadAttribute(), action.loadLicense()]);
+            await all([action.getParameter(), action.getAttribute(), action.getLicense()]);
         }
 
         return {

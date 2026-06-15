@@ -1,43 +1,56 @@
-import { ViewClone, ActionConcurrent } from "@diphyx/harlemify/runtime";
 import { isArray } from "radash";
+import { ViewClone, ActionConcurrent } from "@diphyx/harlemify/runtime";
 
 export const shellStore = createStore({
     name: "shell",
     model({ many }) {
         const list = many(shellShape);
+
         return {
             list,
         };
     },
     view({ from }) {
-        const ordered = from(
+        const list = from(
             "list",
             (items) => {
                 return items.sort((first, second) => {
                     return second.created_at - first.created_at;
                 });
             },
-            { clone: ViewClone.SHALLOW },
+            {
+                clone: ViewClone.SHALLOW,
+            },
         );
+
         return {
-            ordered,
+            list,
         };
     },
     action({ handler }) {
-        const load = handler<unknown, Shell[]>(
+        const get = handler<unknown, Shell[]>(
             async ({ model }) => {
-                const request = newHttpRequest("/api/shell/");
-                const callError = await request.call();
-                ensure(callError);
+                const { call, read } = newHttpRequest("/api/shell/");
+
+                const callError = await call();
+                if (callError) {
+                    throw callError;
+                }
 
                 const shells: Shell[] = [];
-                const readError = await request.read((chunk) => {
+                const readError = await read((chunk) => {
                     if (chunk.isEntity) {
                         shells.push(chunk.payload);
-                        model.list.add(chunk.payload, { unique: true });
+
+                        model.list.add(chunk.payload, {
+                            unique: true,
+                        });
                     }
                 });
-                ensure(readError);
+
+                if (readError) {
+                    throw readError;
+                }
 
                 return shells;
             },
@@ -48,8 +61,9 @@ export const shellStore = createStore({
 
         const create = handler<{ identity?: string; path?: string; args?: string[] } | undefined, Shell | null>(
             async ({ model, payload }) => {
-                const request = newHttpRequest("/api/shell/");
-                const callError = await request.call({
+                const { call, read } = newHttpRequest("/api/shell/");
+
+                const callError = await call({
                     method: "POST",
                     body: {
                         identity: payload?.identity,
@@ -57,18 +71,25 @@ export const shellStore = createStore({
                         args: payload?.args,
                     },
                 });
-                ensure(callError);
+
+                if (callError) {
+                    throw callError;
+                }
 
                 let shell: Shell | null = null;
-                const readError = await request.read((chunk) => {
+                const readError = await read((chunk) => {
                     if (chunk.isEntity) {
                         shell = chunk.payload;
                     }
                 });
-                ensure(readError);
+                if (readError) {
+                    throw readError;
+                }
 
                 if (shell) {
-                    model.list.add(shell, { prepend: true });
+                    model.list.add(shell, {
+                        prepend: true,
+                    });
                 }
 
                 return shell;
@@ -78,10 +99,11 @@ export const shellStore = createStore({
             },
         );
 
-        const resize = handler<{ identity: string; columns: number; rows: number }>(
+        const resizeById = handler<{ identity: string; columns: number; rows: number }>(
             async ({ model, payload }) => {
-                const request = newHttpRequest("/api/shell/resize/");
-                const callError = await request.call({
+                const { call, read } = newHttpRequest("/api/shell/resize/");
+
+                const callError = await call({
                     method: "PUT",
                     body: {
                         identity: payload.identity,
@@ -89,10 +111,15 @@ export const shellStore = createStore({
                         rows: payload.rows,
                     },
                 });
-                ensure(callError);
 
-                const readError = await request.read();
-                ensure(readError);
+                if (callError) {
+                    throw callError;
+                }
+
+                const readError = await read();
+                if (readError) {
+                    throw readError;
+                }
 
                 model.list.patch({
                     identity: payload.identity,
@@ -105,19 +132,25 @@ export const shellStore = createStore({
             },
         );
 
-        const execute = handler<{ identity: string }>(
+        const executeById = handler<{ identity: string }>(
             async ({ model, payload }) => {
-                const request = newHttpRequest("/api/shell/execute/");
-                const callError = await request.call({
+                const { call, read } = newHttpRequest("/api/shell/execute/");
+
+                const callError = await call({
                     method: "PUT",
                     body: {
                         identity: payload.identity,
                     },
                 });
-                ensure(callError);
 
-                const readError = await request.read();
-                ensure(readError);
+                if (callError) {
+                    throw callError;
+                }
+
+                const readError = await read();
+                if (readError) {
+                    throw readError;
+                }
 
                 model.list.patch({
                     identity: payload.identity,
@@ -129,19 +162,25 @@ export const shellStore = createStore({
             },
         );
 
-        const kill = handler<{ identity: string }>(
+        const killById = handler<{ identity: string }>(
             async ({ model, payload }) => {
-                const request = newHttpRequest("/api/shell/kill/");
-                const callError = await request.call({
+                const { call, read } = newHttpRequest("/api/shell/kill/");
+
+                const callError = await call({
                     method: "PUT",
                     body: {
                         identity: payload.identity,
                     },
                 });
-                ensure(callError);
 
-                const readError = await request.read();
-                ensure(readError);
+                if (callError) {
+                    throw callError;
+                }
+
+                const readError = await read();
+                if (readError) {
+                    throw readError;
+                }
 
                 model.list.patch({
                     identity: payload.identity,
@@ -153,21 +192,29 @@ export const shellStore = createStore({
             },
         );
 
-        const remove = handler<{ identity: string }>(
+        const removeById = handler<{ identity: string }>(
             async ({ model, payload }) => {
-                const request = newHttpRequest("/api/shell/");
-                const callError = await request.call({
+                const { call, read } = newHttpRequest("/api/shell/");
+
+                const callError = await call({
                     method: "DELETE",
                     query: {
                         identity: payload.identity,
                     },
                 });
-                ensure(callError);
 
-                const readError = await request.read();
-                ensure(readError);
+                if (callError) {
+                    throw callError;
+                }
 
-                model.list.remove({ identity: payload.identity });
+                const readError = await read();
+                if (readError) {
+                    throw readError;
+                }
+
+                model.list.remove({
+                    identity: payload.identity,
+                });
             },
             {
                 concurrent: ActionConcurrent.BLOCK,
@@ -176,26 +223,35 @@ export const shellStore = createStore({
 
         const removeBatch = handler<{ identities: string[] }, Array<{ identity: string; error?: string }>>(
             async ({ model, payload }) => {
-                const request = newHttpRequest("/api/shell/batch/");
-                const callError = await request.call({
+                const { call, read } = newHttpRequest("/api/shell/batch/");
+
+                const callError = await call({
                     method: "DELETE",
                     body: {
                         identities: payload.identities,
                     },
                 });
-                ensure(callError);
+
+                if (callError) {
+                    throw callError;
+                }
 
                 const results: Array<{ identity: string; error?: string }> = [];
-                const readError = await request.read((chunk) => {
+                const readError = await read((chunk) => {
                     if (chunk.isEntity) {
                         results.push(chunk.payload);
 
                         if (!chunk.payload.error) {
-                            model.list.remove({ identity: chunk.payload.identity });
+                            model.list.remove({
+                                identity: chunk.payload.identity,
+                            });
                         }
                     }
                 });
-                ensure(readError);
+
+                if (readError) {
+                    throw readError;
+                }
 
                 return results;
             },
@@ -206,24 +262,34 @@ export const shellStore = createStore({
 
         const prune = handler<unknown, string[]>(
             async ({ model }) => {
-                const request = newHttpRequest("/api/shell/prune/");
-                const callError = await request.call({
+                const { call, read } = newHttpRequest("/api/shell/prune/");
+
+                const callError = await call({
                     method: "DELETE",
                 });
-                ensure(callError);
+
+                if (callError) {
+                    throw callError;
+                }
 
                 const identities: string[] = [];
-                const readError = await request.read((chunk) => {
+                const readError = await read((chunk) => {
                     if (chunk.isEntity) {
                         if (isArray(chunk.payload)) {
                             for (const identity of chunk.payload) {
                                 identities.push(identity);
-                                model.list.remove({ identity });
+
+                                model.list.remove({
+                                    identity,
+                                });
                             }
                         }
                     }
                 });
-                ensure(readError);
+
+                if (readError) {
+                    throw readError;
+                }
 
                 return identities;
             },
@@ -236,12 +302,12 @@ export const shellStore = createStore({
             model.list.reset();
         });
         return {
-            load,
+            get,
             create,
-            resize,
-            execute,
-            kill,
-            remove,
+            resizeById,
+            executeById,
+            killById,
+            removeById,
             removeBatch,
             prune,
             reset,
@@ -251,7 +317,7 @@ export const shellStore = createStore({
         async function createAndExecute(options?: { identity?: string; path?: string; args?: string[] }) {
             const shell = await action.create({ payload: options });
             if (shell) {
-                await action.execute({ payload: { identity: shell.identity } });
+                await action.executeById({ payload: { identity: shell.identity } });
             }
         }
 

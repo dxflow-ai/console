@@ -1,6 +1,44 @@
 import { ofetch } from "ofetch";
+import { sleep } from "radash";
 
 import type { $Fetch, FetchOptions } from "ofetch";
+
+async function tryAwait<T extends any>({
+    delay,
+    handler,
+    before,
+    after,
+}: {
+    delay?: number;
+    before?: () => Promise<void> | void;
+    handler: () => Promise<T> | T;
+    after?: () => Promise<void> | void;
+}) {
+    const startedAt = Date.now();
+
+    if (before) {
+        await before();
+    }
+
+    await nextTick();
+    const output = await handler();
+
+    await nextTick();
+
+    if (delay) {
+        const endAt = Date.now();
+        const diff = delay - (endAt - startedAt);
+        if (diff > 0) {
+            await sleep(diff);
+        }
+    }
+
+    if (after) {
+        await after();
+    }
+
+    return output;
+}
 
 export const httpStatus: Record<number, string> = {
     0: "Unknown",

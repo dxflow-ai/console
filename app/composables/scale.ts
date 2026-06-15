@@ -3,11 +3,12 @@ export const minScale = 1;
 export const maxScale = 1.5;
 export const stepScale = 0.05;
 
+const scale = useLocalStorage("scale", defaultScale, {
+    shallow: true,
+    initOnMounted: true,
+});
+
 export function useScale() {
-    const scale = useLocalStorage("scale", defaultScale, {
-        shallow: true,
-        initOnMounted: true,
-    });
     const styles = computed(() => {
         return {
             "--spacing": `${0.25 * scale.value}rem`,

@@ -24,7 +24,7 @@
                 text="Prune Workflows"
             >
                 <UiButton
-                    :disabled="pruning"
+                    :loading="pruning"
                     :ui="{
                         base: 'rounded-full',
                     }"
@@ -34,8 +34,9 @@
                     @click="confirmPrune.open()"
                     square
                 >
-                    <UiIcon name="i-mingcute:broom-line" />
-                    <Loading :active="pruning" />
+                    <template v-if="!pruning">
+                        <UiIcon name="i-mingcute:broom-line" />
+                    </template>
                 </UiButton>
             </UiTooltip>
             <UiTooltip
@@ -46,7 +47,7 @@
                 text="Create Workflow"
             >
                 <UiButton
-                    :disabled="creating"
+                    :loading="creating"
                     :ui="{
                         base: 'rounded-full',
                     }"
@@ -56,8 +57,9 @@
                     @click="openCreateDrawer()"
                     square
                 >
-                    <UiIcon name="i-lucide:plus" />
-                    <Loading :active="creating" />
+                    <template v-if="!creating">
+                        <UiIcon name="i-mingcute:add-line" />
+                    </template>
                 </UiButton>
             </UiTooltip>
         </template>
@@ -190,18 +192,12 @@
                 </div>
             </template>
             <template #actions-header>
-                <Animate
-                    :class="{
-                        'pointer-events-none': !selectedIdentities.length,
-                    }"
-                    :state="!!selectedIdentities.length"
-                    :attributes="{
-                        opacity: [0, 1],
-                    }"
+                <div
+                    :class="selectedIdentities.length ? 'animate-fade' : 'opacity-0 pointer-events-none'"
                     class="flex items-center justify-end"
                 >
                     <UiButton
-                        :disabled="removingBatch"
+                        :loading="removingBatch"
                         :ui="{
                             base: 'flex items-center justify-center gap-1.5',
                         }"
@@ -211,10 +207,11 @@
                         @click="confirmRemoveBatch.open()"
                     >
                         <span>Remove</span>
-                        <UiIcon name="i-mingcute:delete-3-line" class="size-3.5" />
-                        <Loading :active="removingBatch" />
+                        <template v-if="!removingBatch">
+                            <UiIcon name="i-mingcute:delete-3-line" class="size-3.5" />
+                        </template>
                     </UiButton>
-                </Animate>
+                </div>
             </template>
             <template #actions-cell="{ row }">
                 <div class="flex items-center justify-end gap-1.5">
@@ -262,7 +259,7 @@
             </div>
             <div class="flex items-center gap-2">
                 <UiButton size="xs" variant="ghost" color="neutral" @click="closeCreateDrawer()" square>
-                    <UiIcon name="i-lucide:x" class="size-3.5" />
+                    <UiIcon name="i-mingcute:close-line" class="size-3.5" />
                 </UiButton>
             </div>
         </template>
@@ -298,6 +295,7 @@
                         <span>Cancel</span>
                     </UiButton>
                     <UiButton
+                        :loading="creating"
                         :disabled="creating || !createForm.source"
                         size="sm"
                         variant="solid"
@@ -305,7 +303,6 @@
                         @click="createAction()"
                     >
                         <span>Create</span>
-                        <Loading :active="creating" />
                     </UiButton>
                 </div>
                 <template v-if="createMessages.length">
@@ -348,7 +345,7 @@
             </div>
             <div class="flex items-center gap-2">
                 <UiButton size="xs" variant="ghost" color="neutral" @click="closeDetailDrawer()" square>
-                    <UiIcon name="i-lucide:x" class="size-3.5" />
+                    <UiIcon name="i-mingcute:close-line" class="size-3.5" />
                 </UiButton>
             </div>
         </template>
@@ -385,28 +382,30 @@
                     <div class="flex items-center gap-2">
                         <template v-if="canStart">
                             <UiButton
-                                :disabled="starting === displayed.identity"
+                                :loading="starting === displayed.identity"
                                 size="sm"
                                 variant="soft"
                                 color="green"
                                 @click="startAction(displayed)"
                             >
-                                <UiIcon name="i-mingcute:play-line" class="size-4" />
+                                <template v-if="starting !== displayed.identity">
+                                    <UiIcon name="i-mingcute:play-line" class="size-4" />
+                                </template>
                                 <span>Start</span>
-                                <Loading :active="starting === displayed.identity" />
                             </UiButton>
                         </template>
                         <template v-if="canStop">
                             <UiButton
-                                :disabled="stopping === displayed.identity"
+                                :loading="stopping === displayed.identity"
                                 size="sm"
                                 variant="soft"
                                 color="amber"
                                 @click="stopAction(displayed)"
                             >
-                                <UiIcon name="i-mingcute:stop-line" class="size-4" />
+                                <template v-if="stopping !== displayed.identity">
+                                    <UiIcon name="i-mingcute:stop-line" class="size-4" />
+                                </template>
                                 <span>Stop</span>
-                                <Loading :active="stopping === displayed.identity" />
                             </UiButton>
                         </template>
                     </div>
@@ -422,15 +421,16 @@
                             <div class="flex items-center justify-between">
                                 <span class="text-sm font-bold">Steps</span>
                                 <UiButton
-                                    :disabled="loadingSteps"
+                                    :loading="loadingSteps"
                                     size="xs"
                                     variant="ghost"
                                     color="neutral"
                                     @click="loadSteps(displayed.identity)"
                                     square
                                 >
-                                    <UiIcon name="i-mingcute:refresh-2-line" class="size-3.5" />
-                                    <Loading :active="loadingSteps" />
+                                    <template v-if="!loadingSteps">
+                                        <UiIcon name="i-mingcute:refresh-2-line" class="size-3.5" />
+                                    </template>
                                 </UiButton>
                             </div>
                         </template>
@@ -467,15 +467,16 @@
                             <div class="flex items-center justify-between">
                                 <span class="text-sm font-bold">Events</span>
                                 <UiButton
-                                    :disabled="loadingEvents"
+                                    :loading="loadingEvents"
                                     size="xs"
                                     variant="ghost"
                                     color="neutral"
                                     @click="loadEvents(displayed.identity)"
                                     square
                                 >
-                                    <UiIcon name="i-mingcute:refresh-2-line" class="size-3.5" />
-                                    <Loading :active="loadingEvents" />
+                                    <template v-if="!loadingEvents">
+                                        <UiIcon name="i-mingcute:refresh-2-line" class="size-3.5" />
+                                    </template>
                                 </UiButton>
                             </div>
                         </template>
@@ -508,35 +509,30 @@
 </template>
 
 <script lang="ts" setup>
-import type { TableColumn } from "@nuxt/ui";
+import { sleep } from "radash";
 
-import Animate from "~/components/Animate.vue";
-import DateLabel from "~/components/DateLabel.vue";
-import EmptyPlaceholder from "~/components/EmptyPlaceholder.vue";
-import Loading from "~/components/Loading.vue";
-import MoreOptions from "~/components/MoreOptions.vue";
-import HeaderLine from "~/components/HeaderLine.vue";
-import WorkflowStatusBadge from "~/components/WorkflowStatusBadge.vue";
+import type { DeepReadonly } from "vue";
+import type { TableColumn } from "@nuxt/ui";
 
 definePageMeta({
     name: "workflow-list",
     layout: "console",
 });
 
-const { data: orderedWorkflows } = useStoreView(workflowStore, "ordered");
-const { execute: loadWorkflows, loading } = useStoreAction(workflowStore, "load");
+const { data: orderedWorkflows } = useStoreView(workflowStore, "list");
+const { execute: loadWorkflows, loading } = useStoreAction(workflowStore, "get");
 const { execute: resetWorkflows } = useStoreAction(workflowStore, "reset");
 
-const { execute: executeLoadSteps, loading: loadingSteps } = useStoreAction(workflowStore, "loadSteps", {
+const { execute: executeLoadSteps, loading: loadingSteps } = useStoreAction(workflowStore, "getStepsById", {
     isolated: true,
 });
 
-const { execute: executeLoadEvents, loading: loadingEvents } = useStoreAction(workflowStore, "loadEvents", {
+const { execute: executeLoadEvents, loading: loadingEvents } = useStoreAction(workflowStore, "getEventsById", {
     isolated: true,
 });
 
-const { data: stepsRecord } = useStoreView(workflowStore, "workflowSteps");
-const { data: eventsRecord } = useStoreView(workflowStore, "workflowEvents");
+const { data: stepsRecord } = useStoreView(workflowStore, "steps");
+const { data: eventsRecord } = useStoreView(workflowStore, "events");
 
 const confirmRemoveWorkflow = useConfirmToast({
     id: "workflow-remove-confirm",
@@ -749,7 +745,7 @@ function openCreateDrawer() {
     createForm.source = "";
     createMessages.value = [];
 
-    sleep(250, () => {
+    sleep(250).then(() => {
         createDrawer.value = true;
     });
 }
@@ -761,7 +757,7 @@ function closeCreateDrawer() {
 function openDetailDrawer(workflow: DeepReadonly<Workflow>) {
     displayed.value = workflow;
 
-    sleep(250, () => {
+    sleep(250).then(() => {
         detailDrawer.value = true;
         loadSteps(workflow.identity);
         loadEvents(workflow.identity);
@@ -771,7 +767,7 @@ function openDetailDrawer(workflow: DeepReadonly<Workflow>) {
 function closeDetailDrawer() {
     detailDrawer.value = false;
 
-    sleep(250, () => {
+    sleep(250).then(() => {
         displayed.value = null;
     });
 }
@@ -826,7 +822,7 @@ async function startAction({ identity }: Pick<DeepReadonly<Workflow>, "identity"
     starting.value = identity;
 
     try {
-        await workflowStore.action.start({ payload: { identity } });
+        await workflowStore.action.startById({ payload: { identity } });
     } catch (error) {
         starting.value = null;
         return dangerToast(`Failed to start '${identity}'`, error as Error);
@@ -840,7 +836,7 @@ async function stopAction({ identity }: Pick<DeepReadonly<Workflow>, "identity">
     stopping.value = identity;
 
     try {
-        await workflowStore.action.stop({ payload: { identity } });
+        await workflowStore.action.stopById({ payload: { identity } });
     } catch (error) {
         stopping.value = null;
         return dangerToast(`Failed to stop '${identity}'`, error as Error);
@@ -854,7 +850,7 @@ async function removeAction({ identity }: Pick<DeepReadonly<Workflow>, "identity
     removing.value = identity;
 
     try {
-        await workflowStore.action.remove({ payload: { identity } });
+        await workflowStore.action.removeById({ payload: { identity } });
     } catch (error) {
         removing.value = null;
         return dangerToast(`Failed to remove '${identity}'`, error as Error);

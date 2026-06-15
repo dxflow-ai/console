@@ -24,7 +24,7 @@
                 text="Prune Sessions"
             >
                 <UiButton
-                    :disabled="pruning"
+                    :loading="pruning"
                     :ui="{
                         base: 'rounded-full',
                     }"
@@ -34,8 +34,9 @@
                     @click="confirmPrune.open()"
                     square
                 >
-                    <UiIcon name="i-mingcute:broom-line" />
-                    <Loading :active="pruning" />
+                    <template v-if="!pruning">
+                        <UiIcon name="i-mingcute:broom-line" />
+                    </template>
                 </UiButton>
             </UiTooltip>
             <UiTooltip
@@ -46,7 +47,7 @@
                 text="Create Session"
             >
                 <UiButton
-                    :disabled="creating"
+                    :loading="creating"
                     :ui="{
                         base: 'rounded-full',
                     }"
@@ -56,8 +57,9 @@
                     @click="createAction()"
                     square
                 >
-                    <UiIcon name="i-lucide:plus" />
-                    <Loading :active="creating" />
+                    <template v-if="!creating">
+                        <UiIcon name="i-mingcute:add-line" />
+                    </template>
                 </UiButton>
             </UiTooltip>
         </template>
@@ -158,18 +160,12 @@
                 </div>
             </template>
             <template #actions-header>
-                <Animate
-                    :class="{
-                        'pointer-events-none': !selectedIdentities.length,
-                    }"
-                    :state="!!selectedIdentities.length"
-                    :attributes="{
-                        opacity: [0, 1],
-                    }"
+                <div
+                    :class="selectedIdentities.length ? 'animate-fade' : 'opacity-0 pointer-events-none'"
                     class="flex items-center justify-end"
                 >
                     <UiButton
-                        :disabled="removingBatch"
+                        :loading="removingBatch"
                         :ui="{
                             base: 'flex items-center justify-center gap-1.5',
                         }"
@@ -179,10 +175,11 @@
                         @click="confirmRemoveBatch.open()"
                     >
                         <span>Remove</span>
-                        <UiIcon name="i-mingcute:delete-3-line" class="size-3.5" />
-                        <Loading :active="removingBatch" />
+                        <template v-if="!removingBatch">
+                            <UiIcon name="i-mingcute:delete-3-line" class="size-3.5" />
+                        </template>
                     </UiButton>
-                </Animate>
+                </div>
             </template>
             <template #actions-cell="{ row }">
                 <div class="flex items-center justify-end gap-1.5">
@@ -231,7 +228,7 @@
             </div>
             <div class="flex items-center gap-2">
                 <UiButton size="xs" variant="ghost" color="neutral" @click="closeDrawer()" square>
-                    <UiIcon name="i-lucide:x" class="size-3.5" />
+                    <UiIcon name="i-mingcute:close-line" class="size-3.5" />
                 </UiButton>
             </div>
         </template>
@@ -244,25 +241,18 @@
 </template>
 
 <script lang="ts" setup>
-import type { TableColumn } from "@nuxt/ui";
+import { sleep } from "radash";
 
-import Animate from "~/components/Animate.vue";
-import DateLabel from "~/components/DateLabel.vue";
-import EmptyPlaceholder from "~/components/EmptyPlaceholder.vue";
-import Loading from "~/components/Loading.vue";
-import MoreOptions from "~/components/MoreOptions.vue";
-import TruncateText from "~/components/TruncateText.vue";
-import HeaderLine from "~/components/HeaderLine.vue";
-import ShellStateBadge from "~/components/ShellStateBadge.vue";
-import Terminal from "~/components/Terminal.vue";
+import type { DeepReadonly } from "vue";
+import type { TableColumn } from "@nuxt/ui";
 
 definePageMeta({
     name: "shell-sessions",
     layout: "console",
 });
 
-const { data: orderedShells } = useStoreView(shellStore, "ordered");
-const { execute: loadShells, loading } = useStoreAction(shellStore, "load");
+const { data: orderedShells } = useStoreView(shellStore, "list");
+const { execute: loadShells, loading } = useStoreAction(shellStore, "get");
 const { execute: resetShells } = useStoreAction(shellStore, "reset");
 
 const confirmRemoveShell = useConfirmToast({
@@ -405,7 +395,7 @@ function getActions(shell: DeepReadonly<Shell>): any {
 function openDrawer(shell: DeepReadonly<Shell>) {
     displayed.value = shell;
 
-    sleep(250, () => {
+    sleep(250).then(() => {
         drawer.value = true;
     });
 }
@@ -413,7 +403,7 @@ function openDrawer(shell: DeepReadonly<Shell>) {
 function closeDrawer() {
     drawer.value = false;
 
-    sleep(250, () => {
+    sleep(250).then(() => {
         displayed.value = null;
     });
 }
@@ -438,7 +428,7 @@ async function executeAction({ identity }: Pick<DeepReadonly<Shell>, "identity">
     executing.value = identity;
 
     try {
-        await shellStore.action.execute({ payload: { identity } });
+        await shellStore.action.executeById({ payload: { identity } });
     } catch (error) {
         executing.value = null;
         return dangerToast(`Failed to execute '${identity}'`, error as Error);
@@ -452,7 +442,7 @@ async function killAction({ identity }: Pick<DeepReadonly<Shell>, "identity">) {
     killing.value = identity;
 
     try {
-        await shellStore.action.kill({ payload: { identity } });
+        await shellStore.action.killById({ payload: { identity } });
     } catch (error) {
         killing.value = null;
         return dangerToast(`Failed to kill '${identity}'`, error as Error);
@@ -466,7 +456,7 @@ async function removeAction({ identity }: Pick<DeepReadonly<Shell>, "identity">)
     removing.value = identity;
 
     try {
-        await shellStore.action.remove({ payload: { identity } });
+        await shellStore.action.removeById({ payload: { identity } });
     } catch (error) {
         removing.value = null;
         return dangerToast(`Failed to remove '${identity}'`, error as Error);

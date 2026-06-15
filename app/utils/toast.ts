@@ -1,3 +1,5 @@
+import { sleep } from "radash";
+
 import type { ButtonProps } from "@nuxt/ui";
 
 const closePropeties: Partial<ButtonProps> = {
@@ -13,45 +15,6 @@ function resolveDescription(value: any, fallback: string) {
         .replace(/^\[(.*?)\]/gi, "$1")
         .replace(/^[^a-z]/gi, "");
     return description || fallback;
-}
-
-export async function infoToast(title: string, description?: any) {
-    const { add } = useToast();
-    add({
-        title,
-        description: resolveDescription(description, "Further information is not available"),
-        color: "blue",
-        icon: "i-mingcute:information-line",
-        close: closePropeties,
-    });
-
-    await sleep(250);
-}
-
-export async function successToast(title: string, description?: any) {
-    const { add } = useToast();
-    add({
-        title,
-        description: resolveDescription(description, "Everything is working as intended"),
-        color: "green",
-        icon: "i-mingcute:check-circle-line",
-        close: closePropeties,
-    });
-
-    await sleep(250);
-}
-
-export async function warningToast(title: string, description?: any) {
-    const { add } = useToast();
-    add({
-        title,
-        description: resolveDescription(description, "An issues were detected"),
-        color: "amber",
-        icon: "i-mingcute:warning-line",
-        close: closePropeties,
-    });
-
-    await sleep(250);
 }
 
 export async function dangerToast(title: string, description?: any) {
