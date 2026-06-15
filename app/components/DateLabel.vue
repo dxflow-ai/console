@@ -1,13 +1,13 @@
 <template>
     <NuxtTime
         :datetime="correctedTimestamp"
-        :weekday="weekday"
-        :year="year"
-        :month="month"
-        :day="day"
-        :hour="hour"
-        :minute="minute"
-        :second="second"
+        :weekday="props.weekday"
+        :year="props.year"
+        :month="props.month"
+        :day="props.day"
+        :hour="props.hour"
+        :minute="props.minute"
+        :second="props.second"
     />
 </template>
 
@@ -50,6 +50,7 @@ const props = defineProps({
         default: undefined,
     },
 });
+
 const correctedTimestamp = computed(() => {
     if (isNumber(props.timestamp)) {
         if (props.timestamp < 10_000_000_000) {

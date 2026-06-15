@@ -1,6 +1,6 @@
 <template>
     <div class="relative bg-default rounded-sm ring-1 ring-accented/25 overflow-hidden">
-        <div :class="loaded ? 'animate-fade animate-delay-500' : 'opacity-0'" class="absolute inset-0 overflow-hidden">
+        <div class="absolute inset-0 overflow-hidden" :class="loaded ? 'animate-fade animate-delay-500' : 'opacity-0'">
             <div ref="element" class="relative size-full flex items-center justify-center overflow-visible" />
         </div>
         <template v-if="!loaded">
@@ -74,6 +74,7 @@ async function load() {
     const shell = orderedShells.value.find((s) => {
         return s.identity === props.identity;
     });
+
     if (shell?.state != "executed") {
         try {
             await shellStore.action.executeById({ payload: { identity: props.identity } });
@@ -89,6 +90,7 @@ async function load() {
             terminalWrapper.tryWrite(atob(value));
         },
     });
+
     if (connectError) {
         loaded.value = true;
         return dangerToast("Failed to load terminal", connectError);

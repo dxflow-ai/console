@@ -1,34 +1,31 @@
 <template>
     <UiCard
-        :ui="{
-            root: 'divide-none',
-            body: '!pt-0 !px-5',
-            header: 'flex items-center gap-4 justify-between !px-5 !pb-0',
-        }"
         variant="soft"
+        :ui="{
+            header: 'flex items-center justify-between gap-4',
+        }"
     >
         <template #header>
             <div class="flex items-center gap-2">
-                <UiIcon name="i-mingcute:certificate-2-line" class="size-4 text-primary-500" />
+                <UiIcon name="i-mingcute:certificate-2-line" class="size-4 text-primary" />
                 <span class="text-sm text-muted">License</span>
             </div>
             <template v-if="engineState.license.expires">
                 <div class="flex items-center gap-1 text-muted">
                     <span class="text-xs">Expires in</span>
                     <DateLabel
-                        :timestamp="engineState.license.expires"
                         class="text-xs"
                         year="numeric"
                         month="short"
                         day="numeric"
+                        :timestamp="engineState.license.expires"
                     />
                 </div>
             </template>
             <template v-else>
-                <UiSkeleton class="h-4 w-32 bg-primary-100/50 dark:bg-primary-950/50" />
+                <UiSkeleton class="h-4 w-32" />
             </template>
         </template>
-        <UiSeparator class="mt-2 mb-6" />
         <div class="flex flex-col gap-3">
             <div class="flex items-center justify-between gap-8">
                 <span class="text-sm font-bold">Name</span>
@@ -42,8 +39,8 @@
                         </UiBadge>
                     </template>
                     <template v-else>
-                        <UiSkeleton class="h-5.5 w-18 bg-primary-100/50 dark:bg-primary-950/50" />
-                        <UiSkeleton class="h-5.5 w-14 bg-primary-100/50 dark:bg-primary-950/50" />
+                        <UiSkeleton class="h-5.5 w-18" />
+                        <UiSkeleton class="h-5.5 w-14" />
                     </template>
                 </div>
             </div>
@@ -58,9 +55,9 @@
                         </template>
                     </template>
                     <template v-else>
-                        <UiSkeleton class="h-5.5 w-16 bg-primary-100/50 dark:bg-primary-950/50" />
-                        <UiSkeleton class="h-5.5 w-16 bg-primary-100/50 dark:bg-primary-950/50" />
-                        <UiSkeleton class="h-5.5 w-16 bg-primary-100/50 dark:bg-primary-950/50" />
+                        <UiSkeleton class="h-5.5 w-16" />
+                        <UiSkeleton class="h-5.5 w-16" />
+                        <UiSkeleton class="h-5.5 w-16" />
                     </template>
                 </div>
             </div>

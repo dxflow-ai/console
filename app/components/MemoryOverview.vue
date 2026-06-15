@@ -1,32 +1,29 @@
 <template>
     <UiCard
         ref="element"
-        :ui="{
-            root: 'divide-none',
-            body: '!pt-0 !px-5',
-            header: 'flex items-center gap-4 justify-between !px-5 !pb-0',
-        }"
         variant="soft"
+        :ui="{
+            header: 'flex items-center justify-between gap-4',
+        }"
     >
         <template #header>
             <div class="flex items-center gap-2">
-                <UiIcon name="i-mingcute:storage-line" class="size-4 text-primary-500" />
+                <UiIcon name="i-mingcute:storage-line" class="size-4 text-primary" />
                 <span class="text-sm text-muted">Memory</span>
             </div>
             <template v-if="engineState.attribute.memory.physical">
                 <div class="flex items-center gap-1 text-muted">
                     <span class="text-xs">{{ physicalLabel }}</span>
                     <template v-if="engineState.attribute.memory.swap">
-                        <span class="text-xs opacity-75">+</span>
+                        <span class="text-xs text-muted">+</span>
                         <span class="text-xs">{{ swapLabel }}</span>
                     </template>
                 </div>
             </template>
             <template v-else>
-                <UiSkeleton class="h-4 w-12 bg-primary-100/50 dark:bg-primary-950/50" />
+                <UiSkeleton class="h-4 w-12" />
             </template>
         </template>
-        <UiSeparator class="mt-2 mb-6" />
         <div class="flex h-20 items-center gap-4 pr-0.5">
             <div class="flex flex-1">
                 <VisXYContainer
@@ -70,7 +67,7 @@
             </div>
             <div class="relative flex w-40 h-20 flex-col items-center justify-end gap-0.5">
                 <div class="absolute top-2 left-1 w-38 h-18">
-                    <VisSingleContainer :key="redrawKey" :data="lastSwapData" class="size-full">
+                    <VisSingleContainer :key="redrawKey" class="size-full" :data="lastSwapData">
                         <VisDonut
                             :value="vData"
                             :radius="calcScale(72)"
@@ -84,7 +81,7 @@
                     </VisSingleContainer>
                 </div>
                 <div class="absolute top-0 left-0 w-40 h-20">
-                    <VisSingleContainer :key="redrawKey" :data="lastPhysicalData" class="size-full">
+                    <VisSingleContainer :key="redrawKey" class="size-full" :data="lastPhysicalData">
                         <VisDonut
                             :value="vData"
                             :radius="calcScale(80)"
@@ -98,24 +95,24 @@
                     </VisSingleContainer>
                 </div>
                 <UiBadge
-                    :ui="{
-                        base: 'rounded-full z-10',
-                    }"
                     size="sm"
                     variant="soft"
                     color="teal"
+                    :ui="{
+                        base: 'z-10',
+                    }"
                 >
                     <span>Swap</span>
                     <span class="font-bold">{{ Math.floor(last.swap) }}</span>
                     <small>%</small>
                 </UiBadge>
                 <UiBadge
-                    :ui="{
-                        base: 'rounded-full z-10',
-                    }"
                     size="sm"
                     variant="soft"
                     color="primary"
+                    :ui="{
+                        base: 'z-10',
+                    }"
                 >
                     <span>Physical</span>
                     <span class="font-bold">{{ Math.floor(last.physical) }}</span>
@@ -147,6 +144,7 @@ const data = computed(() => {
         physical: number;
         swap: number;
     }[] = [];
+
     for (const points of engineState.stat.memory) {
         output.push({
             physical: points["physical"].percent,
@@ -169,6 +167,7 @@ const data = computed(() => {
 
     return output;
 });
+
 const last = computed(() => {
     const point = data.value?.[data.value?.length - 1];
     return {
@@ -176,6 +175,7 @@ const last = computed(() => {
         swap: point?.swap ?? 0,
     };
 });
+
 const lastPhysicalData = computed(() => {
     let { physical } = last.value;
     if (physical < 10) {
@@ -206,6 +206,7 @@ const physicalLabel = computed(() => {
     const value = prettyBytes(engineState.attribute.memory.physical, {
         binary: true,
     });
+
     return value.replaceAll("i", "");
 });
 
@@ -213,6 +214,7 @@ const swapLabel = computed(() => {
     const value = prettyBytes(engineState.attribute.memory.swap, {
         binary: true,
     });
+
     return value.replaceAll("i", "");
 });
 

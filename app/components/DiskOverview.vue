@@ -1,15 +1,13 @@
 <template>
     <UiCard
-        :ui="{
-            root: 'divide-none',
-            body: '!pt-0 !px-5',
-            header: 'flex items-center gap-4 justify-between !px-5 !pb-0',
-        }"
         variant="soft"
+        :ui="{
+            header: 'flex items-center justify-between gap-4',
+        }"
     >
         <template #header>
             <div class="flex items-center gap-2">
-                <UiIcon name="i-mingcute:drive-line" class="size-4 text-primary-500" />
+                <UiIcon name="i-mingcute:drive-line" class="size-4 text-primary" />
                 <span class="text-sm text-muted">Disk</span>
             </div>
             <template v-if="engineState.attribute.disk.length">
@@ -18,17 +16,16 @@
                 </div>
             </template>
             <template v-else>
-                <UiSkeleton class="h-4 w-16 bg-primary-100/50 dark:bg-primary-950/50" />
+                <UiSkeleton class="h-4 w-16" />
             </template>
         </template>
-        <UiSeparator class="mt-2 mb-6" />
         <div class="flex flex-col gap-4">
             <template v-for="disk in disks">
                 <div class="flex items-center gap-8">
                     <span class="text-sm font-bold capitalize">{{ disk.name }}</span>
                     <div class="flex flex-1 items-center justify-end gap-4">
                         <div class="flex w-full max-w-48 mb-2">
-                            <UiProgress :model-value="disk.percent" :max="100" size="sm" />
+                            <UiProgress size="sm" :model-value="disk.percent" :max="100" />
                         </div>
                         <div class="flex items-center gap-1 text-nowrap">
                             <UiBadge size="sm" variant="soft" color="primary">
@@ -45,11 +42,11 @@
             </template>
             <template v-if="!disks.length">
                 <div class="flex items-center gap-8">
-                    <UiSkeleton class="h-5 w-16 bg-primary-100/50 dark:bg-primary-950/50" />
+                    <UiSkeleton class="h-5 w-16" />
                     <div class="flex flex-1 items-center justify-end gap-4">
                         <div class="flex items-center gap-1 text-nowrap">
-                            <UiSkeleton class="h-5 w-24 bg-primary-100/50 dark:bg-primary-950/50" />
-                            <UiSkeleton class="h-5 w-24 bg-primary-100/50 dark:bg-primary-950/50" />
+                            <UiSkeleton class="h-5 w-24" />
+                            <UiSkeleton class="h-5 w-24" />
                         </div>
                     </div>
                 </div>
@@ -82,6 +79,7 @@ const disks = computed(() => {
         const attribute = engineState.attribute.disk.find(({ path }: { path: string }) => {
             return path === key;
         });
+
         output.push({
             path: key,
             name: attribute?.name || "unknown",

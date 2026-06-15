@@ -11,6 +11,7 @@ const props = defineProps({
         },
     },
 });
+
 const correctedTimestamp = computed(() => {
     if (props.timestamp < 10_000_000_000) {
         return props.timestamp * 1000;
