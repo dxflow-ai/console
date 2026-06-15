@@ -148,6 +148,10 @@ export const sessionStore = createStore({
                     throw readError;
                 }
 
+                if (!keyString) {
+                    throw new Error("No stored key");
+                }
+
                 model.session.set(await authenticate(keyString));
             },
             {

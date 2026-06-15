@@ -1,57 +1,46 @@
 <template>
     <UiCard
         :ui="{
-            body: 'flex flex-col items-center justify-center gap-4 !py-10',
+            body: 'flex flex-col items-center gap-6 py-8',
         }"
     >
-        <div class="relative size-16 text-primary-500">
-            <UiIcon class="absolute inset-0 top-0.5 size-16" name="i-mingcute:shield-line" />
-            <UiIcon class="absolute inset-4 size-8 animate-rotate-y" name="i-mingcute:fingerprint-line" />
-        </div>
-        <div class="flex flex-col items-center justify-center gap-3">
-            <div class="text-lg font-bold">
-                <span>{{ title }}</span>
+        <div class="flex flex-col items-center gap-4 text-center">
+            <div class="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <UiIcon name="i-mingcute:fingerprint-line" class="size-6" />
             </div>
-            <div class="animate-fade">
-                <div class="flex items-center text-sm opacity-65 gap-1">
-                    <template v-if="provided">
+            <div class="flex flex-col items-center gap-1">
+                <span class="text-lg font-bold">{{ title }}</span>
+                <span class="flex items-center gap-1 text-sm text-muted">
+                    <template v-if="hasStoredKey && provided">
                         <span>Expired</span>
                         <RelativeTime :timestamp="expiration" />
                     </template>
                     <template v-else>
-                        <span>Using Your Private Key</span>
+                        <span>Using your private key</span>
                     </template>
-                </div>
+                </span>
             </div>
-            <div class="flex mt-3 flex-col items-center gap-2">
-                <UiButton :loading="signing" size="sm" class="animate-fade-up animate-delay-250ms" @click="signin()">
-                    <template v-if="provided">
-                        <span>Sign-In Again</span>
-                    </template>
-                    <template v-else>
-                        <span>Sign-In</span>
-                    </template>
-                </UiButton>
-                <template v-if="provided">
-                    <UiButton
-                        :disabled="signing"
-                        variant="soft"
-                        size="sm"
-                        color="neutral"
-                        class="animate-fade-up animate-delay-500"
-                        @click="signout()"
-                    >
-                        <span>Sign-Out</span>
-                    </UiButton>
-                </template>
-            </div>
+        </div>
+        <div class="flex w-full flex-col gap-2">
+            <UiButton size="sm" :loading="signing" :label="title" @click="signin()" block />
+            <template v-if="hasStoredKey">
+                <UiButton
+                    label="Use a different key"
+                    variant="soft"
+                    color="neutral"
+                    size="sm"
+                    :disabled="signing"
+                    @click="forgetStoredKey()"
+                    block
+                />
+            </template>
         </div>
     </UiCard>
 </template>
 
 <script lang="ts" setup>
 import { sleep } from "radash";
-import { enableStandby, disableStandby } from "~/components/Standby.vue";
+import { enableStandby } from "~/components/Standby.vue";
 
 const { provided, expiration } = useSession();
 const { loading: signingByFile, execute: executeSigninByFile } = useStoreAction(sessionStore, "signinByFile");
@@ -69,58 +58,75 @@ const fileDialog = useFileDialog({
     accept: ".pem,.key",
 });
 
+// "Sign In Again" (re-auth from the stored key) is only possible while a key is
+// actually persisted — i.e. after a token expiry, not after an explicit sign-out
+// (which clears the stored key). A fresh visitor has none either.
+const hasStoredKey = ref(false);
+
 const signing = computed(() => {
     return signingByFile.value || signingByDatabase.value;
 });
 
 const title = computed(() => {
-    if (!provided.value) {
-        return "Sign In";
-    }
-
-    return "Sign In Again";
+    return hasStoredKey.value ? "Sign In Again" : "Sign In";
 });
+
+async function refreshStoredKey() {
+    const [keyString] = await newDatabaseWrapper("auth").read("key");
+
+    hasStoredKey.value = !!keyString;
+}
 
 async function signinByFile(file: File) {
     try {
         await executeSigninByFile({ payload: { file } });
-
-        enableStandby();
-        await sleep(750);
-        disableStandby();
     } catch (error) {
-        dangerToast("Failed to sign-in", error as Error);
+        return dangerToast("Failed to sign-in", error as Error);
     }
+
+    enableStandby();
+
+    await sleep(750);
+    await navigateTo({ name: "engine-overview" });
 }
 
 async function signinByDatabase() {
     try {
         await executeSigninByDatabase();
+    } catch {
+        // The stored key is gone or no longer valid — fall back to picking a file.
+        hasStoredKey.value = false;
 
-        enableStandby();
-        await sleep(750);
-        disableStandby();
-    } catch (error) {
-        dangerToast("Failed to sign-in", error as Error);
-        signout();
+        return fileDialog.open();
     }
+
+    enableStandby();
+
+    await sleep(750);
+    await navigateTo({ name: "engine-overview" });
 }
 
-async function signin() {
-    if (provided.value) {
+function signin() {
+    if (hasStoredKey.value) {
         return signinByDatabase();
     }
 
     fileDialog.open();
 }
 
-function signout() {
-    executeSignout();
+async function forgetStoredKey() {
+    await executeSignout();
+
+    hasStoredKey.value = false;
 }
 
 fileDialog.onChange((files) => {
     if (files?.length) {
         signinByFile(files[0] as File);
     }
+});
+
+onMounted(() => {
+    refreshStoredKey();
 });
 </script>

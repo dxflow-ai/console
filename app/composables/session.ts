@@ -3,9 +3,7 @@ export function useSession() {
     const { data: payload } = useStoreView(sessionStore, "payload");
     const { data: provided } = useStoreView(sessionStore, "provided");
 
-    const timestamp = useTimestamp({
-        interval: 1000,
-    });
+    const timestamp = useSharedTimestamp();
 
     const expiration = computed(() => {
         return (session.value.exp || 0) * 1000;
