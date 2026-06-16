@@ -1,8 +1,8 @@
 allowBuilds:
-  esbuild: true
-  '@parcel/watcher': false
-  '@tailwindcss/oxide': false
-  maplibre-gl: false
-  vue-demi: false
+    esbuild: true
+    "@parcel/watcher": false
+    "@tailwindcss/oxide": false
+    maplibre-gl: false
+    vue-demi: false
 minimumReleaseAgeExclude:
-  - "@diphyx/*"
+    - "@diphyx/*"
