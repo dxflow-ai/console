@@ -52,16 +52,5 @@
         "prettier": "^3.8.4",
         "sass-embedded": "^1.100.0",
         "typescript": "^5.9.3"
-    },
-    "pnpm": {
-        "onlyBuiltDependencies": [
-            "esbuild"
-        ],
-        "ignoredBuiltDependencies": [
-            "@parcel/watcher",
-            "@tailwindcss/oxide",
-            "maplibre-gl",
-            "vue-demi"
-        ]
     }
 }
