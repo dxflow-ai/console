@@ -55,8 +55,11 @@
     },
     "pnpm": {
         "onlyBuiltDependencies": [
+            "esbuild"
+        ],
+        "ignoredBuiltDependencies": [
             "@parcel/watcher",
-            "esbuild",
+            "@tailwindcss/oxide",
             "maplibre-gl",
             "vue-demi"
         ]
