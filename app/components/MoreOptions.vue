@@ -1,8 +1,6 @@
 <template>
-    <UiPopover
-        :ui="{
-            content: 'p-0.5',
-        }"
+    <UiDropdownMenu
+        :items="menuItems"
         :content="{
             side: 'bottom',
             align: 'end',
@@ -15,43 +13,14 @@
             :variant="props.variant"
             :color="props.color"
             :disabled="props.disabled"
-            :ui="{
-                base: 'flex items-center justify-center min-w-6 min-h-6',
-            }"
+            :icon="props.icon"
             square
-        >
-            <UiIcon :name="props.icon" class="size-3" />
-        </UiButton>
-        <template #content>
-            <div class="relative flex flex-col min-w-22 min-h-6 gap-0.5">
-                <template v-for="(item, index) in visibleItems" :key="index">
-                    <UiButton
-                        :color="item.color || 'neutral'"
-                        :disabled="item.disabled || item.loading"
-                        :ui="{
-                            base: 'flex w-full h-6 items-center gap-1 !rounded-[calc(var(--ui-radius)*1.25)] disabled:opacity-50',
-                        }"
-                        size="xs"
-                        variant="ghost"
-                        @click="item.onClick"
-                    >
-                        <template v-if="item.icon">
-                            <UiIcon :name="item.icon" class="size-3" />
-                        </template>
-                        <span>{{ item.label }}</span>
-                        <template v-if="item.loading !== undefined">
-                            <Loading :active="item.loading" />
-                        </template>
-                    </UiButton>
-                </template>
-            </div>
-        </template>
-    </UiPopover>
+        />
+    </UiDropdownMenu>
 </template>
 
 <script lang="ts" setup>
-import Loading from "~/components/Loading.vue";
-import type { ButtonProps } from "@nuxt/ui";
+import type { ButtonProps, DropdownMenuItem } from "@nuxt/ui";
 
 const props = defineProps({
     size: {
@@ -88,9 +57,23 @@ const props = defineProps({
         >,
     },
 });
-const visibleItems = computed(() => {
-    return props.items?.filter((item) => {
-        return !item.hidden;
-    });
+
+const menuItems = computed<DropdownMenuItem[]>(() => {
+    return (props.items ?? [])
+        .filter((item) => {
+            return !item.hidden;
+        })
+        .map((item) => {
+            return {
+                label: item.label,
+                icon: item.icon,
+                color: item.color as DropdownMenuItem["color"],
+                loading: item.loading,
+                disabled: item.disabled || item.loading,
+                onSelect() {
+                    item.onClick?.();
+                },
+            };
+        });
 });
 </script>

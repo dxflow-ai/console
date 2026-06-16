@@ -1,25 +1,17 @@
 <template>
     <div class="relative bg-default rounded-sm ring-1 ring-accented/25 overflow-hidden">
-        <Animate
-            :state="loaded ? 'enter' : 'leave'"
-            :attributes="{
-                opacity: [0, 1],
-            }"
-            :transition="{
-                delay: 500,
-            }"
-            class="absolute inset-0 overflow-hidden"
-        >
+        <div class="absolute inset-0 overflow-hidden" :class="loaded ? 'animate-fade animate-delay-500' : 'opacity-0'">
             <div ref="element" class="relative size-full flex items-center justify-center overflow-visible" />
-        </Animate>
-        <Loading :active="!loaded" :size="5" transparent />
+        </div>
+        <template v-if="!loaded">
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <UiIcon name="i-mingcute:loading-3-fill" class="size-5 animate-spin text-muted" />
+            </div>
+        </template>
     </div>
 </template>
 
 <script lang="ts" setup>
-import Animate from "~/components/Animate.vue";
-import Loading from "~/components/Loading.vue";
-
 const props = defineProps({
     identity: {
         type: String,
@@ -27,9 +19,9 @@ const props = defineProps({
     },
 });
 
-const { authorizedToken } = useAuth();
+const { authorizedToken } = useSession();
 const { scale } = useScale();
-const { data: orderedShells } = useStoreView(shellStore, "ordered");
+const { data: orderedShells } = useStoreView(shellStore, "list");
 
 const theme = useColorMode();
 
@@ -82,9 +74,10 @@ async function load() {
     const shell = orderedShells.value.find((s) => {
         return s.identity === props.identity;
     });
+
     if (shell?.state != "executed") {
         try {
-            await shellStore.action.execute({ payload: { identity: props.identity } });
+            await shellStore.action.executeById({ payload: { identity: props.identity } });
         } catch (error) {
             loaded.value = true;
             return dangerToast("Failed to load terminal", error as Error);
@@ -97,6 +90,7 @@ async function load() {
             terminalWrapper.tryWrite(atob(value));
         },
     });
+
     if (connectError) {
         loaded.value = true;
         return dangerToast("Failed to load terminal", connectError);
@@ -108,7 +102,7 @@ async function load() {
             webSocketWrapper.tryWrite(value);
         },
         onResize(columns, rows) {
-            shellStore.action.resize({ payload: { identity: props.identity, columns, rows } });
+            shellStore.action.resizeById({ payload: { identity: props.identity, columns, rows } });
         },
     });
 

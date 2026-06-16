@@ -10,12 +10,12 @@ export default defineNuxtModule({
     setup(_, nuxt) {
         const logger = useLogger("proxy");
 
-        // Proxy /api/ (including the WebSocket upgrade used by the terminal) to the local backend during dev
         if (nuxt.options.dev) {
             const proxy = createProxyServer({
                 target: "http://localhost/api/",
                 changeOrigin: true,
             });
+
             nuxt.hook("nitro:config", (nitroConfig) => {
                 if (!nitroConfig.devProxy) {
                     nitroConfig.devProxy = {};

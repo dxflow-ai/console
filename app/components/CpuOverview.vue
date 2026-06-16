@@ -1,32 +1,29 @@
 <template>
     <UiCard
         ref="element"
-        :ui="{
-            root: 'divide-none',
-            body: '!pt-0 !px-5',
-            header: 'flex items-center gap-4 justify-between !px-5 !pb-0',
-        }"
         variant="soft"
+        :ui="{
+            header: 'flex items-center justify-between gap-4',
+        }"
     >
         <template #header>
             <div class="flex items-center gap-2">
-                <UiIcon name="i-mingcute:chip-line" class="size-4 text-primary-500" />
+                <UiIcon name="i-mingcute:chip-line" class="size-4 text-primary" />
                 <span class="text-sm text-muted">CPU</span>
             </div>
             <template v-if="engineState.attribute.cpu.cores">
                 <div class="flex items-center gap-1 text-muted">
                     <span class="text-xs">{{ engineState.attribute.cpu.cores }} Core</span>
                     <template v-if="engineState.attribute.cpu.model">
-                        <span class="text-xs opacity-75">-</span>
+                        <span class="text-xs text-muted">-</span>
                         <span class="text-xs">{{ engineState.attribute.cpu.model }}</span>
                     </template>
                 </div>
             </template>
             <template v-else>
-                <UiSkeleton class="h-4 w-16 bg-primary-100/50 dark:bg-primary-950/50" />
+                <UiSkeleton class="h-4 w-16" />
             </template>
         </template>
-        <UiSeparator class="mt-2 mb-6" />
         <div class="flex h-20 items-center gap-4 pr-0.5">
             <div class="flex flex-1">
                 <VisXYContainer
@@ -70,7 +67,7 @@
             </div>
             <div class="relative flex w-40 h-20 flex-col items-center justify-end gap-0.5">
                 <div class="absolute top-2 left-1 w-38 h-18">
-                    <VisSingleContainer :key="redrawKey" :data="lastSystemData" class="size-full">
+                    <VisSingleContainer :key="redrawKey" class="size-full" :data="lastSystemData">
                         <VisDonut
                             :value="vData"
                             :radius="calcScale(72)"
@@ -84,7 +81,7 @@
                     </VisSingleContainer>
                 </div>
                 <div class="absolute top-0 left-0 w-40 h-20">
-                    <VisSingleContainer :key="redrawKey" :data="lastUserData" class="size-full">
+                    <VisSingleContainer :key="redrawKey" class="size-full" :data="lastUserData">
                         <VisDonut
                             :value="vData"
                             :radius="calcScale(80)"
@@ -98,24 +95,24 @@
                     </VisSingleContainer>
                 </div>
                 <UiBadge
-                    :ui="{
-                        base: 'rounded-full z-10',
-                    }"
                     size="sm"
                     variant="soft"
                     color="primary"
+                    :ui="{
+                        base: 'z-10',
+                    }"
                 >
                     <span>User</span>
                     <span class="font-bold">{{ Math.floor(last.user) }}</span>
                     <small>%</small>
                 </UiBadge>
                 <UiBadge
-                    :ui="{
-                        base: 'rounded-full z-10',
-                    }"
                     size="sm"
                     variant="soft"
                     color="teal"
+                    :ui="{
+                        base: 'z-10',
+                    }"
                 >
                     <span>System</span>
                     <span class="font-bold">{{ Math.floor(last.system) }}</span>
@@ -146,6 +143,7 @@ const data = computed(() => {
         user: number;
         system: number;
     }[] = [];
+
     for (const points of engineState.stat.cpu) {
         let cores = 0;
 
@@ -179,6 +177,7 @@ const data = computed(() => {
 
     return output;
 });
+
 const last = computed(() => {
     const point = data.value?.[data.value?.length - 1];
     return {
@@ -186,6 +185,7 @@ const last = computed(() => {
         system: point?.system ?? 0,
     };
 });
+
 const lastUserData = computed(() => {
     let { user } = last.value;
     if (user < 10) {

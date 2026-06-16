@@ -1,6 +1,5 @@
 .PHONY: init
 init:
-	mkdir -p .output/public
 	pnpm install
 
 .PHONY: dev

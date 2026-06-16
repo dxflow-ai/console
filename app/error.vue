@@ -38,6 +38,7 @@ const route = useRoute();
 const statusCode = computed(() => {
     return props.error?.statusCode || 0;
 });
+
 const statusMessage = computed(() => {
     return httpStatus[statusCode.value] || "Unknown";
 });
@@ -49,10 +50,6 @@ const message = computed(() => {
 const redirect = computed(() => {
     if (route.path.startsWith("/docs")) {
         return "/docs";
-    }
-
-    if (route.path.startsWith("/console")) {
-        return "/console";
     }
 
     return "/";

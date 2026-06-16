@@ -9,3 +9,8 @@ The console is the interface served by the dxflow engine. Launch your engine and
 - Manage engines, resources, and shells
 
 Learn more at [dxflow.ai](https://dxflow.ai) · Documentation: [dxflow.ai/docs](https://dxflow.ai/docs)
+
+## Releases
+
+The console is released automatically in lockstep with the engine — there is no
+manual publish step here. To preview a production build locally, run `pnpm generate`.

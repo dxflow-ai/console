@@ -1,4 +1,5 @@
 import { load } from "webfontloader";
+import { sleep } from "radash";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import { WebglAddon } from "@xterm/addon-webgl";
@@ -50,6 +51,7 @@ const darkTheme: ITheme = {
     brightCyan: "#06b6d4",
     brightWhite: "#f1f5f9",
 };
+
 const themes: Record<string, ITheme> = {
     light: lightTheme,
     dark: darkTheme,
@@ -59,6 +61,7 @@ const primaryFont = "Inconsolata";
 
 const fallbackFonts =
     "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace";
+
 const config: ITerminalOptions = {
     theme: lightTheme,
     fontFamily: `"${primaryFont}", ${fallbackFonts}`,
@@ -143,5 +146,6 @@ export function newTerminalWrapper() {
     }
 
     const terminalWrapper = new TerminalWrapper();
+
     return terminalWrapper;
 }

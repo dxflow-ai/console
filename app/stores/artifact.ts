@@ -1,15 +1,17 @@
 import { ViewClone, ActionConcurrent } from "@diphyx/harlemify/runtime";
+import { sleep } from "radash";
 
 export const artifactStore = createStore({
     name: "artifact",
     model({ many }) {
         const list = many(artifactShape);
+
         return {
             list,
         };
     },
     view({ from }) {
-        const ordered = from(
+        const list = from(
             "list",
             (items) => {
                 return items.sort((first, second) => {
@@ -22,27 +24,39 @@ export const artifactStore = createStore({
                     return first.name.localeCompare(second.name);
                 });
             },
-            { clone: ViewClone.SHALLOW },
+            {
+                clone: ViewClone.SHALLOW,
+            },
         );
+
         return {
-            ordered,
+            list,
         };
     },
     action({ handler }) {
-        const load = handler<unknown, Artifact[]>(
+        const get = handler<unknown, Artifact[]>(
             async ({ model }) => {
-                const request = newHttpRequest("/api/artifact/");
-                const callError = await request.call();
-                ensure(callError);
+                const { call, read } = newHttpRequest("/api/artifact/");
+
+                const callError = await call();
+                if (callError) {
+                    throw callError;
+                }
 
                 const artifacts: Artifact[] = [];
-                const readError = await request.read((chunk) => {
+                const readError = await read((chunk) => {
                     if (chunk.isEntity) {
                         artifacts.push(chunk.payload);
-                        model.list.add(chunk.payload, { unique: true });
+
+                        model.list.add(chunk.payload, {
+                            unique: true,
+                        });
                     }
                 });
-                ensure(readError);
+
+                if (readError) {
+                    throw readError;
+                }
 
                 return artifacts;
             },
@@ -61,8 +75,9 @@ export const artifactStore = createStore({
             Artifact | null
         >(
             async ({ model, payload }) => {
-                const request = newHttpRequest("/api/artifact/");
-                const callError = await request.call({
+                const { call, read } = newHttpRequest("/api/artifact/");
+
+                const callError = await call({
                     method: "POST",
                     body: {
                         identity: payload.identity,
@@ -71,15 +86,21 @@ export const artifactStore = createStore({
                         force: payload.force,
                     },
                 });
-                ensure(callError);
+
+                if (callError) {
+                    throw callError;
+                }
 
                 let artifact: Artifact | null = null;
-                const readError = await request.read((chunk) => {
+                const readError = await read((chunk) => {
                     if (chunk.isEntity) {
                         artifact = chunk.payload;
                     }
                 });
-                ensure(readError);
+
+                if (readError) {
+                    throw readError;
+                }
 
                 if (artifact) {
                     model.list.add(artifact);
@@ -92,37 +113,46 @@ export const artifactStore = createStore({
             },
         );
 
-        const rename = handler<
+        const renameById = handler<
             { identity: string; new_identity: string },
             { identity: string; new_identity: string } | null
         >(
             async ({ model, view, payload }) => {
-                const request = newHttpRequest("/api/artifact/rename/");
-                const callError = await request.call({
+                const { call, read } = newHttpRequest("/api/artifact/rename/");
+
+                const callError = await call({
                     method: "PUT",
                     body: {
                         identity: payload.identity,
                         new_identity: payload.new_identity,
                     },
                 });
-                ensure(callError);
+
+                if (callError) {
+                    throw callError;
+                }
 
                 let result: { identity: string; new_identity: string } | null = null;
-                const readError = await request.read((chunk) => {
+                const readError = await read((chunk) => {
                     if (chunk.isEntity) {
                         result = chunk.payload;
                     }
                 });
-                ensure(readError);
+
+                if (readError) {
+                    throw readError;
+                }
 
                 if (result) {
                     // Preserve the existing entity's fields (permission/size/modified_at) so the
-                    // renamed row stays well-formed for the ordered view's sort comparator.
-                    const existing = view.ordered.value.find((item) => {
+                    // renamed row stays well-formed for the list view's sort comparator.
+                    const existing = view.list.value.find((item) => {
                         return item.identity === payload.identity;
                     });
 
-                    model.list.remove({ identity: payload.identity });
+                    model.list.remove({
+                        identity: payload.identity,
+                    });
 
                     model.list.add({
                         ...(existing ?? artifactShape.defaults()),
@@ -138,21 +168,29 @@ export const artifactStore = createStore({
             },
         );
 
-        const remove = handler<{ identity: string }>(
+        const removeById = handler<{ identity: string }>(
             async ({ model, payload }) => {
-                const request = newHttpRequest("/api/artifact/");
-                const callError = await request.call({
+                const { call, read } = newHttpRequest("/api/artifact/");
+
+                const callError = await call({
                     method: "DELETE",
                     query: {
                         identity: payload.identity,
                     },
                 });
-                ensure(callError);
 
-                const readError = await request.read();
-                ensure(readError);
+                if (callError) {
+                    throw callError;
+                }
 
-                model.list.remove({ identity: payload.identity });
+                const readError = await read();
+                if (readError) {
+                    throw readError;
+                }
+
+                model.list.remove({
+                    identity: payload.identity,
+                });
             },
             {
                 concurrent: ActionConcurrent.BLOCK,
@@ -161,26 +199,35 @@ export const artifactStore = createStore({
 
         const removeBatch = handler<{ identities: string[] }, Array<{ identity: string; error?: string }>>(
             async ({ model, payload }) => {
-                const request = newHttpRequest("/api/artifact/batch/");
-                const callError = await request.call({
+                const { call, read } = newHttpRequest("/api/artifact/batch/");
+
+                const callError = await call({
                     method: "DELETE",
                     body: {
                         identities: payload.identities,
                     },
                 });
-                ensure(callError);
+
+                if (callError) {
+                    throw callError;
+                }
 
                 const results: Array<{ identity: string; error?: string }> = [];
-                const readError = await request.read((chunk) => {
+                const readError = await read((chunk) => {
                     if (chunk.isEntity) {
                         results.push(chunk.payload);
 
                         if (!chunk.payload.error) {
-                            model.list.remove({ identity: chunk.payload.identity });
+                            model.list.remove({
+                                identity: chunk.payload.identity,
+                            });
                         }
                     }
                 });
-                ensure(readError);
+
+                if (readError) {
+                    throw readError;
+                }
 
                 return results;
             },
@@ -192,8 +239,9 @@ export const artifactStore = createStore({
             force?: boolean;
             onProgress?: (progress: number) => void;
         }>(async ({ payload }) => {
-            const request = newHttpRequest("/api/artifact/upload/");
-            const uploadError = await request.upload({
+            const { upload } = newHttpRequest("/api/artifact/upload/");
+
+            const uploadError = await upload({
                 method: "PUT",
                 file: payload.file,
                 query: {
@@ -202,32 +250,39 @@ export const artifactStore = createStore({
                 },
                 progress: payload.onProgress,
             });
-            ensure(uploadError);
+
+            if (uploadError) {
+                throw uploadError;
+            }
 
             await sleep(1200);
         });
 
-        const download = handler<
+        const downloadById = handler<
             {
                 identity: string;
                 onProgress?: (progress: number) => void;
             },
             { blob: Blob; name: string } | null
         >(async ({ payload }) => {
-            const request = newHttpRequest("/api/artifact/download/");
-            const [result, downloadError] = await request.download({
+            const { download } = newHttpRequest("/api/artifact/download/");
+
+            const [result, downloadError] = await download({
                 method: "GET",
                 query: {
                     identity: payload.identity,
                 },
                 progress: payload.onProgress,
             });
-            ensure(downloadError);
+
+            if (downloadError) {
+                throw downloadError;
+            }
 
             return result;
         });
 
-        const zip = handler<
+        const zipById = handler<
             {
                 identity: string;
                 quiet?: boolean;
@@ -235,18 +290,22 @@ export const artifactStore = createStore({
             },
             ArtifactZipResult | null
         >(async ({ payload }) => {
-            const request = newHttpRequest("/api/artifact/zip/");
-            const callError = await request.call({
+            const { call, read } = newHttpRequest("/api/artifact/zip/");
+
+            const callError = await call({
                 method: "PUT",
                 body: {
                     identity: payload.identity,
                     quiet: payload.quiet,
                 },
             });
-            ensure(callError);
+
+            if (callError) {
+                throw callError;
+            }
 
             let result: ArtifactZipResult | null = null;
-            const readError = await request.read((chunk) => {
+            const readError = await read((chunk) => {
                 if (!chunk.isEntity) {
                     return;
                 }
@@ -257,12 +316,15 @@ export const artifactStore = createStore({
                     payload.onProgress(chunk.payload);
                 }
             });
-            ensure(readError);
+
+            if (readError) {
+                throw readError;
+            }
 
             return result;
         });
 
-        const unzip = handler<
+        const unzipById = handler<
             {
                 identity: string;
                 quiet?: boolean;
@@ -270,18 +332,22 @@ export const artifactStore = createStore({
             },
             ArtifactZipResult | null
         >(async ({ payload }) => {
-            const request = newHttpRequest("/api/artifact/unzip/");
-            const callError = await request.call({
+            const { call, read } = newHttpRequest("/api/artifact/unzip/");
+
+            const callError = await call({
                 method: "PUT",
                 body: {
                     identity: payload.identity,
                     quiet: payload.quiet,
                 },
             });
-            ensure(callError);
+
+            if (callError) {
+                throw callError;
+            }
 
             let result: ArtifactZipResult | null = null;
-            const readError = await request.read((chunk) => {
+            const readError = await read((chunk) => {
                 if (!chunk.isEntity) {
                     return;
                 }
@@ -292,7 +358,10 @@ export const artifactStore = createStore({
                     payload.onProgress(chunk.payload);
                 }
             });
-            ensure(readError);
+
+            if (readError) {
+                throw readError;
+            }
 
             return result;
         });
@@ -306,8 +375,9 @@ export const artifactStore = createStore({
             ArtifactShareResult[]
         >(
             async ({ payload }) => {
-                const request = newHttpRequest("/api/artifact/share/");
-                const callError = await request.call({
+                const { call, read } = newHttpRequest("/api/artifact/share/");
+
+                const callError = await call({
                     method: "PUT",
                     body: {
                         identities: payload.identities,
@@ -315,15 +385,21 @@ export const artifactStore = createStore({
                         writable: payload.writable,
                     },
                 });
-                ensure(callError);
+
+                if (callError) {
+                    throw callError;
+                }
 
                 const results: ArtifactShareResult[] = [];
-                const readError = await request.read((chunk) => {
+                const readError = await read((chunk) => {
                     if (chunk.isEntity) {
                         results.push(chunk.payload);
                     }
                 });
-                ensure(readError);
+
+                if (readError) {
+                    throw readError;
+                }
 
                 return results;
             },
@@ -335,16 +411,17 @@ export const artifactStore = createStore({
         const reset = handler(async ({ model }) => {
             model.list.reset();
         });
+
         return {
-            load,
+            get,
             create,
-            rename,
+            renameById,
             upload,
-            download,
-            zip,
-            unzip,
+            downloadById,
+            zipById,
+            unzipById,
             share,
-            remove,
+            removeById,
             removeBatch,
             reset,
         };
@@ -357,7 +434,7 @@ export const artifactStore = createStore({
             onProgress?: (progress: number) => void;
         }) {
             await action.upload({ payload });
-            await action.load();
+            await action.get();
         }
 
         return {

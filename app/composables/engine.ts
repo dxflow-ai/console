@@ -1,17 +1,17 @@
 export const engineState = reactive({
     get parameter() {
-        return engineStore.view.engineParameter.value;
+        return engineStore.view.parameter.value;
     },
     get attribute() {
-        return engineStore.view.engineAttribute.value;
+        return engineStore.view.attribute.value;
     },
     get license() {
-        return engineStore.view.engineLicense.value;
+        return engineStore.view.license.value;
     },
     get stat() {
-        return engineStore.view.engineStat.value;
+        return engineStore.view.stat.value;
     },
     get ping() {
-        return engineStore.view.enginePing.value;
+        return engineStore.view.ping.value;
     },
 });

@@ -13,5 +13,6 @@
         <NuxtLayout>
             <NuxtPage />
         </NuxtLayout>
+        <Standby />
     </UiApp>
 </template>

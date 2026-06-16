@@ -1,24 +1,12 @@
 <template>
-    <UiBadge
-        :ui="{
-            base: 'pl-2 pr-2.5 py-1 rounded-full select-none',
-        }"
-        color="neutral"
-        variant="outline"
-        size="xs"
-    >
-        <div class="flex items-center gap-1.5">
-            <div :class="computedColor" class="relative flex items-center justify-center rounded-full size-2">
-                <span class="rounded-full size-1 bg-default" />
-            </div>
-            <span class="relative text-xs capitalize top-[-0.5px]">
-                <small>{{ props.status }}</small>
-            </span>
-        </div>
+    <UiBadge variant="soft" size="sm" class="capitalize" :color="color">
+        <span>{{ props.status }}</span>
     </UiBadge>
 </template>
 
 <script lang="ts" setup>
+import type { BadgeProps } from "@nuxt/ui";
+
 const props = defineProps({
     status: {
         type: String,
@@ -26,13 +14,14 @@ const props = defineProps({
     },
 });
 
-const colors: Record<string, string> = {
-    created: "bg-cyan-500",
-    started: "bg-green-500",
-    stopped: "bg-amber-500",
-    exited: "bg-red-500",
+const colors: Record<string, BadgeProps["color"]> = {
+    created: "cyan",
+    started: "green",
+    stopped: "amber",
+    exited: "red",
 };
-const computedColor = computed(() => {
-    return colors[props.status] ?? "bg-neutral-500";
+
+const color = computed<BadgeProps["color"]>(() => {
+    return colors[props.status] ?? "neutral";
 });
 </script>

@@ -1,5 +1,21 @@
 export default defineNuxtConfig({
     ssr: false,
+    nitro: {
+        prerender: {
+            // SPA (ssr: false) renders no content, so the crawler can't discover the
+            // in-app routes. List them explicitly so each gets an index.html shell and
+            // a hard reload / deep link resolves instead of 404ing on a static host.
+            crawlLinks: false,
+            routes: [
+                "/",
+                "/login",
+                "/console/engine/overview/",
+                "/console/workflow/list/",
+                "/console/artifact/list/",
+                "/console/shell/sessions/",
+            ],
+        },
+    },
     app: {
         baseURL: "/",
         head: {
@@ -13,10 +29,6 @@ export default defineNuxtConfig({
                     rel: "apple-touch-icon",
                     sizes: "512x512",
                     href: "/favicon.png",
-                },
-                {
-                    rel: "manifest",
-                    href: "/site.webmanifest",
                 },
             ],
             meta: [
@@ -39,11 +51,9 @@ export default defineNuxtConfig({
         },
     },
     css: ["~/assets/tailwind.css", "~/assets/custom.scss"],
-    modules: ["@diphyx/harlemify", "@nuxt/ui", "@vueuse/nuxt", "@vueuse/motion/nuxt", "@nuxtjs/device"],
+    modules: ["@diphyx/harlemify", "@nuxt/ui", "@vueuse/nuxt", "@nuxtjs/device"],
     harlemify: {
-        action: {
-            timeout: 5000,
-        },
+        logger: -999,
     },
     ui: {
         prefix: "ui",
@@ -63,22 +73,14 @@ export default defineNuxtConfig({
         },
     },
     icon: {
-        mode: "css",
-        cssLayer: "base",
-        provider: "iconify",
-        customCollections: [
-            {
-                prefix: "custom",
-                dir: "app/assets/icons",
-            },
-        ],
+        mode: "svg",
+        serverBundle: false,
         clientBundle: {
             scan: {
-                globInclude: ["**/*.{vue,ts,md}"],
+                globInclude: ["app/**/*.{vue,ts}"],
+                globExclude: ["node_modules", ".nuxt", ".output", "dist"],
             },
-            includeCustomCollections: true,
         },
-        fetchTimeout: 7500,
     },
     runtimeConfig: {
         public: {
@@ -96,10 +98,6 @@ export default defineNuxtConfig({
     },
     telemetry: {
         enabled: false,
-    },
-    components: {
-        global: false,
-        dirs: [],
     },
     imports: {
         dirs: ["~/types", "~/stores"],

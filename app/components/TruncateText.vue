@@ -27,6 +27,7 @@ const props = defineProps({
         default: 32,
     },
 });
+
 const truncatedValue = computed(() => {
     return truncate(props.value, props.start, props.end);
 });

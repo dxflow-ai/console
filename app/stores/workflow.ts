@@ -1,5 +1,5 @@
-import { ModelManyKind, ViewClone, ActionConcurrent } from "@diphyx/harlemify/runtime";
 import { all, isArray } from "radash";
+import { ModelManyKind, ViewClone, ActionConcurrent } from "@diphyx/harlemify/runtime";
 
 let workflowLogsLiveAbortController: AbortController | null = null;
 let workflowSignalsAbortController: AbortController | null = null;
@@ -31,7 +31,7 @@ export const workflowStore = createStore({
         };
     },
     view({ from }) {
-        const ordered = from(
+        const list = from(
             "list",
             (items) => {
                 return items.sort((first, second) => {
@@ -41,29 +41,38 @@ export const workflowStore = createStore({
             { clone: ViewClone.SHALLOW },
         );
 
-        const workflowSteps = from("steps");
-        const workflowEvents = from("events");
+        const steps = from("steps");
+        const events = from("events");
         return {
-            ordered,
-            workflowSteps,
-            workflowEvents,
+            list,
+            steps,
+            events,
         };
     },
     action({ handler }) {
-        const load = handler<unknown, Workflow[]>(
+        const get = handler<unknown, Workflow[]>(
             async ({ model }) => {
-                const request = newHttpRequest("/api/workflow/");
-                const callError = await request.call();
-                ensure(callError);
+                const { call, read } = newHttpRequest("/api/workflow/");
+
+                const callError = await call();
+                if (callError) {
+                    throw callError;
+                }
 
                 const workflows: Workflow[] = [];
-                const readError = await request.read((chunk) => {
+                const readError = await read((chunk) => {
                     if (chunk.isEntity) {
                         workflows.push(chunk.payload);
-                        model.list.add(chunk.payload, { unique: true });
+
+                        model.list.add(chunk.payload, {
+                            unique: true,
+                        });
                     }
                 });
-                ensure(readError);
+
+                if (readError) {
+                    throw readError;
+                }
 
                 return workflows;
             },
@@ -82,18 +91,22 @@ export const workflowStore = createStore({
             Workflow | null
         >(
             async ({ model, payload }) => {
-                const request = newHttpRequest("/api/workflow/");
-                const callError = await request.call({
+                const { call, read } = newHttpRequest("/api/workflow/");
+
+                const callError = await call({
                     method: "POST",
                     query: {
                         identity: payload.identity,
                     },
                     body: payload.source,
                 });
-                ensure(callError);
+
+                if (callError) {
+                    throw callError;
+                }
 
                 let workflow: Workflow | null = null;
-                const readError = await request.read((chunk) => {
+                const readError = await read((chunk) => {
                     if (!chunk.isEntity) {
                         return;
                     }
@@ -109,9 +122,15 @@ export const workflowStore = createStore({
                     }
 
                     workflow = chunk.payload;
-                    model.list.add(chunk.payload, { prepend: true });
+
+                    model.list.add(chunk.payload, {
+                        prepend: true,
+                    });
                 });
-                ensure(readError);
+
+                if (readError) {
+                    throw readError;
+                }
 
                 return workflow;
             },
@@ -120,7 +139,7 @@ export const workflowStore = createStore({
             },
         );
 
-        const start = handler<
+        const startById = handler<
             {
                 identity: string;
                 onMessage?: (message: string) => void;
@@ -129,17 +148,21 @@ export const workflowStore = createStore({
             Workflow | null
         >(
             async ({ model, payload }) => {
-                const request = newHttpRequest("/api/workflow/start/");
-                const callError = await request.call({
+                const { call, read } = newHttpRequest("/api/workflow/start/");
+
+                const callError = await call({
                     method: "PUT",
                     body: {
                         identity: payload.identity,
                     },
                 });
-                ensure(callError);
+
+                if (callError) {
+                    throw callError;
+                }
 
                 let workflow: Workflow | null = null;
-                const readError = await request.read((chunk) => {
+                const readError = await read((chunk) => {
                     if (!chunk.isEntity) {
                         return;
                     }
@@ -157,7 +180,10 @@ export const workflowStore = createStore({
                     workflow = chunk.payload;
                     model.list.patch(chunk.payload);
                 });
-                ensure(readError);
+
+                if (readError) {
+                    throw readError;
+                }
 
                 return workflow;
             },
@@ -166,7 +192,7 @@ export const workflowStore = createStore({
             },
         );
 
-        const stop = handler<
+        const stopById = handler<
             {
                 identity: string;
                 onMessage?: (message: string) => void;
@@ -175,17 +201,21 @@ export const workflowStore = createStore({
             Workflow | null
         >(
             async ({ model, payload }) => {
-                const request = newHttpRequest("/api/workflow/stop/");
-                const callError = await request.call({
+                const { call, read } = newHttpRequest("/api/workflow/stop/");
+
+                const callError = await call({
                     method: "PUT",
                     body: {
                         identity: payload.identity,
                     },
                 });
-                ensure(callError);
+
+                if (callError) {
+                    throw callError;
+                }
 
                 let workflow: Workflow | null = null;
-                const readError = await request.read((chunk) => {
+                const readError = await read((chunk) => {
                     if (!chunk.isEntity) {
                         return;
                     }
@@ -203,7 +233,10 @@ export const workflowStore = createStore({
                     workflow = chunk.payload;
                     model.list.patch(chunk.payload);
                 });
-                ensure(readError);
+
+                if (readError) {
+                    throw readError;
+                }
 
                 return workflow;
             },
@@ -212,19 +245,28 @@ export const workflowStore = createStore({
             },
         );
 
-        const remove = handler<{ identity: string }>(
+        const removeById = handler<{ identity: string }>(
             async ({ model, payload }) => {
-                const request = newHttpRequest("/api/workflow/");
-                const callError = await request.call({
+                const { call, read } = newHttpRequest("/api/workflow/");
+
+                const callError = await call({
                     method: "DELETE",
                     query: payload,
                 });
-                ensure(callError);
 
-                const readError = await request.read(() => {});
-                ensure(readError);
+                if (callError) {
+                    throw callError;
+                }
 
-                model.list.remove({ identity: payload.identity });
+                const readError = await read(() => {});
+                if (readError) {
+                    throw readError;
+                }
+
+                model.list.remove({
+                    identity: payload.identity,
+                });
+
                 model.steps.remove(payload.identity);
                 model.events.remove(payload.identity);
             },
@@ -235,28 +277,38 @@ export const workflowStore = createStore({
 
         const removeBatch = handler<{ identities: string[] }, Array<{ identity: string; error?: string }>>(
             async ({ model, payload }) => {
-                const request = newHttpRequest("/api/workflow/batch/");
-                const callError = await request.call({
+                const { call, read } = newHttpRequest("/api/workflow/batch/");
+
+                const callError = await call({
                     method: "DELETE",
                     body: {
                         identities: payload.identities,
                     },
                 });
-                ensure(callError);
+
+                if (callError) {
+                    throw callError;
+                }
 
                 const results: Array<{ identity: string; error?: string }> = [];
-                const readError = await request.read((chunk) => {
+                const readError = await read((chunk) => {
                     if (chunk.isEntity) {
                         results.push(chunk.payload);
 
                         if (!chunk.payload.error) {
-                            model.list.remove({ identity: chunk.payload.identity });
+                            model.list.remove({
+                                identity: chunk.payload.identity,
+                            });
+
                             model.steps.remove(chunk.payload.identity);
                             model.events.remove(chunk.payload.identity);
                         }
                     }
                 });
-                ensure(readError);
+
+                if (readError) {
+                    throw readError;
+                }
 
                 return results;
             },
@@ -267,26 +319,37 @@ export const workflowStore = createStore({
 
         const prune = handler<unknown, string[]>(
             async ({ model }) => {
-                const request = newHttpRequest("/api/workflow/prune/");
-                const callError = await request.call({
+                const { call, read } = newHttpRequest("/api/workflow/prune/");
+
+                const callError = await call({
                     method: "DELETE",
                 });
-                ensure(callError);
+
+                if (callError) {
+                    throw callError;
+                }
 
                 const identities: string[] = [];
-                const readError = await request.read((chunk) => {
+                const readError = await read((chunk) => {
                     if (chunk.isEntity) {
                         if (isArray(chunk.payload)) {
                             for (const identity of chunk.payload) {
                                 identities.push(identity);
-                                model.list.remove({ identity });
+
+                                model.list.remove({
+                                    identity,
+                                });
+
                                 model.steps.remove(identity);
                                 model.events.remove(identity);
                             }
                         }
                     }
                 });
-                ensure(readError);
+
+                if (readError) {
+                    throw readError;
+                }
 
                 return identities;
             },
@@ -295,26 +358,36 @@ export const workflowStore = createStore({
             },
         );
 
-        const loadSteps = handler<{ identity: string }, WorkflowStep[]>(
+        const getStepsById = handler<{ identity: string }, WorkflowStep[]>(
             async ({ model, payload }) => {
-                const request = newHttpRequest("/api/workflow/steps/");
-                const callError = await request.call({
+                const { call, read } = newHttpRequest("/api/workflow/steps/");
+
+                const callError = await call({
                     timeout: 5000,
                     query: {
                         identity: payload.identity,
                     },
                 });
-                ensure(callError);
+
+                if (callError) {
+                    throw callError;
+                }
 
                 const steps: WorkflowStep[] = [];
-                const readError = await request.read((chunk) => {
+                const readError = await read((chunk) => {
                     if (chunk.isEntity) {
                         steps.push(chunk.payload);
                     }
                 });
-                ensure(readError);
 
-                model.steps.add({ key: payload.identity, value: steps });
+                if (readError) {
+                    throw readError;
+                }
+
+                model.steps.add({
+                    key: payload.identity,
+                    value: steps,
+                });
 
                 return steps;
             },
@@ -323,26 +396,36 @@ export const workflowStore = createStore({
             },
         );
 
-        const loadEvents = handler<{ identity: string }, WorkflowEvent[]>(
+        const getEventsById = handler<{ identity: string }, WorkflowEvent[]>(
             async ({ model, payload }) => {
-                const request = newHttpRequest("/api/workflow/events/");
-                const callError = await request.call({
+                const { call, read } = newHttpRequest("/api/workflow/events/");
+
+                const callError = await call({
                     timeout: 5000,
                     query: {
                         identity: payload.identity,
                     },
                 });
-                ensure(callError);
+
+                if (callError) {
+                    throw callError;
+                }
 
                 const events: WorkflowEvent[] = [];
-                const readError = await request.read((chunk) => {
+                const readError = await read((chunk) => {
                     if (chunk.isEntity) {
                         events.push(chunk.payload);
                     }
                 });
-                ensure(readError);
 
-                model.events.add({ key: payload.identity, value: events });
+                if (readError) {
+                    throw readError;
+                }
+
+                model.events.add({
+                    key: payload.identity,
+                    value: events,
+                });
 
                 return events;
             },
@@ -351,7 +434,7 @@ export const workflowStore = createStore({
             },
         );
 
-        const loadLogs = handler<
+        const getLogsById = handler<
             {
                 identity: string;
                 stdout?: boolean;
@@ -362,8 +445,9 @@ export const workflowStore = createStore({
             WorkflowLog[]
         >(
             async ({ payload }) => {
-                const request = newHttpRequest("/api/workflow/logs/");
-                const callError = await request.call({
+                const { call, read } = newHttpRequest("/api/workflow/logs/");
+
+                const callError = await call({
                     timeout: 5000,
                     query: {
                         identity: payload.identity,
@@ -373,15 +457,21 @@ export const workflowStore = createStore({
                         count: payload.count,
                     },
                 });
-                ensure(callError);
+
+                if (callError) {
+                    throw callError;
+                }
 
                 const logs: WorkflowLog[] = [];
-                const readError = await request.read((chunk) => {
+                const readError = await read((chunk) => {
                     if (chunk.isEntity) {
                         logs.push(chunk.payload);
                     }
                 });
-                ensure(readError);
+
+                if (readError) {
+                    throw readError;
+                }
 
                 return logs;
             },
@@ -401,8 +491,9 @@ export const workflowStore = createStore({
 
                 workflowLogsLiveAbortController = new AbortController();
 
-                const request = newHttpRequest("/api/workflow/logs/live/");
-                const callError = await request.call({
+                const { call, read } = newHttpRequest("/api/workflow/logs/live/");
+
+                const callError = await call({
                     timeout: 0,
                     signal: workflowLogsLiveAbortController.signal,
                     query: {
@@ -411,14 +502,20 @@ export const workflowStore = createStore({
                         stderr: payload.stderr,
                     },
                 });
-                ensure(callError);
 
-                const readError = await request.read((chunk) => {
+                if (callError) {
+                    throw callError;
+                }
+
+                const readError = await read((chunk) => {
                     if (chunk.isEntity) {
                         payload.onLog?.(chunk.payload);
                     }
                 });
-                ensure(readError);
+
+                if (readError) {
+                    throw readError;
+                }
             },
             {
                 concurrent: ActionConcurrent.CANCEL,
@@ -434,17 +531,21 @@ export const workflowStore = createStore({
 
                 workflowSignalsAbortController = new AbortController();
 
-                const request = newHttpRequest("/api/workflow/signals/");
-                const callError = await request.call({
+                const { call, read } = newHttpRequest("/api/workflow/signals/");
+
+                const callError = await call({
                     timeout: 0,
                     signal: workflowSignalsAbortController.signal,
                     query: {
                         identity: payload.identity,
                     },
                 });
-                ensure(callError);
 
-                const readError = await request.read((chunk) => {
+                if (callError) {
+                    throw callError;
+                }
+
+                const readError = await read((chunk) => {
                     if (!chunk.isEntity) {
                         return;
                     }
@@ -458,11 +559,12 @@ export const workflowStore = createStore({
                     }
 
                     if (signal.step_index !== undefined && signal.step_status) {
-                        const steps = view.workflowSteps.value[payload.identity];
+                        const steps = view.steps.value[payload.identity];
                         if (steps) {
                             const stepIndex = steps.findIndex((s) => {
                                 return s.index === signal.step_index;
                             });
+
                             if (stepIndex !== -1) {
                                 const updatedSteps = [...steps];
                                 updatedSteps[stepIndex] = {
@@ -471,14 +573,20 @@ export const workflowStore = createStore({
                                     phase: signal.step_phase ?? steps[stepIndex].phase,
                                 };
 
-                                model.steps.add({ key: payload.identity, value: updatedSteps });
+                                model.steps.add({
+                                    key: payload.identity,
+                                    value: updatedSteps,
+                                });
                             }
                         }
                     }
 
                     payload.onSignal?.(signal);
                 });
-                ensure(readError);
+
+                if (readError) {
+                    throw readError;
+                }
             },
             {
                 concurrent: ActionConcurrent.CANCEL,
@@ -492,17 +600,18 @@ export const workflowStore = createStore({
             stopWorkflowLogsLive();
             stopWorkflowSignals();
         });
+
         return {
-            load,
+            get,
             create,
-            start,
-            stop,
-            remove,
+            startById,
+            stopById,
+            removeById,
             removeBatch,
             prune,
-            loadSteps,
-            loadEvents,
-            loadLogs,
+            getStepsById,
+            getEventsById,
+            getLogsById,
             startLogsLive,
             startSignals,
             reset,
@@ -510,7 +619,10 @@ export const workflowStore = createStore({
     },
     compose({ action }) {
         async function loadDetail(identity: string) {
-            await all([action.loadSteps({ payload: { identity } }), action.loadEvents({ payload: { identity } })]);
+            await all([
+                action.getStepsById({ payload: { identity } }),
+                action.getEventsById({ payload: { identity } }),
+            ]);
         }
 
         async function loadAndWatch(identity: string) {

@@ -1,15 +1,13 @@
 <template>
     <UiCard
-        :ui="{
-            root: 'divide-none',
-            body: '!pt-0 !px-5',
-            header: 'flex items-center gap-4 justify-between !px-5 !pb-0',
-        }"
         variant="soft"
+        :ui="{
+            header: 'flex items-center justify-between gap-4',
+        }"
     >
         <template #header>
             <div class="flex items-center gap-2">
-                <UiIcon name="i-mingcute:router-modem-line" class="size-4 text-primary-500" />
+                <UiIcon name="i-mingcute:router-modem-line" class="size-4 text-primary" />
                 <span class="text-sm text-muted">Network</span>
             </div>
             <template v-if="engineState.attribute.network.length">
@@ -18,10 +16,9 @@
                 </div>
             </template>
             <template v-else>
-                <UiSkeleton class="h-4 w-16 bg-primary-100/50 dark:bg-primary-950/50" />
+                <UiSkeleton class="h-4 w-16" />
             </template>
         </template>
-        <UiSeparator class="mt-2 mb-6" />
         <div class="flex flex-col gap-4">
             <template v-for="network in networks">
                 <div class="flex items-center gap-8">
@@ -30,23 +27,23 @@
                         <UiBadge size="sm" variant="soft" color="primary">
                             <span>Sent</span>
                             <span class="font-bold">{{ prettyBytes(network.sent, prettyBytesOptions) }}</span>
-                            <UiIcon name="i-lucide:arrow-up" />
+                            <UiIcon name="i-mingcute:arrow-up-line" />
                         </UiBadge>
                         <UiBadge size="sm" variant="soft" color="teal">
                             <span>Received</span>
                             <span class="font-bold">{{ prettyBytes(network.received, prettyBytesOptions) }}</span>
-                            <UiIcon name="i-lucide:arrow-down" />
+                            <UiIcon name="i-mingcute:arrow-down-line" />
                         </UiBadge>
                     </div>
                 </div>
             </template>
             <template v-if="!networks.length">
                 <div class="flex items-center gap-8">
-                    <UiSkeleton class="h-5 w-16 bg-primary-100/50 dark:bg-primary-950/50" />
+                    <UiSkeleton class="h-5 w-16" />
                     <div class="flex flex-1 items-center justify-end gap-4">
                         <div class="flex items-center gap-1 text-nowrap">
-                            <UiSkeleton class="h-5 w-28 bg-primary-100/50 dark:bg-primary-950/50" />
-                            <UiSkeleton class="h-5 w-28 bg-primary-100/50 dark:bg-primary-950/50" />
+                            <UiSkeleton class="h-5 w-28" />
+                            <UiSkeleton class="h-5 w-28" />
                         </div>
                     </div>
                 </div>
@@ -78,6 +75,7 @@ const networks = computed(() => {
         const attribute = engineState.attribute.network.find(({ name }: { name: string }) => {
             return name === key;
         });
+
         output.push({
             name: attribute?.name || "unknown",
             address: attribute?.address || "unknown",
