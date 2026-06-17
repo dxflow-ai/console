@@ -24,16 +24,12 @@
 }
 
 :root {
-    --ui-radius: 0.5rem;
+    --ui-radius: 0.25rem;
 
     --ui-zodiac: var(--color-zodiac-500);
     --ui-neutral: var(--color-slate-500);
-    --ui-teal: var(--color-teal-500);
-    --ui-emerald: var(--color-emerald-500);
-    --ui-indigo: var(--color-indigo-500);
-    --ui-cyan: var(--color-cyan-500);
     --ui-green: var(--color-green-500);
     --ui-red: var(--color-red-500);
     --ui-blue: var(--color-blue-500);
-    --ui-amber: var(--color-amber-500);
+    --ui-yellow: var(--color-yellow-500);
 }

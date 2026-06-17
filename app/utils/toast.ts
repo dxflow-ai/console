@@ -25,7 +25,7 @@ export async function dangerToast(title: string, description?: any) {
 export interface UseConfirmToastOptions<T = any> {
     id: string;
     icon: string;
-    color: "neutral" | "primary" | "red" | "green" | "amber" | "blue" | "cyan" | "teal";
+    color: "neutral" | "primary" | "green" | "red" | "blue" | "yellow";
     title: (payload: T) => string;
     description: (payload: T) => string;
     confirm: (payload: T) => void | Promise<void>;
