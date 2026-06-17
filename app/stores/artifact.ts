@@ -1,13 +1,15 @@
-import { ViewClone, ActionConcurrent } from "@diphyx/harlemify/runtime";
+import { ViewClone, ActionConcurrent, ModelManyKind } from "@diphyx/harlemify/runtime";
 import { sleep } from "radash";
 
 export const artifactStore = createStore({
     name: "artifact",
     model({ many }) {
         const list = many(artifactShape);
+        const nodes = many(artifactShape, { kind: ModelManyKind.RECORD });
 
         return {
             list,
+            nodes,
         };
     },
     view({ from }) {
@@ -29,16 +31,39 @@ export const artifactStore = createStore({
             },
         );
 
+        const nodes = from("nodes");
+
         return {
             list,
+            nodes,
         };
     },
     action({ handler }) {
-        const get = handler<unknown, Artifact[]>(
-            async ({ model }) => {
+        const get = handler<
+            {
+                directory?: string;
+                pattern?: string;
+                all?: boolean;
+                depth?: number;
+                offset?: number;
+                limit?: number;
+            },
+            Artifact[]
+        >(
+            async ({ model, payload }) => {
                 const { call, read } = newHttpRequest("/api/artifact/");
 
-                const callError = await call();
+                const callError = await call({
+                    query: {
+                        directory: payload?.directory,
+                        pattern: payload?.pattern,
+                        all: payload?.all,
+                        depth: payload?.depth,
+                        offset: payload?.offset,
+                        limit: payload?.limit,
+                    },
+                });
+
                 if (callError) {
                     throw callError;
                 }
@@ -59,6 +84,54 @@ export const artifactStore = createStore({
                 }
 
                 return artifacts;
+            },
+            {
+                concurrent: ActionConcurrent.SKIP,
+            },
+        );
+
+        const listDir = handler<{ directory: string; pattern?: string }, Artifact[]>(
+            async ({ model, payload }) => {
+                const { call, read } = newHttpRequest("/api/artifact/");
+
+                const callError = await call({
+                    query: {
+                        directory: payload.directory,
+                        pattern: payload.pattern,
+                    },
+                });
+
+                if (callError) {
+                    throw callError;
+                }
+
+                const children: Artifact[] = [];
+                const readError = await read((chunk) => {
+                    if (chunk.isEntity) {
+                        children.push(chunk.payload);
+                    }
+                });
+
+                if (readError) {
+                    throw readError;
+                }
+
+                children.sort((first, second) => {
+                    const firstIsDirectory = first.permission[0] === "d";
+                    const secondIsDirectory = second.permission[0] === "d";
+                    if (firstIsDirectory !== secondIsDirectory) {
+                        return firstIsDirectory ? 1 : -1;
+                    }
+
+                    return first.name.localeCompare(second.name);
+                });
+
+                model.nodes.add({
+                    key: payload.directory,
+                    value: children,
+                });
+
+                return children;
             },
             {
                 concurrent: ActionConcurrent.SKIP,
@@ -410,10 +483,12 @@ export const artifactStore = createStore({
 
         const reset = handler(async ({ model }) => {
             model.list.reset();
+            model.nodes.reset();
         });
 
         return {
             get,
+            listDir,
             create,
             renameById,
             upload,
@@ -434,7 +509,9 @@ export const artifactStore = createStore({
             onProgress?: (progress: number) => void;
         }) {
             await action.upload({ payload });
-            await action.get();
+
+            const directory = payload.identity.split("/").slice(0, -1).join("/");
+            await action.get({ payload: { directory } });
         }
 
         return {
