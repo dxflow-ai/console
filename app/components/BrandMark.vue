@@ -1,5 +1,7 @@
 <template>
-    <span class="inline-flex [&>svg]:size-full [&_path]:fill-default" v-html="mark" />
+    <div class="inline-flex [&>svg]:size-full [&_path]:fill-primary">
+        <svg v-html="mark" />
+    </div>
 </template>
 
 <script lang="ts" setup>

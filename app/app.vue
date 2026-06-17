@@ -4,7 +4,7 @@
             delayDuration: 250,
         }"
         :toaster="{
-            position: 'bottom-center',
+            position: 'bottom-right',
             duration: 7500,
             expand: false,
             progress: false,

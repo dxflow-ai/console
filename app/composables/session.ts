@@ -1,3 +1,9 @@
+export const useSharedTimestamp = createGlobalState(() => {
+    return useTimestamp({
+        interval: 1000,
+    });
+});
+
 export function useSession() {
     const { data: session } = useStoreView(sessionStore, "session");
     const { data: payload } = useStoreView(sessionStore, "payload");
