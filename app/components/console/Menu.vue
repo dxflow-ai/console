@@ -116,21 +116,21 @@ const viewItems = computed<DropdownMenuItem[][]>(() => {
         [
             {
                 label: "Small · 100%",
-                icon: scale.value === 1 ? "i-mingcute:check-line" : "i-mingcute:minimize-line",
+                icon: scale.value === 1 ? "i-mingcute:checkbox-line" : "i-mingcute:minus-square-line",
                 onSelect() {
                     scale.value = 1;
                 },
             },
             {
                 label: "Medium · 125%",
-                icon: scale.value === 1.25 ? "i-mingcute:check-line" : "i-mingcute:minimize-line",
+                icon: scale.value === 1.25 ? "i-mingcute:checkbox-line" : "i-mingcute:minus-square-line",
                 onSelect() {
                     scale.value = 1.25;
                 },
             },
             {
                 label: "Large · 150%",
-                icon: scale.value === 1.5 ? "i-mingcute:check-line" : "i-mingcute:minimize-line",
+                icon: scale.value === 1.5 ? "i-mingcute:checkbox-line" : "i-mingcute:minus-square-line",
                 onSelect() {
                     scale.value = 1.5;
                 },
