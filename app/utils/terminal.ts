@@ -92,12 +92,12 @@ export function newTerminalWrapper() {
             this.webglAddon = new WebglAddon();
 
             this.loadAddon(this.fitAddon);
-            this.loadAddon(this.webglAddon);
         }
 
         async attach({ element, onData, onResize }: { element: HTMLElement } & TerminalWrapperCallback) {
             await sleep(250);
             this.open(element);
+            this.loadAddon(this.webglAddon);
 
             this.onData((data) => {
                 if (onData) {
@@ -118,6 +118,8 @@ export function newTerminalWrapper() {
                     inactive: resolve,
                 });
             });
+
+            this.webglAddon.clearTextureAtlas();
 
             await sleep(500);
             this.fitAddon.fit();
