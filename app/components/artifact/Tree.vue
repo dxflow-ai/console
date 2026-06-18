@@ -1,5 +1,20 @@
 <template>
-    <div class="px-1">
+    <div
+        class="relative"
+        :class="{
+            'px-1': props.depth === 0,
+        }"
+    >
+        <template v-if="props.depth > 0">
+            <div
+                class="absolute w-px h-full left-[--spacing(var(--tree-depth))] z-10"
+                :style="{
+                    '--tree-depth': props.depth * 3,
+                }"
+            >
+                <div class="absolute w-px h-full bg-elevated left-px" />
+            </div>
+        </template>
         <button
             type="button"
             class="flex w-full items-center gap-1.5 rounded-sm py-1.5 pr-2 pl-[--spacing(var(--tree-indent))] text-xs hover:bg-elevated"

@@ -1,6 +1,6 @@
 <template>
-    <div class="flex min-h-0 flex-col">
-        <ExplorerHeader :title="props.title" :expanded="props.expanded" @toggle="emit('toggle')">
+    <div class="flex bg-muted/25 min-h-0 flex-col">
+        <ExplorerHeader :title="props.title" :expanded="props.expanded" @toggle="toggle()">
             <slot name="actions" />
         </ExplorerHeader>
         <div v-show="props.expanded" class="min-h-0 flex-1 overflow-auto py-1.5">
@@ -44,4 +44,8 @@ const props = defineProps({
 const emit = defineEmits({
     toggle: null,
 });
+
+function toggle() {
+    emit("toggle");
+}
 </script>
