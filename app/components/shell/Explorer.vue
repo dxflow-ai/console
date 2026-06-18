@@ -24,9 +24,10 @@
         </template>
         <template #empty>
             <ExplorerEmpty
-                title="No shells yet"
-                description="An interactive engine session"
                 icon="i-hugeicons:command-line"
+                description="Sessions opened or resumed here"
+                :title="loading ? 'Loading shells' : 'No shells yet'"
+                :loading="loading"
             />
         </template>
         <template v-for="shell in shells" :key="shell.identity">

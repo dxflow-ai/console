@@ -4,13 +4,8 @@
             <slot name="actions" />
         </ExplorerHeader>
         <div v-show="props.expanded" class="min-h-0 flex-1 overflow-auto py-1.5">
-            <template v-if="props.loading && props.empty">
-                <div class="px-3 py-2 text-xs text-dimmed">Loading…</div>
-            </template>
-            <template v-else-if="props.empty">
-                <slot name="empty">
-                    <div class="px-3 py-2 text-xs text-dimmed">{{ props.emptyLabel }}</div>
-                </slot>
+            <template v-if="props.empty">
+                <slot name="empty" />
             </template>
             <template v-else>
                 <slot />

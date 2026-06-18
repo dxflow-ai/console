@@ -24,9 +24,10 @@
         </template>
         <template #empty>
             <ExplorerEmpty
-                title="No workflows yet"
-                description="Automate multi-step engine tasks"
                 icon="i-hugeicons:git-branch"
+                description="Pipelines imported or run here"
+                :title="loading ? 'Loading workflows' : 'No workflows yet'"
+                :loading="loading"
             />
         </template>
         <template v-for="workflow in workflows" :key="workflow.identity">
