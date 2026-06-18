@@ -24,7 +24,6 @@ export async function dangerToast(title: string, description?: any) {
 
 export interface UseConfirmToastOptions<T = any> {
     id: string;
-    icon: string;
     color: "neutral" | "primary" | "green" | "red" | "blue" | "yellow";
     title: (payload: T) => string;
     description: (payload: T) => string;
@@ -93,7 +92,6 @@ export function useConfirmToast<T = any>(options: UseConfirmToastOptions<T>) {
 
         toast.add({
             id: options.id,
-            icon: options.icon,
             color: options.color,
             title: options.title(payload),
             description: options.description(payload),
@@ -102,7 +100,7 @@ export function useConfirmToast<T = any>(options: UseConfirmToastOptions<T>) {
             actions: [
                 {
                     label: "Cancel",
-                    variant: "ghost",
+                    variant: "soft",
                     color: options.color,
                     onClick() {
                         cancel();
