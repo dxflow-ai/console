@@ -10,7 +10,7 @@
             </div>
             <div class="flex shrink-0 flex-col items-end gap-1.5">
                 <div class="flex items-baseline gap-0.5 font-mono tabular-nums">
-                    <span class="text-3xl leading-none font-semibold" :class="props.accent">{{ props.value }}</span>
+                    <span class="text-3xl leading-none font-semibold text-primary">{{ props.value }}</span>
                     <span class="text-sm text-dimmed">{{ props.unit }}</span>
                 </div>
                 <template v-if="props.meta">
@@ -18,7 +18,7 @@
                 </template>
             </div>
         </div>
-        <div class="h-12" :class="props.accent">
+        <div class="h-12 text-primary">
             <Sparkline :points="props.points" fill />
         </div>
     </div>
@@ -55,10 +55,6 @@ const props = defineProps({
         default() {
             return [] as number[];
         },
-    },
-    accent: {
-        type: String,
-        default: "text-primary",
     },
 });
 </script>
