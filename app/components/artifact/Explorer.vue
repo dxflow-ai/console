@@ -1,6 +1,13 @@
 <template>
-    <div class="flex min-h-0 flex-col">
-        <ExplorerHeader title="Artifacts" :expanded="props.expanded" @toggle="toggle">
+    <ExplorerSection
+        title="Artifacts"
+        empty-label="No artifacts"
+        :expanded="props.expanded"
+        :loading="loading"
+        :empty="!artifacts.length"
+        @toggle="toggle"
+    >
+        <template #actions>
             <UiButton
                 icon="i-mingcute:add-square-fill"
                 size="xs"
@@ -9,35 +16,16 @@
                 class="pr-0!"
                 :loading="uploading"
                 :ui="{
-                    leadingIcon: 'size-3',
+                    leadingIcon: 'size-3.5',
                 }"
                 @click="fileDialog.open()"
                 square
             />
-        </ExplorerHeader>
-        <div
-            v-show="props.expanded"
-            class="min-h-0 flex-1 overflow-auto py-1.5"
-            :class="{
-                'bg-elevated/40': dragging,
-            }"
-            @dragover.prevent="dragging = true"
-            @dragleave.prevent="dragging = false"
-            @drop.prevent="onDrop($event)"
-        >
-            <template v-if="loading && !rootChildren.length">
-                <div class="px-3 py-2 text-xs text-dimmed">Loading…</div>
-            </template>
-            <template v-else-if="!rootChildren.length">
-                <div class="px-3 py-2 text-xs text-dimmed">No artifacts</div>
-            </template>
-            <template v-else>
-                <template v-for="child in rootChildren" :key="child.identity">
-                    <ArtifactTree :artifact="child" @open="onOpen" />
-                </template>
-            </template>
-        </div>
-    </div>
+        </template>
+        <template v-for="child in artifacts" :key="child.identity">
+            <ArtifactTree :artifact="child" @open="onOpen" />
+        </template>
+    </ExplorerSection>
 </template>
 
 <script lang="ts" setup>
@@ -64,12 +52,13 @@ const fileDialog = useFileDialog({
     multiple: true,
 });
 
-const { execute: executeListDir, loading } = useStoreAction(artifactStore, "listDir", { isolated: true });
+const { execute: executeListDir, loading } = useStoreAction(artifactStore, "listDir", {
+    isolated: true,
+});
 
 const uploading = ref(false);
-const dragging = ref(false);
 
-const rootChildren = computed<Artifact[]>(() => {
+const artifacts = computed<Artifact[]>(() => {
     return nodes.value[props.root] ?? [];
 });
 
@@ -83,7 +72,11 @@ function onOpen(artifact: Artifact) {
 
 async function load() {
     try {
-        await executeListDir({ payload: { directory: props.root } });
+        await executeListDir({
+            payload: {
+                directory: props.root,
+            },
+        });
     } catch (error) {
         return dangerToast("Failed to load artifacts", error as Error);
     }
@@ -113,15 +106,6 @@ async function uploadFiles(files: File[]) {
 
     if (success) {
         await load();
-    }
-}
-
-function onDrop(event: DragEvent) {
-    dragging.value = false;
-
-    const files = event.dataTransfer?.files;
-    if (files?.length) {
-        uploadFiles(Array.from(files));
     }
 }
 
