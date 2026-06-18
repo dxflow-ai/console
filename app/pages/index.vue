@@ -1,9 +1,7 @@
 <template>
     <div class="flex h-screen flex-col">
         <ConsoleHeader />
-
         <ConsoleMain />
-
         <ConsoleFooter />
     </div>
 </template>

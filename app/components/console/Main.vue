@@ -3,20 +3,18 @@
         <template v-if="sidebarOpen">
             <ConsoleSidebar />
         </template>
-
         <div class="flex min-w-0 flex-1 flex-col">
-            <template v-if="!panelFull">
+            <template v-if="!secondaryFull">
                 <div class="flex min-h-0 flex-1 flex-col">
-                    <ConsoleContent />
+                    <ConsolePane position="primary" />
                 </div>
             </template>
-
-            <template v-if="panelOpen">
+            <template v-if="secondaryOpen">
                 <div
                     class="flex shrink-0 flex-col"
-                    :class="panelFull ? 'min-h-0 flex-1' : 'h-48 border-t border-default'"
+                    :class="secondaryFull ? 'min-h-0 flex-1' : 'h-48 border-t border-default'"
                 >
-                    <ConsolePanel />
+                    <ConsolePane position="secondary" fullscreenable />
                 </div>
             </template>
         </div>
@@ -24,5 +22,5 @@
 </template>
 
 <script lang="ts" setup>
-const { sidebarOpen, panelOpen, panelFull } = useWorkspace();
+const { sidebarOpen, secondaryOpen, secondaryFull } = useWorkspace();
 </script>

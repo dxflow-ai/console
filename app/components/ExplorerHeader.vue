@@ -1,0 +1,38 @@
+<template>
+    <div
+        class="flex shrink-0 items-center justify-between border-b border-default px-3 py-1"
+        :class="{
+            'border-b-0': !props.expanded,
+        }"
+    >
+        <button type="button" class="flex min-w-0 flex-1 items-center gap-1 text-left" @click="emit('toggle')">
+            <div class="size-2 flex items-center">
+                <UiIcon
+                    class="-ml-1 size-4 shrink-0"
+                    :name="props.expanded ? 'i-mingcute:down-small-fill' : 'i-mingcute:right-small-fill'"
+                />
+            </div>
+            <span class="text-xs font-semibold text-muted capitalize">{{ props.title }}</span>
+        </button>
+        <div class="flex items-center gap-0.5">
+            <slot />
+        </div>
+    </div>
+</template>
+
+<script lang="ts" setup>
+const props = defineProps({
+    title: {
+        type: String,
+        required: true,
+    },
+    expanded: {
+        type: Boolean,
+        default: true,
+    },
+});
+
+const emit = defineEmits({
+    toggle: null,
+});
+</script>
