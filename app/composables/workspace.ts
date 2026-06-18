@@ -41,7 +41,9 @@ const expandedExplorers = ref<Set<ExplorerKey>>(new Set(["workflow"]));
 export function useExplorer() {
     function toggle(key: ExplorerKey) {
         if (expandedExplorers.value.has(key)) {
-            expandedExplorers.value.delete(key);
+            if (expandedExplorers.value.size > 1) {
+                expandedExplorers.value.delete(key);
+            }
         } else {
             expandedExplorers.value.add(key);
         }
