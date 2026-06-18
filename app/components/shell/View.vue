@@ -1,6 +1,11 @@
 <template>
-    <div class="relative bg-default rounded-sm ring-1 ring-accented/25 overflow-hidden">
-        <div class="absolute inset-0 overflow-hidden" :class="loaded ? 'animate-fade animate-delay-500' : 'opacity-0'">
+    <div class="relative bg-default overflow-hidden">
+        <div
+            class="absolute inset-0 overflow-hidden"
+            :class="{
+                'opacity-0': !loaded,
+            }"
+        >
             <div ref="element" class="relative size-full flex items-center justify-center overflow-visible" />
         </div>
         <template v-if="!loaded">

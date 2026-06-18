@@ -1,5 +1,5 @@
 <template>
-    <header class="flex h-9 shrink-0 items-center gap-0.5 border-b border-default px-3 text-sm">
+    <header class="flex h-9 shrink-0 items-center gap-0.5 bg-elevated/75 border-b border-default px-3 text-sm">
         <UiButton
             size="xs"
             variant="link"

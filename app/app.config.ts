@@ -57,10 +57,10 @@ export default defineAppConfig({
             variants: {
                 size: {
                     xs: {
-                        base: "text-xs px-1 py-0.5 gap-1 rounded-sm",
+                        base: "text-xs px-1 py-0.25 gap-1 rounded-sm",
                     },
                     sm: {
-                        base: "text-xs px-1.5 py-1 gap-1 rounded-sm",
+                        base: "text-xs px-1.5 py-0.5 gap-1 rounded-sm",
                     },
                 },
             },

@@ -1,17 +1,19 @@
 <template>
-    <div class="flex items-center gap-3">
-        <span class="flex items-center gap-1.5">
-            <span class="size-2 rounded-full transition-all" :class="pingStatus" />
+    <div class="flex items-center gap-4">
+        <span class="flex items-center gap-2">
+            <span class="size-2.5 rounded-sm" :class="pingStatus" />
             <span class="font-medium text-default">{{ host.name || "Unknown" }}</span>
         </span>
-        <UiBadge color="neutral" variant="soft">
+        <UiSeparator orientation="vertical" class="h-3" />
+        <div class="flex items-center gap-1 text-xs">
             <span class="font-semibold">Cpu</span>
             <span class="font-mono w-4.5 text-right">{{ cpu }}%</span>
-        </UiBadge>
-        <UiBadge color="neutral" variant="soft">
+        </div>
+        <UiSeparator orientation="vertical" class="h-3" />
+        <div class="flex items-center gap-1 text-xs">
             <span class="font-semibold">Mem</span>
             <span class="font-mono w-4.5 text-right">{{ memory }}%</span>
-        </UiBadge>
+        </div>
     </div>
 </template>
 

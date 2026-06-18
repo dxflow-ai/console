@@ -1,14 +1,12 @@
 <template>
     <UiButton
-        label="Sign Out"
-        size="sm"
+        size="xs"
         variant="link"
-        color="red"
+        color="neutral"
+        icon="i-mingcute:power-line"
         class="pr-0!"
-        :ui="{
-            base: 'px-0 focus-visible:ring-0 focus:outline-none',
-        }"
         @click="confirmSignout.open()"
+        square
     />
 </template>
 
