@@ -1,22 +1,22 @@
 <template>
     <aside class="flex w-64 shrink-0 flex-col border-r border-default">
         <WorkflowExplorer
-            :expanded="expanded === 'workflow'"
-            :class="expanded === 'workflow' ? 'min-h-0 flex-1' : 'shrink-0'"
+            :expanded="expanded.has('workflow')"
+            :class="expanded.has('workflow') ? 'min-h-0 flex-1' : 'shrink-0'"
             @toggle="toggle('workflow')"
             @open="openWorkflow"
         />
         <UiSeparator />
         <ArtifactExplorer
-            :expanded="expanded === 'artifact'"
-            :class="expanded === 'artifact' ? 'min-h-0 flex-1' : 'shrink-0'"
+            :expanded="expanded.has('artifact')"
+            :class="expanded.has('artifact') ? 'min-h-0 flex-1' : 'shrink-0'"
             @toggle="toggle('artifact')"
             @open="openArtifact"
         />
         <UiSeparator />
         <ShellExplorer
-            :expanded="expanded === 'shell'"
-            :class="expanded === 'shell' ? 'min-h-0 flex-1' : 'shrink-0'"
+            :expanded="expanded.has('shell')"
+            :class="expanded.has('shell') ? 'min-h-0 flex-1' : 'shrink-0'"
             @toggle="toggle('shell')"
             @open="openShell"
         />
@@ -27,10 +27,14 @@
 const { openTab } = useTabs();
 const { openSecondary } = useWorkspace();
 
-const expanded = ref<"workflow" | "artifact" | "shell">("workflow");
+const expanded = ref<Set<"workflow" | "artifact" | "shell">>(new Set(["workflow"]));
 
 function toggle(key: "workflow" | "artifact" | "shell") {
-    expanded.value = key;
+    if (expanded.value.has(key)) {
+        expanded.value.delete(key);
+    } else {
+        expanded.value.add(key);
+    }
 }
 
 function openWorkflow(payload: { workflow: Workflow; view: string; step?: number }) {
