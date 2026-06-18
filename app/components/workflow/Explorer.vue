@@ -16,7 +16,7 @@
                 class="pr-0!"
                 :loading="creating"
                 :ui="{
-                    leadingIcon: 'size-3',
+                    leadingIcon: 'size-3.5',
                 }"
                 @click="fileDialog.open()"
                 square
@@ -49,8 +49,13 @@ const fileDialog = useFileDialog({
     accept: ".yaml,.yml,application/x-yaml,text/yaml",
 });
 
-const { execute: executeGet, loading } = useStoreAction(workflowStore, "get", { isolated: true });
-const { execute: executeCreate, loading: creating } = useStoreAction(workflowStore, "create", { isolated: true });
+const { execute: executeGet, loading } = useStoreAction(workflowStore, "get", {
+    isolated: true,
+});
+
+const { execute: executeCreate, loading: creating } = useStoreAction(workflowStore, "create", {
+    isolated: true,
+});
 
 async function load() {
     try {
@@ -72,7 +77,9 @@ async function createFromFile(file: File) {
     try {
         const source = await file.text();
 
-        await executeCreate({ payload: { source } });
+        await executeCreate({
+            payload: { source },
+        });
     } catch (error) {
         dangerToast("Failed to create workflow", error as Error);
     }

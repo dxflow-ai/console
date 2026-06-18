@@ -16,7 +16,7 @@
                 class="pr-0!"
                 :loading="creating"
                 :ui="{
-                    leadingIcon: 'size-3',
+                    leadingIcon: 'size-3.5',
                 }"
                 @click="createShell()"
                 square
@@ -43,8 +43,13 @@ const emit = defineEmits({
 
 const { data: shells } = useStoreView(shellStore, "list");
 
-const { execute: executeGet, loading } = useStoreAction(shellStore, "get", { isolated: true });
-const { execute: executeCreate, loading: creating } = useStoreAction(shellStore, "create", { isolated: true });
+const { execute: executeGet, loading } = useStoreAction(shellStore, "get", {
+    isolated: true,
+});
+
+const { execute: executeCreate, loading: creating } = useStoreAction(shellStore, "create", {
+    isolated: true,
+});
 
 function toggle() {
     emit("toggle");
