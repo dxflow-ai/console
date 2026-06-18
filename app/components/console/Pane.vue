@@ -34,7 +34,7 @@
                     />
                 </template>
             </div>
-            <div class="min-h-0 flex-1 overflow-hidden">
+            <div class="h-full min-h-0 flex-1 overflow-hidden">
                 <template v-if="activeTab?.kind === 'artifact'">
                     <ArtifactView :key="activeTab.key" :artifact="activeTab.payload" />
                 </template>
