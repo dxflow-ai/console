@@ -1,37 +1,33 @@
 <template>
-    <div>
+    <div class="px-1">
         <button
             type="button"
-            class="flex w-full items-center gap-1 rounded-sm py-1 pr-2 text-sm hover:bg-elevated"
-            :style="{ paddingLeft: `${props.depth * 12 + 8}px` }"
+            class="flex w-full items-center gap-1.5 rounded-sm py-1.5 pr-2 pl-[--spacing(var(--tree-indent))] text-xs hover:bg-elevated"
+            :style="{
+                '--tree-indent': props.depth * 3 + 2,
+            }"
             @click="toggle()"
         >
             <template v-if="isDirectory">
                 <UiIcon
-                    :name="
-                        loading
-                            ? 'i-mingcute:loading-3-fill'
-                            : expanded
-                              ? 'i-mingcute:down-small-fill'
-                              : 'i-mingcute:right-small-fill'
-                    "
-                    :class="['size-4 shrink-0 text-muted', { 'animate-spin': loading }]"
-                />
-                <UiIcon
-                    class="size-4 shrink-0 text-primary"
-                    :name="expanded ? 'i-mingcute:folder-open-fill' : 'i-mingcute:folder-fill'"
+                    :name="loading ? 'i-mingcute:loading-3-fill' : 'i-hugeicons:folder-01'"
+                    :class="[
+                        'size-3 shrink-0',
+                        expanded ? 'text-primary' : 'text-muted',
+                        {
+                            'animate-spin': loading,
+                        },
+                    ]"
                 />
             </template>
             <template v-else>
-                <span class="size-4 shrink-0" />
-                <UiIcon name="i-mingcute:file-fill" class="size-4 shrink-0 text-muted" />
+                <UiIcon class="size-3 shrink-0 text-muted" :name="fileIcon(props.artifact.name)" />
             </template>
             <span class="truncate">{{ props.artifact.name }}</span>
         </button>
-
         <template v-if="isDirectory && expanded">
             <template v-for="child in children" :key="child.identity">
-                <ArtifactTreeNode :artifact="child" :depth="props.depth + 1" @open="emit('open', $event)" />
+                <ArtifactTree :artifact="child" :depth="props.depth + 1" @open="onOpen" />
             </template>
         </template>
     </div>
@@ -55,8 +51,9 @@ const emit = defineEmits({
 
 const { data: nodes } = useStoreView(artifactStore, "nodes");
 
+const { execute: executeListDir, loading } = useStoreAction(artifactStore, "listDir", { isolated: true });
+
 const expanded = ref(false);
-const loading = ref(false);
 
 const isDirectory = computed(() => {
     return props.artifact.permission[0] === "d";
@@ -66,9 +63,17 @@ const children = computed<Artifact[]>(() => {
     return nodes.value[props.artifact.identity] ?? [];
 });
 
+function onOpen(artifact: Artifact) {
+    emit("open", artifact);
+}
+
 async function toggle() {
     if (!isDirectory.value) {
-        emit("open", props.artifact);
+        // Only image and text files can be opened in the viewer.
+        if (isOpenableFile(props.artifact.name)) {
+            emit("open", props.artifact);
+        }
+
         return;
     }
 
@@ -78,16 +83,11 @@ async function toggle() {
     }
 
     if (!nodes.value[props.artifact.identity]) {
-        loading.value = true;
-
         try {
-            await artifactStore.action.listDir({ payload: { directory: props.artifact.identity } });
+            await executeListDir({ payload: { directory: props.artifact.identity } });
         } catch (error) {
-            loading.value = false;
             return dangerToast("Failed to load directory", error as Error);
         }
-
-        loading.value = false;
     }
 
     expanded.value = true;

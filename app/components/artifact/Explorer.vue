@@ -1,35 +1,20 @@
 <template>
     <div class="flex min-h-0 flex-col">
-        <div class="flex shrink-0 items-center justify-between px-3 py-2">
-            <span class="text-xs font-semibold text-muted uppercase">Artifacts</span>
-            <div class="flex items-center gap-0.5">
-                <UiTooltip text="Upload" :delay-duration="500" :content="{ side: 'top' }">
-                    <UiButton
-                        icon="i-mingcute:upload-2-line"
-                        size="xs"
-                        variant="ghost"
-                        color="neutral"
-                        :loading="uploading"
-                        @click="fileDialog.open()"
-                        square
-                    />
-                </UiTooltip>
-                <UiTooltip text="New Folder" :delay-duration="500" :content="{ side: 'top' }">
-                    <UiButton
-                        icon="i-mingcute:folder-line"
-                        size="xs"
-                        variant="ghost"
-                        color="neutral"
-                        :loading="creating"
-                        @click="createFolder()"
-                        square
-                    />
-                </UiTooltip>
-            </div>
-        </div>
-
+        <ExplorerHeader title="Artifacts" :expanded="props.expanded" @toggle="toggle">
+            <UiButton
+                icon="i-mingcute:add-circle-line"
+                size="xs"
+                variant="link"
+                color="neutral"
+                class="pr-0!"
+                :loading="uploading"
+                @click="fileDialog.open()"
+                square
+            />
+        </ExplorerHeader>
         <div
-            class="min-h-0 flex-1 overflow-auto pb-2"
+            v-show="props.expanded"
+            class="min-h-0 flex-1 overflow-auto py-1.5"
             :class="{ 'bg-elevated/40': dragging }"
             @dragover.prevent="dragging = true"
             @dragleave.prevent="dragging = false"
@@ -43,7 +28,7 @@
             </template>
             <template v-else>
                 <template v-for="child in rootChildren" :key="child.identity">
-                    <ArtifactTreeNode :artifact="child" @open="emit('open', $event)" />
+                    <ArtifactTree :artifact="child" @open="onOpen" />
                 </template>
             </template>
         </div>
@@ -56,10 +41,15 @@ const props = defineProps({
         type: String,
         default: ".",
     },
+    expanded: {
+        type: Boolean,
+        default: true,
+    },
 });
 
 const emit = defineEmits({
     open: null,
+    toggle: null,
 });
 
 const { data: nodes } = useStoreView(artifactStore, "nodes");
@@ -69,26 +59,29 @@ const fileDialog = useFileDialog({
     multiple: true,
 });
 
-const loading = ref(false);
+const { execute: executeListDir, loading } = useStoreAction(artifactStore, "listDir", { isolated: true });
+
 const uploading = ref(false);
-const creating = ref(false);
 const dragging = ref(false);
 
 const rootChildren = computed<Artifact[]>(() => {
     return nodes.value[props.root] ?? [];
 });
 
-async function load() {
-    loading.value = true;
+function toggle() {
+    emit("toggle");
+}
 
+function onOpen(artifact: Artifact) {
+    emit("open", artifact);
+}
+
+async function load() {
     try {
-        await artifactStore.action.listDir({ payload: { directory: props.root } });
+        await executeListDir({ payload: { directory: props.root } });
     } catch (error) {
-        loading.value = false;
         return dangerToast("Failed to load artifacts", error as Error);
     }
-
-    loading.value = false;
 }
 
 async function uploadFiles(files: File[]) {
@@ -125,27 +118,6 @@ function onDrop(event: DragEvent) {
     if (files?.length) {
         uploadFiles(Array.from(files));
     }
-}
-
-async function createFolder() {
-    creating.value = true;
-
-    try {
-        await artifactStore.action.create({
-            payload: {
-                identity: `${props.root}/new-folder`,
-                directory: true,
-                force: true,
-            },
-        });
-    } catch (error) {
-        creating.value = false;
-        return dangerToast("Failed to create folder", error as Error);
-    }
-
-    creating.value = false;
-
-    await load();
 }
 
 fileDialog.onChange((files) => {
