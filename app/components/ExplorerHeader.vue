@@ -14,7 +14,12 @@
             </div>
             <span class="text-xs font-semibold text-muted capitalize">{{ props.title }}</span>
         </button>
-        <div class="flex items-center gap-0.5">
+        <div
+            class="flex items-center gap-0.5"
+            :class="{
+                'opacity-0': !props.expanded,
+            }"
+        >
             <slot />
         </div>
     </div>
