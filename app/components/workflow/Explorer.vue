@@ -9,12 +9,15 @@
     >
         <template #actions>
             <UiButton
-                icon="i-mingcute:add-circle-line"
+                icon="i-mingcute:add-square-fill"
                 size="xs"
                 variant="link"
                 color="neutral"
                 class="pr-0!"
                 :loading="creating"
+                :ui="{
+                    leadingIcon: 'size-3',
+                }"
                 @click="fileDialog.open()"
                 square
             />

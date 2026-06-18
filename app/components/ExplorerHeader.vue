@@ -1,11 +1,11 @@
 <template>
     <div
-        class="flex shrink-0 items-center justify-between border-b border-default px-3 py-1"
+        class="flex h-8 shrink-0 items-center justify-between bg-muted/50 border-b border-default px-3"
         :class="{
             'border-b-0': !props.expanded,
         }"
     >
-        <button type="button" class="flex min-w-0 flex-1 items-center gap-1 text-left" @click="emit('toggle')">
+        <button type="button" class="flex min-w-0 flex-1 items-center gap-1 text-left" @click="toggle()">
             <div class="size-2 flex items-center">
                 <UiIcon
                     class="-ml-1 size-4 shrink-0"
@@ -35,4 +35,8 @@ const props = defineProps({
 const emit = defineEmits({
     toggle: null,
 });
+
+function toggle() {
+    emit("toggle");
+}
 </script>

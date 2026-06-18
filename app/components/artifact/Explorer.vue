@@ -2,12 +2,15 @@
     <div class="flex min-h-0 flex-col">
         <ExplorerHeader title="Artifacts" :expanded="props.expanded" @toggle="toggle">
             <UiButton
-                icon="i-mingcute:add-circle-line"
+                icon="i-mingcute:add-square-fill"
                 size="xs"
                 variant="link"
                 color="neutral"
                 class="pr-0!"
                 :loading="uploading"
+                :ui="{
+                    leadingIcon: 'size-3',
+                }"
                 @click="fileDialog.open()"
                 square
             />
@@ -15,7 +18,9 @@
         <div
             v-show="props.expanded"
             class="min-h-0 flex-1 overflow-auto py-1.5"
-            :class="{ 'bg-elevated/40': dragging }"
+            :class="{
+                'bg-elevated/40': dragging,
+            }"
             @dragover.prevent="dragging = true"
             @dragleave.prevent="dragging = false"
             @drop.prevent="onDrop($event)"
