@@ -1,49 +1,42 @@
 <template>
-    <Transition
-        enter-active-class="transition duration-200 ease-out"
-        enter-from-class="scale-95 opacity-0"
-        enter-to-class="scale-100 opacity-100"
-        appear
-    >
-        <div class="flex w-full flex-col overflow-hidden rounded-md border border-default">
-            <div class="flex items-center gap-2.5 border-b border-default bg-elevated/40 px-4 py-3">
-                <div class="flex size-9 shrink-0 items-center justify-center rounded bg-elevated">
-                    <BrandMark class="size-5" />
-                </div>
-                <div class="flex flex-col">
-                    <span class="font-semibold text-default">dxflow</span>
-                    <span class="text-xs text-muted -mt-1.5">Console</span>
-                </div>
+    <div class="flex w-full flex-col overflow-hidden rounded-md border border-default">
+        <div class="flex items-center gap-2.5 border-b border-default bg-elevated/40 px-4 py-3">
+            <div class="flex size-9 shrink-0 items-center justify-center rounded bg-elevated">
+                <BrandMark class="size-5" />
             </div>
-            <div class="flex flex-col gap-4 p-4">
-                <div class="flex flex-col gap-0.5">
-                    <span class="font-semibold text-default">{{ title }}</span>
-                    <span class="text-xs text-muted">
-                        <template v-if="hasStoredKey && provided">
-                            <span>Session expired</span>
-                            <RelativeTime class="ml-1" :timestamp="expiration" />
-                        </template>
-                        <template v-else>
-                            <span>Authenticate with your private key</span>
-                        </template>
-                    </span>
-                </div>
-                <div class="flex flex-col gap-2">
-                    <UiButton :loading="signing" :label="title" @click="signin()" block />
-                    <template v-if="hasStoredKey">
-                        <UiButton
-                            label="Use a different key"
-                            variant="soft"
-                            color="neutral"
-                            :disabled="signing"
-                            @click="forgetStoredKey()"
-                            block
-                        />
-                    </template>
-                </div>
+            <div class="flex flex-col">
+                <span class="font-semibold text-default">dxflow</span>
+                <span class="text-xs text-muted -mt-1.5">Console</span>
             </div>
         </div>
-    </Transition>
+        <div class="flex flex-col gap-4 p-4">
+            <div class="flex flex-col gap-0.5">
+                <span class="font-semibold text-default">{{ title }}</span>
+                <span class="text-xs text-muted">
+                    <template v-if="hasStoredKey && provided">
+                        <span>Session expired</span>
+                        <RelativeTime class="ml-1" :timestamp="expiration" />
+                    </template>
+                    <template v-else>
+                        <span>Authenticate with your private key</span>
+                    </template>
+                </span>
+            </div>
+            <div class="flex flex-col gap-2">
+                <UiButton :loading="signing" :label="title" @click="signin()" block />
+                <template v-if="hasStoredKey">
+                    <UiButton
+                        label="Use a different key"
+                        variant="soft"
+                        color="neutral"
+                        :disabled="signing"
+                        @click="forgetStoredKey()"
+                        block
+                    />
+                </template>
+            </div>
+        </div>
+    </div>
 </template>
 
 <script lang="ts" setup>
@@ -66,9 +59,6 @@ const fileDialog = useFileDialog({
     accept: ".pem,.key",
 });
 
-// "Sign In Again" (re-auth from the stored key) is only possible while a key is
-// actually persisted — i.e. after a token expiry, not after an explicit sign-out
-// (which clears the stored key). A fresh visitor has none either.
 const hasStoredKey = ref(false);
 
 const signing = computed(() => {
@@ -105,7 +95,6 @@ async function signinByDatabase() {
     try {
         await executeSigninByDatabase();
     } catch {
-        // The stored key is gone or no longer valid — fall back to picking a file.
         hasStoredKey.value = false;
 
         return fileDialog.open();
