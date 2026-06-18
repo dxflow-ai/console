@@ -5,14 +5,12 @@
             <UiSeparator orientation="vertical" class="h-3" />
             <span class="capitalize">{{ props.view }}</span>
         </div>
-
         <div class="min-h-0 flex-1 overflow-auto p-4">
             <template v-if="loading">
                 <div class="flex h-full items-center justify-center text-xs text-dimmed">
                     <UiIcon name="i-mingcute:loading-3-fill" class="size-4 animate-spin" />
                 </div>
             </template>
-
             <template v-else-if="props.view === 'diagram'">
                 <div class="flex items-start gap-4">
                     <template v-for="phase in phases" :key="phase.phase">
@@ -28,7 +26,6 @@
                     </template>
                 </div>
             </template>
-
             <template v-else-if="props.view === 'step'">
                 <template v-if="activeStep">
                     <div class="flex flex-col gap-1.5 text-sm">
@@ -46,7 +43,6 @@
                     </div>
                 </template>
             </template>
-
             <template v-else-if="props.view === 'events'">
                 <div class="flex flex-col gap-1.5">
                     <template v-for="(event, index) in events" :key="index">
@@ -68,7 +64,6 @@
                     </template>
                 </div>
             </template>
-
             <template v-else-if="props.view === 'logs'">
                 <div class="font-mono text-xs">
                     <template v-if="logs.length">
@@ -81,7 +76,6 @@
                     </template>
                 </div>
             </template>
-
             <template v-else>
                 <div class="flex flex-col gap-1.5">
                     <template v-for="step in steps" :key="step.identity">
@@ -118,7 +112,17 @@ const { data: eventsRecord } = useStoreView(workflowStore, "events");
 
 const { lines: logs, start: startLogs, stop: stopLogs } = useWorkflow().logs();
 
-const loading = ref(false);
+const { execute: executeGetSteps, loading: loadingSteps } = useStoreAction(workflowStore, "getStepsById", {
+    isolated: true,
+});
+
+const { execute: executeGetEvents, loading: loadingEvents } = useStoreAction(workflowStore, "getEventsById", {
+    isolated: true,
+});
+
+const loading = computed(() => {
+    return loadingSteps.value || loadingEvents.value;
+});
 
 const steps = computed<WorkflowStep[]>(() => {
     return stepsRecord.value[props.workflow.identity] ?? [];
@@ -159,20 +163,15 @@ async function load() {
         return;
     }
 
-    loading.value = true;
-
     try {
         if (props.view === "events") {
-            await workflowStore.action.getEventsById({ payload: { identity: props.workflow.identity } });
+            await executeGetEvents({ payload: { identity: props.workflow.identity } });
         } else {
-            await workflowStore.action.getStepsById({ payload: { identity: props.workflow.identity } });
+            await executeGetSteps({ payload: { identity: props.workflow.identity } });
         }
     } catch (error) {
-        loading.value = false;
         return dangerToast("Failed to load workflow", error as Error);
     }
-
-    loading.value = false;
 }
 
 onMounted(() => {
