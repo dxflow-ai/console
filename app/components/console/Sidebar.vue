@@ -16,7 +16,7 @@
         <UiSeparator />
         <ShellExplorer
             :expanded="expanded.has('shell')"
-            :class="expanded.has('shell') ? 'min-h-0 flex-[0.75]' : 'shrink-0'"
+            :class="expanded.has('shell') ? 'min-h-0 flex-1' : 'shrink-0'"
             @toggle="toggle('shell')"
             @open="openShell"
         />
