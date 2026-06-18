@@ -9,7 +9,7 @@
     >
         <template #actions>
             <UiButton
-                icon="i-mingcute:add-square-fill"
+                icon="i-mingcute:add-circle-fill"
                 size="xs"
                 variant="link"
                 color="neutral"
@@ -20,6 +20,13 @@
                 }"
                 @click="fileDialog.open()"
                 square
+            />
+        </template>
+        <template #empty>
+            <ExplorerEmpty
+                title="No artifacts yet"
+                description="Files generated or uploaded here"
+                icon="i-hugeicons:file-01"
             />
         </template>
         <template v-for="child in artifacts" :key="child.identity">

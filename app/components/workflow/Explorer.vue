@@ -9,7 +9,7 @@
     >
         <template #actions>
             <UiButton
-                icon="i-mingcute:add-square-fill"
+                icon="i-mingcute:add-circle-fill"
                 size="xs"
                 variant="link"
                 color="neutral"
@@ -20,6 +20,13 @@
                 }"
                 @click="fileDialog.open()"
                 square
+            />
+        </template>
+        <template #empty>
+            <ExplorerEmpty
+                title="No workflows yet"
+                description="Automate multi-step engine tasks"
+                icon="i-hugeicons:git-branch"
             />
         </template>
         <template v-for="workflow in workflows" :key="workflow.identity">

@@ -9,7 +9,7 @@
     >
         <template #actions>
             <UiButton
-                icon="i-mingcute:add-square-fill"
+                icon="i-mingcute:add-circle-fill"
                 size="xs"
                 variant="link"
                 color="neutral"
@@ -20,6 +20,13 @@
                 }"
                 @click="createShell()"
                 square
+            />
+        </template>
+        <template #empty>
+            <ExplorerEmpty
+                title="No shells yet"
+                description="An interactive engine session"
+                icon="i-hugeicons:command-line"
             />
         </template>
         <template v-for="shell in shells" :key="shell.identity">

@@ -8,7 +8,9 @@
                 <div class="px-3 py-2 text-xs text-dimmed">Loading…</div>
             </template>
             <template v-else-if="props.empty">
-                <div class="px-3 py-2 text-xs text-dimmed">{{ props.emptyLabel }}</div>
+                <slot name="empty">
+                    <div class="px-3 py-2 text-xs text-dimmed">{{ props.emptyLabel }}</div>
+                </slot>
             </template>
             <template v-else>
                 <slot />
