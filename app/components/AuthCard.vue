@@ -95,7 +95,10 @@ async function signinByFile(file: File) {
     enableStandby();
 
     await sleep(750);
-    await navigateTo({ name: "index" });
+
+    await navigateTo({
+        name: "index",
+    });
 }
 
 async function signinByDatabase() {

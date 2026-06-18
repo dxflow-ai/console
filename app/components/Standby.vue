@@ -24,7 +24,6 @@
                                     <span class="text-xs text-muted -mt-1.5">Console</span>
                                 </div>
                             </div>
-
                             <div class="flex flex-col gap-0.5 p-4">
                                 <div class="flex items-center gap-2">
                                     <UiIcon
