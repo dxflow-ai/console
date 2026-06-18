@@ -6,7 +6,7 @@
         "dev": "nuxt dev",
         "generate": "NODE_OPTIONS=--max-old-space-size=4096 nuxt generate",
         "lint": "tsc --noEmit && eslint --fix .",
-        "format": "prettier --write . '!.output' '!.nuxt'",
+        "format": "prettier --write . '!.output' '!.nuxt' `!pnpm-lock.yaml`",
         "postinstall": "nuxt prepare"
     },
     "dependencies": {
@@ -32,7 +32,6 @@
         "tailwind-variants": "^2.1.0",
         "tailwindcss": "^4.3.1",
         "tailwindcss-animated": "^2.1.0",
-        "uplot": "^1.6.32",
         "vue": "^3.5.38",
         "vue-router": "^4.6.4",
         "webfontloader": "^1.6.28",
@@ -40,6 +39,7 @@
     },
     "devDependencies": {
         "@diphyx/eslint-plugin": "^1.2.0",
+        "@iconify-json/hugeicons": "^1.2.29",
         "@types/jsrsasign": "^10.5.15",
         "@types/node": "^24.13.2",
         "@types/webfontloader": "^1.6.38",

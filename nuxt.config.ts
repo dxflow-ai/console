@@ -34,7 +34,7 @@ export default defineNuxtConfig({
             },
         },
     },
-    css: ["~/assets/tailwind.css", "~/assets/custom.scss", "uplot/dist/uPlot.min.css"],
+    css: ["~/assets/tailwind.css", "~/assets/custom.scss"],
     modules: ["@diphyx/harlemify", "@nuxt/ui", "@vueuse/nuxt", "@nuxtjs/device"],
     harlemify: {
         logger: -999,
