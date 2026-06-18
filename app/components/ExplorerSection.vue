@@ -1,6 +1,12 @@
 <template>
     <div class="flex bg-muted/25 min-h-0 flex-col">
-        <ExplorerHeader :title="props.title" :expanded="props.expanded" @toggle="toggle()">
+        <ExplorerHeader
+            :title="props.title"
+            :expanded="props.expanded"
+            :first="props.first"
+            :last="props.last"
+            @toggle="toggle()"
+        >
             <slot name="actions" />
         </ExplorerHeader>
         <div v-show="props.expanded" class="min-h-0 flex-1 overflow-auto py-1.5">
@@ -32,9 +38,13 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
-    emptyLabel: {
-        type: String,
-        default: "No items",
+    first: {
+        type: Boolean,
+        default: false,
+    },
+    last: {
+        type: Boolean,
+        default: false,
     },
 });
 

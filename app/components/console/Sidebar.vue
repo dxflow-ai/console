@@ -5,20 +5,20 @@
             :class="expanded.has('workflow') ? 'min-h-0 flex-1' : 'shrink-0'"
             @toggle="toggle('workflow')"
             @open="openWorkflow"
+            first
         />
-        <UiSeparator />
         <ArtifactExplorer
             :expanded="expanded.has('artifact')"
             :class="expanded.has('artifact') ? 'min-h-0 flex-1' : 'shrink-0'"
             @toggle="toggle('artifact')"
             @open="openArtifact"
         />
-        <UiSeparator />
         <ShellExplorer
             :expanded="expanded.has('shell')"
             :class="expanded.has('shell') ? 'min-h-0 flex-1' : 'shrink-0'"
             @toggle="toggle('shell')"
             @open="openShell"
+            last
         />
     </aside>
 </template>

@@ -1,10 +1,12 @@
 <template>
-    <div
-        class="flex h-8 shrink-0 items-center justify-between bg-muted/50 border-b border-default px-3"
-        :class="{
-            'border-b-0': !props.expanded,
-        }"
-    >
+    <div class="relative flex h-8 shrink-0 items-center justify-between bg-muted/50 px-3">
+        <div
+            class="absolute inset-[-0.5px] border-default pointer-events-none"
+            :class="{
+                'border-t': !props.first || props.expanded,
+                'border-b': !props.last || props.expanded,
+            }"
+        />
         <button type="button" class="flex min-w-0 flex-1 items-center gap-1 text-left" @click="toggle()">
             <div class="size-2 flex items-center">
                 <UiIcon
@@ -34,6 +36,14 @@ const props = defineProps({
     expanded: {
         type: Boolean,
         default: true,
+    },
+    first: {
+        type: Boolean,
+        default: false,
+    },
+    last: {
+        type: Boolean,
+        default: false,
     },
 });
 
