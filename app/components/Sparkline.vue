@@ -2,8 +2,8 @@
     <svg class="size-full" preserveAspectRatio="none" fill="none" :viewBox="`0 0 ${VIEW_W} ${VIEW_H}`">
         <defs>
             <linearGradient :id="gradientId" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="currentColor" stop-opacity="0.22" />
-                <stop offset="100%" stop-color="currentColor" stop-opacity="0" />
+                <stop offset="0%" stop-color="currentColor" stop-opacity="0.2" />
+                <stop offset="100%" stop-color="currentColor" stop-opacity="0.1" />
             </linearGradient>
         </defs>
         <template v-if="props.fill">
