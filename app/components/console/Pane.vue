@@ -1,13 +1,15 @@
 <template>
     <div class="flex min-h-0 flex-1 flex-col">
-        <template v-if="tabs.length">
-            <div class="flex shrink-0 items-center gap-1.5 overflow-x-auto border-b border-default px-3 py-1">
-                <template v-for="tab in tabs" :key="tab.key">
+        <template v-if="tabs[props.position].length">
+            <div
+                class="flex h-8 shrink-0 items-center gap-1.5 overflow-x-auto bg-muted/50 border-b border-default px-3"
+            >
+                <template v-for="tab in tabs[props.position]" :key="tab.key">
                     <UiBadge
-                        variant="soft"
                         size="sm"
+                        variant="soft"
                         class="shrink-0 cursor-pointer items-center gap-1"
-                        :color="tab.key === activeKey ? 'primary' : 'neutral'"
+                        :color="tab.key === activeKey[props.position] ? 'primary' : 'neutral'"
                         @click="setActive(props.position, tab.key)"
                     >
                         <UiIcon class="size-3 shrink-0" :name="tab.icon" />
@@ -67,21 +69,13 @@ const props = defineProps({
     },
 });
 
-const { tabs: allTabs, activeKey: allActiveKey, closeTab, setActive } = useTabs();
+const { tabs, activeKey, closeTab, setActive } = useTabs();
 const { secondaryFull, toggleSecondaryFull } = useWorkspace();
-
-const tabs = computed(() => {
-    return allTabs[props.position];
-});
-
-const activeKey = computed(() => {
-    return allActiveKey[props.position];
-});
 
 const activeTab = computed<PaneTab | null>(() => {
     return (
-        tabs.value.find((tab) => {
-            return tab.key === activeKey.value;
+        tabs[props.position].find((tab) => {
+            return tab.key === activeKey[props.position];
         }) ?? null
     );
 });
