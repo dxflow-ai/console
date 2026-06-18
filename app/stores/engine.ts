@@ -421,36 +421,6 @@ export const engineStore = createStore({
             }
         });
 
-        const restart = handler<unknown, string | null>(
-            async () => {
-                const { call, read } = newHttpRequest("/api/engine/restart/");
-
-                const callError = await call({
-                    method: "PUT",
-                });
-
-                if (callError) {
-                    throw callError;
-                }
-
-                let result: string | null = null;
-                const readError = await read((chunk) => {
-                    if (chunk.isEntity) {
-                        result = chunk.payload;
-                    }
-                });
-
-                if (readError) {
-                    throw readError;
-                }
-
-                return result;
-            },
-            {
-                concurrent: ActionConcurrent.BLOCK,
-            },
-        );
-
         const reset = handler(async ({ model }) => {
             liveStatState = false;
             liveStatController?.abort();
@@ -491,7 +461,6 @@ export const engineStore = createStore({
             stopStatLive,
             startPingLive,
             stopPingLive,
-            restart,
             reset,
         };
     },

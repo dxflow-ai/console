@@ -35,29 +35,67 @@ export function useEngineStats() {
         return Math.round(memoryHistory.value[memoryHistory.value.length - 1] ?? 0);
     });
 
-    const disks = computed(() => {
-        const samples = engineStore.view.stat.value.disk;
-        const point = (samples[samples.length - 1] ?? {}) as Record<string, { percent: number; value: number }>;
-
-        return Object.entries(point).map(([name, usage]) => {
-            return {
-                name,
-                percent: Math.round(usage.percent ?? 0),
-            };
-        });
+    const cores = computed(() => {
+        return engineStore.view.attribute.value.cpu.cores || 0;
     });
 
-    const networks = computed(() => {
+    const model = computed(() => {
+        return engineStore.view.attribute.value.cpu.model || "";
+    });
+
+    const memoryTotal = computed(() => {
+        return engineStore.view.attribute.value.memory.physical || 0;
+    });
+
+    const disk = computed(() => {
+        const inventory = engineStore.view.attribute.value.disk;
+        const samples = engineStore.view.stat.value.disk;
+
+        const size = inventory.reduce((total, item) => {
+            return total + (item.size || 0);
+        }, 0);
+
+        const usedAt = (sample: Record<string, { percent: number }>) => {
+            return inventory.reduce((total, item) => {
+                const percent = (sample[item.path] ?? sample[item.name])?.percent || 0;
+
+                return total + (percent / 100) * (item.size || 0);
+            }, 0);
+        };
+
+        const used = usedAt((samples[samples.length - 1] ?? {}) as Record<string, { percent: number }>);
+
+        return {
+            count: inventory.length,
+            used,
+            size,
+            percent: size ? Math.round((used / size) * 100) : 0,
+            history: samples.map((sample) => {
+                return size ? Math.round((usedAt(sample) / size) * 100) : 0;
+            }),
+        };
+    });
+
+    const network = computed(() => {
+        const inventory = engineStore.view.attribute.value.network;
         const samples = engineStore.view.stat.value.network;
+
+        const sumAt = (sample: Record<string, { sent: number; received: number }>, key: "sent" | "received") => {
+            return inventory.reduce((total, item) => {
+                return total + (sample[item.name]?.[key] || 0);
+            }, 0);
+        };
+
         const point = (samples[samples.length - 1] ?? {}) as Record<string, { sent: number; received: number }>;
 
-        return Object.entries(point).map(([name, throughput]) => {
-            return {
-                name,
-                sent: throughput.sent ?? 0,
-                received: throughput.received ?? 0,
-            };
-        });
+        return {
+            count: inventory.length,
+            sent: sumAt(point, "sent"),
+            received: sumAt(point, "received"),
+            history: samples.map((sample) => {
+                return sumAt(sample, "received");
+            }),
+        };
     });
 
     return {
@@ -65,7 +103,10 @@ export function useEngineStats() {
         memoryHistory,
         cpu,
         memory,
-        disks,
-        networks,
+        cores,
+        model,
+        memoryTotal,
+        disk,
+        network,
     };
 }

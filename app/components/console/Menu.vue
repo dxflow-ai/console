@@ -1,54 +1,60 @@
 <template>
     <UiDropdownMenu
         :items="brandItems"
+        :modal="false"
         :external-icon="false"
         :content="{
             align: 'start',
             side: 'bottom',
-            sideOffset: 2,
+            sideOffset: -0.5,
         }"
+        :ui="{
+            content: 'rounded-t-none',
+        }"
+        arrow
     >
         <UiButton
             label="dxflow"
             size="sm"
-            variant="link"
+            variant="ghost"
             color="neutral"
             :ui="{
-                base: 'px-0 font-semibold focus-visible:ring-0 focus:outline-none',
+                base: 'font-semibold',
             }"
         />
-        <template #brand>
-            <div class="flex items-center gap-2.5">
-                <div class="flex size-9 shrink-0 items-center justify-center rounded bg-elevated">
-                    <BrandMark class="size-5" />
-                </div>
-                <div class="flex flex-col text-left">
-                    <span class="font-semibold text-default">dxflow</span>
-                    <div class="text-xs text-muted -mt-0.5 w-22 truncate">
-                        <span>Console · v{{ version || "unknown" }}</span>
-                    </div>
-                </div>
-            </div>
-        </template>
     </UiDropdownMenu>
     <UiDropdownMenu
         :items="viewItems"
+        :modal="false"
         :content="{
             align: 'start',
             side: 'bottom',
-            sideOffset: 2,
+            sideOffset: -0.5,
+        }"
+        :ui="{
+            content: 'rounded-t-none',
+        }"
+        arrow
+    >
+        <UiButton label="View" size="sm" variant="ghost" color="neutral" />
+    </UiDropdownMenu>
+    <UiModal
+        v-model:open="systemOpen"
+        title="Engine Monitor"
+        :transition="false"
+        :ui="{
+            content: 'sm:max-w-3xl',
         }"
     >
-        <UiButton
-            label="View"
-            size="sm"
-            variant="link"
-            color="neutral"
-            :ui="{
-                base: 'focus-visible:ring-0 focus:outline-none',
-            }"
-        />
-    </UiDropdownMenu>
+        <template #body>
+            <Overview />
+        </template>
+    </UiModal>
+    <UiModal v-model:open="licenseOpen" title="Engine License" :transition="false">
+        <template #body>
+            <License />
+        </template>
+    </UiModal>
 </template>
 
 <script lang="ts" setup>
@@ -56,39 +62,27 @@ import type { DropdownMenuItem } from "@nuxt/ui";
 
 const colorMode = useColorMode();
 
-const { upScale, downScale, resetScale } = useScale();
+const { scale } = useScale();
 
-const { sidebarOpen, panelOpen, toggleSidebar, togglePanel } = useWorkspace();
-
-const confirmRestart = useConfirmToast({
-    id: "engine-restart-confirm",
-    icon: "i-mingcute:power-line",
-    color: "neutral",
-    title() {
-        return "Restart Engine";
-    },
-    description() {
-        return "Are you sure you want to restart the engine?";
-    },
-    async confirm() {
-        try {
-            await engineStore.action.restart();
-        } catch (error) {
-            dangerToast("Failed to restart engine", error as Error);
-        }
-    },
-});
-
-const version = computed(() => {
-    return engineStore.view.attribute.value.version;
-});
+const systemOpen = ref(false);
+const licenseOpen = ref(false);
 
 const brandItems = computed<DropdownMenuItem[][]>(() => {
     return [
         [
             {
-                label: "dxflow",
-                slot: "brand",
+                label: "Engine Monitor",
+                icon: "i-mingcute:server-2-line",
+                onSelect() {
+                    systemOpen.value = true;
+                },
+            },
+            {
+                label: "Engine License",
+                icon: "i-mingcute:certificate-line",
+                onSelect() {
+                    licenseOpen.value = true;
+                },
             },
         ],
         [
@@ -105,16 +99,6 @@ const brandItems = computed<DropdownMenuItem[][]>(() => {
                 target: "_blank",
             },
         ],
-        [
-            {
-                label: "Restart Engine",
-                icon: "i-mingcute:power-line",
-                color: "error",
-                onSelect() {
-                    confirmRestart.open();
-                },
-            },
-        ] as any,
     ];
 });
 
@@ -131,40 +115,24 @@ const viewItems = computed<DropdownMenuItem[][]>(() => {
         ],
         [
             {
-                label: sidebarOpen.value ? "Hide Sidebar" : "Show Sidebar",
-                icon: "i-mingcute:layout-leftbar-line",
+                label: "Small · 100%",
+                icon: scale.value === 1 ? "i-mingcute:check-line" : "i-mingcute:minimize-line",
                 onSelect() {
-                    toggleSidebar();
+                    scale.value = 1;
                 },
             },
             {
-                label: panelOpen.value ? "Hide Panel" : "Show Panel",
-                icon: "i-mingcute:layout-bottom-line",
+                label: "Medium · 125%",
+                icon: scale.value === 1.25 ? "i-mingcute:check-line" : "i-mingcute:minimize-line",
                 onSelect() {
-                    togglePanel();
-                },
-            },
-        ],
-        [
-            {
-                label: "Zoom In",
-                icon: "i-mingcute:add-circle-line",
-                onSelect() {
-                    upScale();
+                    scale.value = 1.25;
                 },
             },
             {
-                label: "Zoom Out",
-                icon: "i-mingcute:minus-circle-line",
+                label: "Large · 150%",
+                icon: scale.value === 1.5 ? "i-mingcute:check-line" : "i-mingcute:minimize-line",
                 onSelect() {
-                    downScale();
-                },
-            },
-            {
-                label: "Reset Zoom",
-                icon: "i-mingcute:refresh-2-line",
-                onSelect() {
-                    resetScale();
+                    scale.value = 1.5;
                 },
             },
         ],

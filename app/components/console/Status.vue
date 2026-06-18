@@ -1,64 +1,32 @@
 <template>
-    <UiPopover
-        :content="{
-            side: 'top',
-            align: 'start',
-            sideOffset: 6,
-        }"
-    >
-        <button type="button" class="flex items-center gap-1.5 hover:text-default">
-            <span class="size-2 rounded-full" :class="connectionClass" />
+    <div class="flex items-center gap-3">
+        <span class="flex items-center gap-1.5">
+            <span class="size-2 rounded-full transition-all" :class="pingStatus" />
             <span class="font-medium text-default">{{ host.name || "Unknown" }}</span>
-        </button>
-
-        <template #content>
-            <div class="flex w-60 flex-col gap-2 p-2 text-xs">
-                <ConsoleInfoCard title="Engine">
-                    <ConsoleInfoRow label="Version" :value="attribute.version || '—'" />
-                    <ConsoleInfoRow label="License" :value="license.name || '—'" />
-                    <ConsoleInfoRow label="Uptime">
-                        <template v-if="attribute.boot">
-                            <RelativeTime :timestamp="attribute.boot" />
-                        </template>
-                        <template v-else>
-                            <span>—</span>
-                        </template>
-                    </ConsoleInfoRow>
-                </ConsoleInfoCard>
-
-                <ConsoleInfoCard title="System">
-                    <ConsoleInfoRow label="OS" :value="host.os ? `${host.os} · ${host.arch}` : '—'" />
-                    <ConsoleInfoRow
-                        label="CPU"
-                        :value="attribute.cpu.model ? `${attribute.cpu.model} · ${attribute.cpu.cores}c` : '—'"
-                    />
-                    <ConsoleInfoRow label="Memory" :value="prettyBytes(attribute.memory.physical || 0)" />
-                </ConsoleInfoCard>
-            </div>
-        </template>
-    </UiPopover>
+        </span>
+        <UiBadge color="neutral" variant="soft">
+            <span class="font-semibold">Cpu</span>
+            <span class="font-mono w-4.5 text-right">{{ cpu }}%</span>
+        </UiBadge>
+        <UiBadge color="neutral" variant="soft">
+            <span class="font-semibold">Mem</span>
+            <span class="font-mono w-4.5 text-right">{{ memory }}%</span>
+        </UiBadge>
+    </div>
 </template>
 
 <script lang="ts" setup>
-import prettyBytes from "pretty-bytes";
+const { cpu, memory } = useEngineStats();
 
-const attribute = computed(() => {
-    return engineStore.view.attribute.value;
+const host = computed(() => {
+    return engineStore.view.attribute.value.host;
 });
 
 const ping = computed(() => {
     return engineStore.view.ping.value;
 });
 
-const host = computed(() => {
-    return engineStore.view.attribute.value.host;
-});
-
-const license = computed(() => {
-    return engineStore.view.license.value;
-});
-
-const connectionClass = computed(() => {
+const pingStatus = computed(() => {
     if (!ping.value.latency || ping.value.timeout) {
         return "bg-red-500";
     }
