@@ -2,20 +2,17 @@
     <aside class="flex w-64 shrink-0 flex-col border-r border-default">
         <WorkflowExplorer
             :expanded="expanded.has('workflow')"
-            :class="expanded.has('workflow') ? 'min-h-0 flex-1' : 'shrink-0'"
             @toggle="toggle('workflow')"
             @open="openWorkflow"
             first
         />
         <ArtifactExplorer
             :expanded="expanded.has('artifact')"
-            :class="expanded.has('artifact') ? 'min-h-0 flex-1' : 'shrink-0'"
             @toggle="toggle('artifact')"
             @open="openArtifact"
         />
         <ShellExplorer
             :expanded="expanded.has('shell')"
-            :class="expanded.has('shell') ? 'min-h-0 flex-1' : 'shrink-0'"
             @toggle="toggle('shell')"
             @open="openShell"
             last

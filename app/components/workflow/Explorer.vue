@@ -1,7 +1,6 @@
 <template>
     <ExplorerSection
         title="Workflows"
-        empty-label="No workflows"
         :expanded="props.expanded"
         :loading="loading"
         :empty="!workflows.length"

@@ -1,7 +1,6 @@
 <template>
     <ExplorerSection
         title="Shell"
-        empty-label="No shells"
         :expanded="props.expanded"
         :loading="loading"
         :empty="!shells.length"

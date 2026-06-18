@@ -1,7 +1,6 @@
 <template>
     <ExplorerSection
         title="Artifacts"
-        empty-label="No artifacts"
         :expanded="props.expanded"
         :loading="loading"
         :empty="!artifacts.length"
