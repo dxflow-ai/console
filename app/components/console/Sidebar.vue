@@ -26,16 +26,7 @@
 <script lang="ts" setup>
 const { openTab } = useTabs();
 const { openSecondary } = useWorkspace();
-
-const expanded = ref<Set<"workflow" | "artifact" | "shell">>(new Set(["workflow"]));
-
-function toggle(key: "workflow" | "artifact" | "shell") {
-    if (expanded.value.has(key)) {
-        expanded.value.delete(key);
-    } else {
-        expanded.value.add(key);
-    }
-}
+const { expanded, toggle } = useExplorer();
 
 function openWorkflow(payload: { workflow: Workflow; view: string; step?: number }) {
     const position: PanePosition = payload.view === "logs" ? "secondary" : "primary";

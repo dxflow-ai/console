@@ -52,7 +52,7 @@
             </div>
         </template>
         <template v-else>
-            <div class="flex flex-1 items-center justify-center text-xs text-dimmed">No open tabs</div>
+            <ConsoleIntro :position="props.position" />
         </template>
     </div>
 </template>

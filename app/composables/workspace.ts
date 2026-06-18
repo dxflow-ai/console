@@ -34,6 +34,30 @@ export function useWorkspace() {
     };
 }
 
+export type ExplorerKey = "workflow" | "artifact" | "shell";
+
+const expandedExplorers = ref<Set<ExplorerKey>>(new Set(["workflow"]));
+
+export function useExplorer() {
+    function toggle(key: ExplorerKey) {
+        if (expandedExplorers.value.has(key)) {
+            expandedExplorers.value.delete(key);
+        } else {
+            expandedExplorers.value.add(key);
+        }
+    }
+
+    function expand(key: ExplorerKey) {
+        expandedExplorers.value = new Set([key]);
+    }
+
+    return {
+        expanded: expandedExplorers,
+        toggle,
+        expand,
+    };
+}
+
 export type PanePosition = "primary" | "secondary";
 
 export type PaneTab = {
