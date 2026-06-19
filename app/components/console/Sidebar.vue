@@ -6,17 +6,8 @@
             @open="openWorkflow"
             first
         />
-        <ArtifactExplorer
-            :expanded="expanded.has('artifact')"
-            @toggle="toggle('artifact')"
-            @open="openArtifact"
-        />
-        <ShellExplorer
-            :expanded="expanded.has('shell')"
-            @toggle="toggle('shell')"
-            @open="openShell"
-            last
-        />
+        <ArtifactExplorer :expanded="expanded.has('artifact')" @toggle="toggle('artifact')" @open="openArtifact" />
+        <ShellExplorer :expanded="expanded.has('shell')" @toggle="toggle('shell')" @open="openShell" last />
     </aside>
 </template>
 

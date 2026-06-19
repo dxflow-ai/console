@@ -1,23 +1,17 @@
 <template>
-    <ExplorerSection
-        title="Shell"
-        :expanded="props.expanded"
-        :loading="loading"
-        :empty="!shells.length"
-        @toggle="toggle"
-    >
+    <ExplorerSection title="Shell" :expanded="props.expanded" :empty="!shells.length" :menu="menu" @toggle="toggle">
         <template #actions>
             <UiButton
-                icon="i-mingcute:add-circle-fill"
+                icon="i-mingcute:refresh-2-line"
                 size="xs"
                 variant="link"
                 color="neutral"
                 class="pr-0!"
-                :loading="creating"
+                :loading="loading || creating"
                 :ui="{
                     leadingIcon: 'size-3.5',
                 }"
-                @click="createShell()"
+                @click="load()"
                 square
             />
         </template>
@@ -36,6 +30,8 @@
 </template>
 
 <script lang="ts" setup>
+import type { ContextMenuItem } from "@nuxt/ui";
+
 const props = defineProps({
     expanded: {
         type: Boolean,
@@ -54,8 +50,47 @@ const { execute: executeGet, loading } = useStoreAction(shellStore, "get", {
     isolated: true,
 });
 
-const { execute: executeCreate, loading: creating } = useStoreAction(shellStore, "create", {
-    isolated: true,
+const { create, prune, creating } = useShellActions();
+
+const confirmPrune = useConfirmToast({
+    id: "shell-prune",
+    color: "red",
+    title() {
+        return "Prune shells";
+    },
+    description() {
+        return "Remove all terminated shells?";
+    },
+    confirm() {
+        prune();
+    },
+});
+
+const menu = computed<ContextMenuItem[][]>(() => {
+    const items: ContextMenuItem[][] = [
+        [
+            {
+                label: "New shell",
+                onSelect() {
+                    createShell();
+                },
+            },
+        ],
+    ];
+
+    if (shells.value.length) {
+        items.push([
+            {
+                label: "Prune all",
+                color: "red",
+                onSelect() {
+                    confirmPrune.open();
+                },
+            },
+        ]);
+    }
+
+    return items;
 });
 
 function toggle() {
@@ -75,14 +110,10 @@ async function load() {
 }
 
 async function createShell() {
-    try {
-        const shell = await executeCreate();
+    const shell = await create();
 
-        if (shell) {
-            onOpen(shell);
-        }
-    } catch (error) {
-        dangerToast("Failed to create shell", error as Error);
+    if (shell) {
+        onOpen(shell);
     }
 }
 

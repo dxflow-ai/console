@@ -43,3 +43,28 @@ export function useWorkflow() {
         logs,
     };
 }
+
+export function useWorkflowActions() {
+    const { execute: executeCreate, loading: creating } = useStoreAction(workflowStore, "create", {
+        isolated: true,
+    });
+
+    async function createFromFile(file: File) {
+        try {
+            const source = await file.text();
+
+            await executeCreate({
+                payload: {
+                    source,
+                },
+            });
+        } catch (error) {
+            dangerToast("Failed to create workflow", error as Error);
+        }
+    }
+
+    return {
+        creating,
+        createFromFile,
+    };
+}

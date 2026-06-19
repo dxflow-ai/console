@@ -2,22 +2,22 @@
     <ExplorerSection
         title="Artifacts"
         :expanded="props.expanded"
-        :loading="loading"
         :empty="!artifacts.length"
+        :menu="menu"
         @toggle="toggle"
     >
         <template #actions>
             <UiButton
-                icon="i-mingcute:add-circle-fill"
+                icon="i-mingcute:refresh-2-line"
                 size="xs"
                 variant="link"
                 color="neutral"
                 class="pr-0!"
-                :loading="uploading"
+                :loading="loading || uploading"
                 :ui="{
                     leadingIcon: 'size-3.5',
                 }"
-                @click="fileDialog.open()"
+                @click="load()"
                 square
             />
         </template>
@@ -36,6 +36,8 @@
 </template>
 
 <script lang="ts" setup>
+import type { ContextMenuItem } from "@nuxt/ui";
+
 const props = defineProps({
     root: {
         type: String,
@@ -54,19 +56,36 @@ const emit = defineEmits({
 
 const { data: nodes } = useStoreView(artifactStore, "nodes");
 
+const { execute: executeList, loading } = useStoreAction(artifactStore, "list", {
+    isolated: true,
+});
+
+const { makeDirectory, upload, uploading } = useArtifactActions();
+
 const fileDialog = useFileDialog({
     reset: true,
     multiple: true,
 });
 
-const { execute: executeListDir, loading } = useStoreAction(artifactStore, "listDir", {
-    isolated: true,
-});
-
-const uploading = ref(false);
-
 const artifacts = computed<Artifact[]>(() => {
     return nodes.value[props.root] ?? [];
+});
+
+const menu = computed<ContextMenuItem[]>(() => {
+    return [
+        {
+            label: "Upload file",
+            onSelect() {
+                fileDialog.open();
+            },
+        },
+        {
+            label: "Make directory",
+            onSelect() {
+                makeDirectory(props.root, artifacts.value);
+            },
+        },
+    ];
 });
 
 function toggle() {
@@ -79,7 +98,7 @@ function onOpen(artifact: Artifact) {
 
 async function load() {
     try {
-        await executeListDir({
+        await executeList({
             payload: {
                 directory: props.root,
             },
@@ -89,36 +108,9 @@ async function load() {
     }
 }
 
-async function uploadFiles(files: File[]) {
-    uploading.value = true;
-
-    let success = 0;
-    for (const file of files) {
-        try {
-            await artifactStore.action.upload({
-                payload: {
-                    identity: `${props.root}/${file.name}`,
-                    file,
-                    force: true,
-                },
-            });
-
-            success++;
-        } catch (error) {
-            dangerToast(`Failed to upload '${file.name}'`, error as Error);
-        }
-    }
-
-    uploading.value = false;
-
-    if (success) {
-        await load();
-    }
-}
-
 fileDialog.onChange((files) => {
     if (files?.length) {
-        uploadFiles(Array.from(files));
+        upload(props.root, Array.from(files));
     }
 });
 

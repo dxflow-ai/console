@@ -2,22 +2,22 @@
     <ExplorerSection
         title="Workflows"
         :expanded="props.expanded"
-        :loading="loading"
         :empty="!workflows.length"
+        :menu="menu"
         @toggle="toggle"
     >
         <template #actions>
             <UiButton
-                icon="i-mingcute:add-circle-fill"
+                icon="i-mingcute:refresh-2-line"
                 size="xs"
                 variant="link"
                 color="neutral"
                 class="pr-0!"
-                :loading="creating"
+                :loading="loading || creating"
                 :ui="{
                     leadingIcon: 'size-3.5',
                 }"
-                @click="fileDialog.open()"
+                @click="load()"
                 square
             />
         </template>
@@ -36,6 +36,8 @@
 </template>
 
 <script lang="ts" setup>
+import type { ContextMenuItem } from "@nuxt/ui";
+
 const props = defineProps({
     expanded: {
         type: Boolean,
@@ -50,27 +52,28 @@ const emit = defineEmits({
 
 const { data: workflows } = useStoreView(workflowStore, "list");
 
+const { execute: executeGet, loading } = useStoreAction(workflowStore, "get", {
+    isolated: true,
+});
+
+const { createFromFile, creating } = useWorkflowActions();
+
 const fileDialog = useFileDialog({
     reset: true,
     multiple: false,
     accept: ".yaml,.yml,application/x-yaml,text/yaml",
 });
 
-const { execute: executeGet, loading } = useStoreAction(workflowStore, "get", {
-    isolated: true,
+const menu = computed<ContextMenuItem[]>(() => {
+    return [
+        {
+            label: "New workflow",
+            onSelect() {
+                fileDialog.open();
+            },
+        },
+    ];
 });
-
-const { execute: executeCreate, loading: creating } = useStoreAction(workflowStore, "create", {
-    isolated: true,
-});
-
-async function load() {
-    try {
-        await executeGet();
-    } catch (error) {
-        return dangerToast("Failed to load workflows", error as Error);
-    }
-}
 
 function toggle() {
     emit("toggle");
@@ -80,15 +83,11 @@ function onOpen(payload: { workflow: Workflow; view: string; step?: number }) {
     emit("open", payload);
 }
 
-async function createFromFile(file: File) {
+async function load() {
     try {
-        const source = await file.text();
-
-        await executeCreate({
-            payload: { source },
-        });
+        await executeGet();
     } catch (error) {
-        dangerToast("Failed to create workflow", error as Error);
+        return dangerToast("Failed to load workflows", error as Error);
     }
 }
 

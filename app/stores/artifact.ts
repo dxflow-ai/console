@@ -1,11 +1,15 @@
 import { ViewClone, ActionConcurrent, ModelManyKind } from "@diphyx/harlemify/runtime";
+import { saveAs } from "file-saver";
 import { sleep } from "radash";
 
 export const artifactStore = createStore({
     name: "artifact",
     model({ many }) {
         const list = many(artifactShape);
-        const nodes = many(artifactShape, { kind: ModelManyKind.RECORD });
+
+        const nodes = many(artifactShape, {
+            kind: ModelManyKind.RECORD,
+        });
 
         return {
             list,
@@ -90,7 +94,7 @@ export const artifactStore = createStore({
             },
         );
 
-        const listDir = handler<{ directory: string; pattern?: string }, Artifact[]>(
+        const list = handler<{ directory: string; pattern?: string }, Artifact[]>(
             async ({ model, payload }) => {
                 const { call, read } = newHttpRequest("/api/artifact/");
 
@@ -217,8 +221,6 @@ export const artifactStore = createStore({
                 }
 
                 if (result) {
-                    // Preserve the existing entity's fields (permission/size/modified_at) so the
-                    // renamed row stays well-formed for the list view's sort comparator.
                     const existing = view.list.value.find((item) => {
                         return item.identity === payload.identity;
                     });
@@ -439,48 +441,6 @@ export const artifactStore = createStore({
             return result;
         });
 
-        const share = handler<
-            {
-                identities: string[];
-                lifetime?: string;
-                writable?: boolean;
-            },
-            ArtifactShareResult[]
-        >(
-            async ({ payload }) => {
-                const { call, read } = newHttpRequest("/api/artifact/share/");
-
-                const callError = await call({
-                    method: "PUT",
-                    body: {
-                        identities: payload.identities,
-                        lifetime: payload.lifetime,
-                        writable: payload.writable,
-                    },
-                });
-
-                if (callError) {
-                    throw callError;
-                }
-
-                const results: ArtifactShareResult[] = [];
-                const readError = await read((chunk) => {
-                    if (chunk.isEntity) {
-                        results.push(chunk.payload);
-                    }
-                });
-
-                if (readError) {
-                    throw readError;
-                }
-
-                return results;
-            },
-            {
-                concurrent: ActionConcurrent.BLOCK,
-            },
-        );
-
         const reset = handler(async ({ model }) => {
             model.list.reset();
             model.nodes.reset();
@@ -488,34 +448,115 @@ export const artifactStore = createStore({
 
         return {
             get,
-            listDir,
+            list,
             create,
-            renameById,
             upload,
+            renameById,
             downloadById,
             zipById,
             unzipById,
-            share,
             removeById,
             removeBatch,
             reset,
         };
     },
     compose({ action }) {
-        async function uploadAndRefresh(payload: {
-            identity: string;
-            file: File;
-            force?: boolean;
-            onProgress?: (progress: number) => void;
-        }) {
-            await action.upload({ payload });
+        async function refreshDirectory(directory: string) {
+            await action.list({
+                payload: {
+                    directory,
+                },
+            });
+        }
 
-            const directory = payload.identity.split("/").slice(0, -1).join("/");
-            await action.get({ payload: { directory } });
+        async function createDirectory(identity: string) {
+            await action.create({
+                payload: {
+                    identity,
+                    directory: true,
+                },
+            });
+
+            await refreshDirectory(parentOf(identity));
+        }
+
+        async function renameAndRefresh(identity: string, newIdentity: string) {
+            await action.renameById({
+                payload: {
+                    identity,
+                    new_identity: newIdentity,
+                },
+            });
+
+            await refreshDirectory(parentOf(identity));
+        }
+
+        async function removeAndRefresh(identity: string) {
+            await action.removeById({
+                payload: {
+                    identity,
+                },
+            });
+
+            await refreshDirectory(parentOf(identity));
+        }
+
+        async function zipAndRefresh(identity: string) {
+            await action.zipById({
+                payload: {
+                    identity,
+                    quiet: true,
+                },
+            });
+
+            await refreshDirectory(parentOf(identity));
+        }
+
+        async function unzipAndRefresh(identity: string) {
+            await action.unzipById({
+                payload: {
+                    identity,
+                    quiet: true,
+                },
+            });
+
+            await refreshDirectory(parentOf(identity));
+        }
+
+        async function downloadAndSave(identity: string) {
+            const result = await action.downloadById({
+                payload: {
+                    identity,
+                },
+            });
+
+            if (result) {
+                saveAs(result.blob, result.name);
+            }
+        }
+
+        async function uploadDirectory(directory: string, files: File[]) {
+            for (const file of files) {
+                await action.upload({
+                    payload: {
+                        identity: `${directory}/${file.name}`,
+                        file,
+                        force: true,
+                    },
+                });
+            }
+
+            await refreshDirectory(directory);
         }
 
         return {
-            uploadAndRefresh,
+            createDirectory,
+            renameAndRefresh,
+            removeAndRefresh,
+            zipAndRefresh,
+            unzipAndRefresh,
+            downloadAndSave,
+            uploadDirectory,
         };
     },
 });

@@ -116,11 +116,26 @@ export function useTabs() {
         activeKey[position] = key;
     }
 
+    function closeTabsWhere(predicate: (tab: PaneTab) => boolean) {
+        const positions: PanePosition[] = ["primary", "secondary"];
+
+        for (const position of positions) {
+            const keys = tabs[position].filter(predicate).map((tab) => {
+                return tab.key;
+            });
+
+            for (const key of keys) {
+                closeTab(position, key);
+            }
+        }
+    }
+
     return {
         tabs,
         activeKey,
         openTab,
         closeTab,
+        closeTabsWhere,
         setActive,
     };
 }
