@@ -6,13 +6,9 @@
                 'opacity-0': loading,
             }"
         >
-            <div ref="element" class="relative size-full flex items-center justify-center overflow-visible" />
+            <ShellTerminal ref="terminal" @data="onData" @resize="onResize" />
         </div>
-        <template v-if="loading">
-            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <UiIcon class="size-5 animate-spin text-muted" name="i-mingcute:loading-3-fill" />
-            </div>
-        </template>
+        <Loading :active="loading" />
     </div>
 </template>
 
@@ -26,60 +22,30 @@ const props = defineProps({
     },
 });
 
-const theme = useColorMode();
-
-const { scale } = useScale();
 const { authorizedToken } = useSession();
 const { data: shells } = useStoreView(shellStore, "list");
 
-const element = useTemplateRef("element");
-const { width, height } = useElementSize(element);
+const terminal = useTemplateRef<{ attach: () => Promise<void>; write: (data: string) => void }>("terminal");
 
 const loading = ref(false);
 
 const webSocketWrapper = newWebSocketWrapper();
-const terminalWrapper = newTerminalWrapper();
 
-watchDebounced(
-    () => {
-        return width.value * height.value;
-    },
-    () => {
-        terminalWrapper.fitAddon.fit();
-    },
-    {
-        debounce: 250,
-    },
-);
+function onData(value: string) {
+    webSocketWrapper.tryWrite(value);
+}
 
-watchDebounced(
-    () => {
-        return scale.value;
-    },
-    (value) => {
-        terminalWrapper.setScale(value);
-    },
-    {
-        debounce: 250,
-    },
-);
-
-watchDebounced(
-    () => {
-        return theme.value;
-    },
-    (value) => {
-        terminalWrapper.setTheme(value);
-    },
-    {
-        debounce: 250,
-    },
-);
+function onResize(columns: number, rows: number) {
+    shellStore.action.resizeById({
+        payload: {
+            identity: props.identity,
+            columns,
+            rows,
+        },
+    });
+}
 
 async function load() {
-    terminalWrapper.setScale(scale.value);
-    terminalWrapper.setTheme(theme.value);
-
     const shell = shells.value.find(({ identity }) => {
         return identity === props.identity;
     });
@@ -99,7 +65,7 @@ async function load() {
     const connectError = await webSocketWrapper.connect({
         path: `/api/shell/${props.identity}/?authorization=${authorizedToken.value}`,
         onData(value) {
-            terminalWrapper.tryWrite(atob(value));
+            terminal.value?.write(atob(value));
         },
     });
 
@@ -107,21 +73,7 @@ async function load() {
         return dangerToast("Failed to load terminal", connectError);
     }
 
-    await terminalWrapper.attach({
-        element: element.value as HTMLElement,
-        onData(value) {
-            webSocketWrapper.tryWrite(value);
-        },
-        onResize(columns, rows) {
-            shellStore.action.resizeById({
-                payload: {
-                    identity: props.identity,
-                    columns,
-                    rows,
-                },
-            });
-        },
-    });
+    await terminal.value?.attach();
 }
 
 async function loadWrapper() {
@@ -142,6 +94,5 @@ onMounted(() => {
 
 onUnmounted(() => {
     webSocketWrapper.close();
-    terminalWrapper.dispose();
 });
 </script>
