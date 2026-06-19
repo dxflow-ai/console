@@ -18,7 +18,7 @@
                             <span class="text-xs text-dimmed">phase {{ phase.phase }}</span>
                             <template v-for="step in phase.steps" :key="step.identity">
                                 <div class="flex items-center gap-2 rounded-md border border-default px-3 py-2 text-sm">
-                                    <StatusDot :status="step.status" />
+                                    <WorkflowStatus :status="step.status" />
                                     <span class="truncate">{{ step.name }}</span>
                                 </div>
                             </template>
@@ -30,7 +30,7 @@
                 <template v-if="activeStep">
                     <div class="flex flex-col gap-1.5 text-sm">
                         <div class="flex items-center gap-2">
-                            <StatusDot :status="activeStep.status" />
+                            <WorkflowStatus :status="activeStep.status" />
                             <span class="font-medium">{{ activeStep.name }}</span>
                         </div>
                         <span class="text-xs text-muted">status: {{ activeStep.status }}</span>
@@ -80,7 +80,7 @@
                 <div class="flex flex-col gap-1.5">
                     <template v-for="step in steps" :key="step.identity">
                         <div class="flex items-center gap-2 text-sm">
-                            <StatusDot :status="step.status" />
+                            <WorkflowStatus :status="step.status" />
                             <span class="truncate">{{ step.name }}</span>
                             <span class="text-xs text-dimmed">{{ step.status }}</span>
                         </div>

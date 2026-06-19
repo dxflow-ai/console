@@ -1,3 +1,5 @@
+const busyIdentities = ref<Set<string>>(new Set());
+
 export function useShellActions() {
     const { closeTabsWhere } = useTabs();
 
@@ -12,6 +14,20 @@ export function useShellActions() {
     const { execute: executeRemove, loading: removing } = useStoreAction(shellStore, "removeById", {
         isolated: true,
     });
+
+    function isBusy(identity: string) {
+        return busyIdentities.value.has(identity);
+    }
+
+    async function withBusy<T>(identity: string, run: () => Promise<T>) {
+        busyIdentities.value.add(identity);
+
+        try {
+            return await run();
+        } finally {
+            busyIdentities.value.delete(identity);
+        }
+    }
 
     function closeTabs(identity: string) {
         closeTabsWhere((tab) => {
@@ -39,10 +55,12 @@ export function useShellActions() {
 
     async function remove(shell: Shell) {
         try {
-            await executeRemove({
-                payload: {
-                    identity: shell.identity,
-                },
+            await withBusy(shell.identity, () => {
+                return executeRemove({
+                    payload: {
+                        identity: shell.identity,
+                    },
+                });
             });
 
             closeTabs(shell.identity);
@@ -55,6 +73,7 @@ export function useShellActions() {
         creating,
         pruning,
         removing,
+        isBusy,
         create,
         prune,
         remove,

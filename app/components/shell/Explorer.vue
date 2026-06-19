@@ -7,7 +7,7 @@
                 variant="link"
                 color="neutral"
                 class="pr-0!"
-                :loading="loading || creating"
+                :loading="loading || creating || pruning"
                 :ui="{
                     leadingIcon: 'size-3.5',
                 }"
@@ -24,7 +24,7 @@
             />
         </template>
         <template v-for="shell in shells" :key="shell.identity">
-            <ShellTree :shell="shell" @open="onOpen" />
+            <ShellNode :shell="shell" @open="onOpen" />
         </template>
     </ExplorerSection>
 </template>
@@ -50,7 +50,7 @@ const { execute: executeGet, loading } = useStoreAction(shellStore, "get", {
     isolated: true,
 });
 
-const { create, prune, creating } = useShellActions();
+const { create, prune, creating, pruning } = useShellActions();
 
 const confirmPrune = useConfirmToast({
     id: "shell-prune",
@@ -66,8 +66,8 @@ const confirmPrune = useConfirmToast({
     },
 });
 
-const menu = computed<ContextMenuItem[][]>(() => {
-    const items: ContextMenuItem[][] = [
+const menu = computed(() => {
+    const output: ContextMenuItem[][] = [
         [
             {
                 label: "New shell",
@@ -76,21 +76,19 @@ const menu = computed<ContextMenuItem[][]>(() => {
                 },
             },
         ],
-    ];
-
-    if (shells.value.length) {
-        items.push([
+        [
             {
                 label: "Prune all",
                 color: "red",
+                disabled: !shells.value.length,
                 onSelect() {
                     confirmPrune.open();
                 },
             },
-        ]);
-    }
+        ],
+    ];
 
-    return items;
+    return output;
 });
 
 function toggle() {

@@ -1,14 +1,22 @@
 <template>
     <div class="px-1">
         <ExplorerMenu :items="menu">
-            <button
-                type="button"
+            <div
                 class="flex w-full items-center gap-1.5 rounded-sm py-1.5 pr-2 pl-2 text-xs hover:bg-elevated"
+                :class="{
+                    'pointer-events-none': busy,
+                }"
                 @click="onOpen()"
             >
-                <UiIcon class="size-3 shrink-0 text-muted" name="i-hugeicons:command-line" />
+                <UiIcon
+                    class="size-3 shrink-0 text-muted"
+                    :class="{
+                        'animate-spin': busy,
+                    }"
+                    :name="busy ? 'i-mingcute:loading-3-fill' : 'i-hugeicons:command-line'"
+                />
                 <span class="truncate">{{ props.shell.identity }}</span>
-            </button>
+            </div>
         </ExplorerMenu>
     </div>
 </template>
@@ -43,16 +51,23 @@ const confirmDelete = useConfirmToast({
     },
 });
 
-const menu = computed<ContextMenuItem[]>(() => {
-    return [
+const busy = computed(() => {
+    return actions.isBusy(props.shell.identity);
+});
+
+const menu = computed(() => {
+    const output: ContextMenuItem[] = [
         {
             label: "Delete",
             color: "red",
+            disabled: busy.value,
             onSelect() {
                 confirmDelete.open();
             },
         },
     ];
+
+    return output;
 });
 
 function onOpen() {

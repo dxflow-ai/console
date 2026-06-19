@@ -1,16 +1,15 @@
 <template>
     <div class="px-1">
-        <button
-            type="button"
-            class="flex w-full items-center gap-1.5 rounded-sm py-1.5 pr-2 pl-[--spacing(var(--tree-indent))] text-xs hover:bg-elevated"
+        <div
+            class="flex w-full items-center gap-1.5 rounded-sm py-1.5 pr-2 pl-[--spacing(var(--tree-indent))] text-xs hover:bg-elevated cursor-pointer"
             :style="{
                 '--tree-indent': 2,
             }"
             @click="toggle()"
         >
-            <StatusDot :status="props.workflow.status" />
+            <WorkflowStatus :status="props.workflow.status" />
             <span class="truncate">{{ props.workflow.name }}</span>
-        </button>
+        </div>
         <template v-if="expanded">
             <div class="relative">
                 <div
@@ -21,9 +20,8 @@
                 >
                     <div class="absolute w-px h-full bg-elevated left-px" />
                 </div>
-                <button
-                    type="button"
-                    class="flex w-full items-center gap-1.5 rounded-sm py-1.5 pr-2 pl-[--spacing(var(--tree-indent))] text-xs hover:bg-elevated"
+                <div
+                    class="flex w-full items-center gap-1.5 rounded-sm py-1.5 pr-2 pl-[--spacing(var(--tree-indent))] text-xs hover:bg-elevated cursor-pointer"
                     :style="{
                         '--tree-indent': 5,
                     }"
@@ -31,10 +29,9 @@
                 >
                     <UiIcon name="i-mingcute:git-branch-line" class="size-3 shrink-0 text-muted" />
                     <span class="truncate">Diagram</span>
-                </button>
-                <button
-                    type="button"
-                    class="flex w-full items-center gap-1.5 rounded-sm py-1.5 pr-2 pl-[--spacing(var(--tree-indent))] text-xs hover:bg-elevated"
+                </div>
+                <div
+                    class="flex w-full items-center gap-1.5 rounded-sm py-1.5 pr-2 pl-[--spacing(var(--tree-indent))] text-xs hover:bg-elevated cursor-pointer"
                     :style="{
                         '--tree-indent': 5,
                     }"
@@ -51,7 +48,7 @@
                         :class="['size-3 shrink-0 text-muted', { 'animate-spin': loadingSteps }]"
                     />
                     <span class="truncate">steps</span>
-                </button>
+                </div>
                 <template v-if="stepsExpanded">
                     <div class="relative">
                         <div
@@ -63,23 +60,21 @@
                             <div class="absolute w-px h-full bg-elevated left-px" />
                         </div>
                         <template v-for="step in steps" :key="step.identity">
-                            <button
-                                type="button"
-                                class="flex w-full items-center gap-1.5 rounded-sm py-1.5 pr-2 pl-[--spacing(var(--tree-indent))] text-xs hover:bg-elevated"
+                            <div
+                                class="flex w-full items-center gap-1.5 rounded-sm py-1.5 pr-2 pl-[--spacing(var(--tree-indent))] text-xs hover:bg-elevated cursor-pointer"
                                 :style="{
                                     '--tree-indent': 8,
                                 }"
                                 @click="open('step', step.index)"
                             >
-                                <StatusDot :status="step.status" />
+                                <WorkflowStatus :status="step.status" />
                                 <span class="truncate">{{ step.name }}</span>
-                            </button>
+                            </div>
                         </template>
                     </div>
                 </template>
-                <button
-                    type="button"
-                    class="flex w-full items-center gap-1.5 rounded-sm py-1.5 pr-2 pl-[--spacing(var(--tree-indent))] text-xs hover:bg-elevated"
+                <div
+                    class="flex w-full items-center gap-1.5 rounded-sm py-1.5 pr-2 pl-[--spacing(var(--tree-indent))] text-xs hover:bg-elevated cursor-pointer"
                     :style="{
                         '--tree-indent': 5,
                     }"
@@ -87,10 +82,9 @@
                 >
                     <UiIcon name="i-mingcute:terminal-line" class="size-3 shrink-0 text-muted" />
                     <span class="truncate">logs</span>
-                </button>
-                <button
-                    type="button"
-                    class="flex w-full items-center gap-1.5 rounded-sm py-1.5 pr-2 pl-[--spacing(var(--tree-indent))] text-xs hover:bg-elevated"
+                </div>
+                <div
+                    class="flex w-full items-center gap-1.5 rounded-sm py-1.5 pr-2 pl-[--spacing(var(--tree-indent))] text-xs hover:bg-elevated cursor-pointer"
                     :style="{
                         '--tree-indent': 5,
                     }"
@@ -98,7 +92,7 @@
                 >
                     <UiIcon name="i-mingcute:list-check-line" class="size-3 shrink-0 text-muted" />
                     <span class="truncate">events</span>
-                </button>
+                </div>
             </div>
         </template>
     </div>

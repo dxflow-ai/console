@@ -13,7 +13,7 @@
                 variant="link"
                 color="neutral"
                 class="pr-0!"
-                :loading="loading || uploading"
+                :loading="loading || uploading || creating"
                 :ui="{
                     leadingIcon: 'size-3.5',
                 }"
@@ -30,7 +30,7 @@
             />
         </template>
         <template v-for="child in artifacts" :key="child.identity">
-            <ArtifactTree :artifact="child" @open="onOpen" />
+            <ArtifactNode :artifact="child" @open="onOpen" />
         </template>
     </ExplorerSection>
 </template>
@@ -70,15 +70,15 @@ const { execute: executeList, loading } = useStoreAction(artifactStore, "list", 
     isolated: true,
 });
 
-const { makeDirectory, upload, uploading } = useArtifactActions();
+const { makeDirectory, upload, uploading, creating } = useArtifactActions();
 
 const fileDialog = useFileDialog({
     reset: true,
     multiple: true,
 });
 
-const menu = computed<ContextMenuItem[]>(() => {
-    return [
+const menu = computed(() => {
+    const output: ContextMenuItem[] = [
         {
             label: "Upload file",
             onSelect() {
@@ -92,6 +92,8 @@ const menu = computed<ContextMenuItem[]>(() => {
             },
         },
     ];
+
+    return output;
 });
 
 function toggle() {

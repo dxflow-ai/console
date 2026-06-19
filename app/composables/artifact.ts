@@ -1,5 +1,6 @@
 const renamingIdentity = ref<MaybeString>(undefined);
 const draftIdentity = ref<MaybeString>(undefined);
+const busyIdentities = ref<Set<string>>(new Set());
 
 export function useArtifactActions() {
     const { closeTabsWhere } = useTabs();
@@ -30,12 +31,26 @@ export function useArtifactActions() {
         return draftIdentity.value === identity;
     }
 
+    function isBusy(identity: string) {
+        return busyIdentities.value.has(identity);
+    }
+
+    async function withBusy<T>(identity: string, run: () => Promise<T>) {
+        busyIdentities.value.add(identity);
+
+        try {
+            return await run();
+        } finally {
+            busyIdentities.value.delete(identity);
+        }
+    }
+
     function closeTabs(identity: string) {
         const exact = `artifact:${identity}`;
         const prefix = `${exact}/`;
 
-        closeTabsWhere((tab) => {
-            return tab.key === exact || tab.key.startsWith(prefix);
+        closeTabsWhere(({ key }) => {
+            return key === exact || key.startsWith(prefix);
         });
     }
 
@@ -47,7 +62,9 @@ export function useArtifactActions() {
         const identity = `${directory}/${uniqueName(names, "new-folder")}`;
 
         try {
-            await executeCreateDirectory(identity);
+            await withBusy(directory, () => {
+                return executeCreateDirectory(identity);
+            });
 
             startRename(identity, {
                 draft: true,
@@ -65,7 +82,9 @@ export function useArtifactActions() {
         }
 
         try {
-            await executeRename(artifact.identity, `${parentOf(artifact.identity)}/${name}`);
+            await withBusy(artifact.identity, () => {
+                return executeRename(artifact.identity, `${parentOf(artifact.identity)}/${name}`);
+            });
 
             closeTabs(artifact.identity);
         } catch (error) {
@@ -78,7 +97,9 @@ export function useArtifactActions() {
     async function cancelRename(artifact: Artifact) {
         if (isDraft(artifact.identity)) {
             try {
-                await executeRemove(artifact.identity);
+                await withBusy(artifact.identity, () => {
+                    return executeRemove(artifact.identity);
+                });
             } catch (error) {
                 dangerToast("Failed to discard folder", error as Error);
             }
@@ -89,7 +110,9 @@ export function useArtifactActions() {
 
     async function upload(directory: string, files: File[]) {
         try {
-            await executeUpload(directory, files);
+            await withBusy(directory, () => {
+                return executeUpload(directory, files);
+            });
         } catch (error) {
             dangerToast("Failed to upload", error as Error);
         }
@@ -97,7 +120,9 @@ export function useArtifactActions() {
 
     async function download(artifact: Artifact) {
         try {
-            await executeDownload(artifact.identity);
+            await withBusy(artifact.identity, () => {
+                return executeDownload(artifact.identity);
+            });
         } catch (error) {
             dangerToast("Failed to download", error as Error);
         }
@@ -105,7 +130,9 @@ export function useArtifactActions() {
 
     async function zip(artifact: Artifact) {
         try {
-            await executeZip(artifact.identity);
+            await withBusy(artifact.identity, () => {
+                return executeZip(artifact.identity);
+            });
         } catch (error) {
             dangerToast("Failed to zip", error as Error);
         }
@@ -113,7 +140,9 @@ export function useArtifactActions() {
 
     async function unzip(artifact: Artifact) {
         try {
-            await executeUnzip(artifact.identity);
+            await withBusy(artifact.identity, () => {
+                return executeUnzip(artifact.identity);
+            });
         } catch (error) {
             dangerToast("Failed to unzip", error as Error);
         }
@@ -121,7 +150,9 @@ export function useArtifactActions() {
 
     async function remove(artifact: Artifact) {
         try {
-            await executeRemove(artifact.identity);
+            await withBusy(artifact.identity, () => {
+                return executeRemove(artifact.identity);
+            });
 
             closeTabs(artifact.identity);
         } catch (error) {
@@ -138,6 +169,7 @@ export function useArtifactActions() {
         downloading,
         uploading,
         isRenaming,
+        isBusy,
         startRename,
         makeDirectory,
         commitRename,

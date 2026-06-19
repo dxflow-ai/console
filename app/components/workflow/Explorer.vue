@@ -30,7 +30,7 @@
             />
         </template>
         <template v-for="workflow in workflows" :key="workflow.identity">
-            <WorkflowTree :workflow="workflow" @open="onOpen" />
+            <WorkflowNode :workflow="workflow" @open="onOpen" />
         </template>
     </ExplorerSection>
 </template>
@@ -64,8 +64,8 @@ const fileDialog = useFileDialog({
     accept: ".yaml,.yml,application/x-yaml,text/yaml",
 });
 
-const menu = computed<ContextMenuItem[]>(() => {
-    return [
+const menu = computed(() => {
+    const output: ContextMenuItem[] = [
         {
             label: "New workflow",
             onSelect() {
@@ -73,6 +73,8 @@ const menu = computed<ContextMenuItem[]>(() => {
             },
         },
     ];
+
+    return output;
 });
 
 function toggle() {
