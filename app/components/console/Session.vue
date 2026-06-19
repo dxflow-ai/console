@@ -1,9 +1,9 @@
 <template>
     <UiButton
+        label="Sign Out"
         size="xs"
         variant="link"
         color="neutral"
-        icon="i-mingcute:power-line"
         class="pr-0!"
         @click="confirmSignout.open()"
         square
