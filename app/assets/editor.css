@@ -1,0 +1,82 @@
+.editor {
+    color: var(--editor-plain);
+
+    --editor-plain: #0f172a;
+    --editor-comment: #64748b;
+    --editor-punctuation: #475569;
+    --editor-keyword: #9333ea;
+    --editor-string: #16a34a;
+    --editor-number: #ca8a04;
+    --editor-function: #2563eb;
+    --editor-tag: #dc2626;
+    --editor-attribute: #0891b2;
+}
+
+.dark .editor {
+    --editor-plain: #e2e8f0;
+    --editor-comment: #64748b;
+    --editor-punctuation: #94a3b8;
+    --editor-keyword: #a855f7;
+    --editor-string: #22c55e;
+    --editor-number: #eab308;
+    --editor-function: #3b82f6;
+    --editor-tag: #ef4444;
+    --editor-attribute: #06b6d4;
+}
+
+.editor .token.comment,
+.editor .token.prolog,
+.editor .token.doctype,
+.editor .token.cdata {
+    color: var(--editor-comment);
+    font-style: italic;
+}
+
+.editor .token.punctuation {
+    color: var(--editor-punctuation);
+}
+
+.editor .token.keyword,
+.editor .token.atrule,
+.editor .token.important {
+    color: var(--editor-keyword);
+}
+
+.editor .token.string,
+.editor .token.char,
+.editor .token.attr-value,
+.editor .token.regex,
+.editor .token.inserted {
+    color: var(--editor-string);
+}
+
+.editor .token.number,
+.editor .token.boolean,
+.editor .token.constant,
+.editor .token.symbol {
+    color: var(--editor-number);
+}
+
+.editor .token.function,
+.editor .token.class-name {
+    color: var(--editor-function);
+}
+
+.editor .token.tag,
+.editor .token.selector,
+.editor .token.builtin,
+.editor .token.deleted {
+    color: var(--editor-tag);
+}
+
+.editor .token.attr-name,
+.editor .token.property,
+.editor .token.variable {
+    color: var(--editor-attribute);
+}
+
+.editor .token.operator,
+.editor .token.entity,
+.editor .token.url {
+    color: var(--editor-plain);
+}

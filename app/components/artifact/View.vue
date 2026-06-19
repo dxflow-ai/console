@@ -1,20 +1,19 @@
 <template>
-    <div class="flex h-full min-h-0 flex-1 flex-col">
-        <div class="min-h-0 flex-1 overflow-auto">
-            <template v-if="loading">
-                <div class="flex h-full items-center justify-center text-xs text-dimmed">
-                    <UiIcon name="i-mingcute:loading-3-fill" class="size-4 animate-spin" />
-                </div>
+    <div class="relative flex h-full min-h-0 flex-1 flex-col">
+        <div
+            class="min-h-0 flex-1 overflow-auto"
+            :class="{
+                'opacity-0': loading,
+            }"
+        >
+            <template v-if="view === 'media'">
+                <ArtifactMedia :source="imageUrl" :alt="props.artifact.identity" />
             </template>
-            <template v-else-if="imageUrl">
-                <div class="flex h-full items-center justify-center p-4">
-                    <img class="max-h-full max-w-full object-contain" :src="imageUrl" :alt="props.artifact.identity" />
-                </div>
-            </template>
-            <template v-else>
-                <pre class="p-4 font-mono text-xs leading-relaxed whitespace-pre-wrap">{{ text }}</pre>
+            <template v-else-if="view === 'editor'">
+                <ArtifactEditor v-model="draft" :name="props.artifact.name" :readonly="saving" @save="save" />
             </template>
         </div>
+        <Loading :active="loading" />
     </div>
 </template>
 
@@ -26,13 +25,24 @@ const props = defineProps({
     },
 });
 
-const { execute: executeDownload, loading } = useStoreAction(artifactStore, "downloadById", { isolated: true });
+const { execute: executeDownload, loading } = useStoreAction(artifactStore, "downloadById", {
+    isolated: true,
+});
 
-const text = ref<MaybeString>();
+const { execute: executeUpload, loading: saving } = useStoreAction(artifactStore, "upload", {
+    isolated: true,
+});
+
+const text = ref("");
+const draft = ref("");
 const imageUrl = ref<MaybeString>();
 
-const isImage = computed(() => {
-    return isImageFile(props.artifact.name);
+const view = computed(() => {
+    return isImageFile(props.artifact.name) ? "media" : "editor";
+});
+
+const dirty = computed(() => {
+    return draft.value !== text.value;
 });
 
 function release() {
@@ -44,20 +54,51 @@ function release() {
 
 async function load() {
     release();
-    text.value = null;
+
+    text.value = "";
+    draft.value = "";
 
     try {
-        const result = await executeDownload({ payload: { identity: props.artifact.identity } });
+        const result = await executeDownload({
+            payload: {
+                identity: props.artifact.identity,
+            },
+        });
 
         if (result) {
-            if (isImage.value) {
+            if (view.value === "media") {
                 imageUrl.value = URL.createObjectURL(result.blob);
             } else {
                 text.value = await result.blob.text();
+                draft.value = text.value;
             }
         }
     } catch (error) {
         dangerToast(`Failed to open '${props.artifact.name}'`, error as Error);
+    }
+}
+
+async function save() {
+    if (!dirty.value) {
+        return;
+    }
+
+    try {
+        const file = new File([draft.value], props.artifact.name, {
+            type: "text/plain",
+        });
+
+        await executeUpload({
+            payload: {
+                identity: props.artifact.identity,
+                file,
+                force: true,
+            },
+        });
+
+        text.value = draft.value;
+    } catch (error) {
+        dangerToast(`Failed to save '${props.artifact.name}'`, error as Error);
     }
 }
 
