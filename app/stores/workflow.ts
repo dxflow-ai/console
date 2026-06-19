@@ -22,8 +22,15 @@ export const workflowStore = createStore({
     name: "workflow",
     model({ many }) {
         const list = many(workflowShape);
-        const steps = many(workflowStepShape, { kind: ModelManyKind.RECORD });
-        const events = many(workflowEventShape, { kind: ModelManyKind.RECORD });
+
+        const steps = many(workflowStepShape, {
+            kind: ModelManyKind.RECORD,
+        });
+
+        const events = many(workflowEventShape, {
+            kind: ModelManyKind.RECORD,
+        });
+
         return {
             list,
             steps,
@@ -38,7 +45,9 @@ export const workflowStore = createStore({
                     return second.created_at - first.created_at;
                 });
             },
-            { clone: ViewClone.SHALLOW },
+            {
+                clone: ViewClone.SHALLOW,
+            },
         );
 
         const steps = from("steps");

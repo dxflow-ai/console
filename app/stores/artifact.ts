@@ -1,4 +1,4 @@
-import { ViewClone, ActionConcurrent, ModelManyKind } from "@diphyx/harlemify/runtime";
+import { ViewClone, ActionConcurrent } from "@diphyx/harlemify/runtime";
 import { saveAs } from "file-saver";
 import { sleep } from "radash";
 
@@ -7,13 +7,8 @@ export const artifactStore = createStore({
     model({ many }) {
         const list = many(artifactShape);
 
-        const nodes = many(artifactShape, {
-            kind: ModelManyKind.RECORD,
-        });
-
         return {
             list,
-            nodes,
         };
     },
     view({ from }) {
@@ -35,11 +30,8 @@ export const artifactStore = createStore({
             },
         );
 
-        const nodes = from("nodes");
-
         return {
             list,
-            nodes,
         };
     },
     action({ handler }) {
@@ -95,7 +87,7 @@ export const artifactStore = createStore({
         );
 
         const list = handler<{ directory: string; pattern?: string }, Artifact[]>(
-            async ({ model, payload }) => {
+            async ({ model, view, payload }) => {
                 const { call, read } = newHttpRequest("/api/artifact/");
 
                 const callError = await call({
@@ -120,20 +112,20 @@ export const artifactStore = createStore({
                     throw readError;
                 }
 
-                children.sort((first, second) => {
-                    const firstIsDirectory = first.permission[0] === "d";
-                    const secondIsDirectory = second.permission[0] === "d";
-                    if (firstIsDirectory !== secondIsDirectory) {
-                        return firstIsDirectory ? 1 : -1;
-                    }
+                let directory = payload.directory;
+                if (children.length) {
+                    directory = parentOf(children[0].identity);
+                }
 
-                    return first.name.localeCompare(second.name);
+                const stale = view.list.value.filter((item) => {
+                    return parentOf(item.identity) === directory;
                 });
 
-                model.nodes.add({
-                    key: payload.directory,
-                    value: children,
-                });
+                if (stale.length) {
+                    model.list.remove(stale);
+                }
+
+                model.list.add(children);
 
                 return children;
             },
@@ -244,7 +236,7 @@ export const artifactStore = createStore({
         );
 
         const removeById = handler<{ identity: string }>(
-            async ({ model, payload }) => {
+            async ({ model, view, payload }) => {
                 const { call, read } = newHttpRequest("/api/artifact/");
 
                 const callError = await call({
@@ -263,9 +255,11 @@ export const artifactStore = createStore({
                     throw readError;
                 }
 
-                model.list.remove({
-                    identity: payload.identity,
+                const removable = view.list.value.filter(({ identity }) => {
+                    return identity === payload.identity || identity.startsWith(`${payload.identity}/`);
                 });
+
+                model.list.remove(removable);
             },
             {
                 concurrent: ActionConcurrent.BLOCK,
@@ -273,7 +267,7 @@ export const artifactStore = createStore({
         );
 
         const removeBatch = handler<{ identities: string[] }, Array<{ identity: string; error?: string }>>(
-            async ({ model, payload }) => {
+            async ({ model, view, payload }) => {
                 const { call, read } = newHttpRequest("/api/artifact/batch/");
 
                 const callError = await call({
@@ -293,9 +287,14 @@ export const artifactStore = createStore({
                         results.push(chunk.payload);
 
                         if (!chunk.payload.error) {
-                            model.list.remove({
-                                identity: chunk.payload.identity,
+                            const removable = view.list.value.filter(({ identity }) => {
+                                return (
+                                    identity === chunk.payload.identity ||
+                                    identity.startsWith(`${chunk.payload.identity}/`)
+                                );
                             });
+
+                            model.list.remove(removable);
                         }
                     }
                 });
@@ -443,7 +442,6 @@ export const artifactStore = createStore({
 
         const reset = handler(async ({ model }) => {
             model.list.reset();
-            model.nodes.reset();
         });
 
         return {

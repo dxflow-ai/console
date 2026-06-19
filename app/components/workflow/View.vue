@@ -107,8 +107,13 @@ const props = defineProps({
     },
 });
 
-const { data: stepsRecord } = useStoreView(workflowStore, "steps");
-const { data: eventsRecord } = useStoreView(workflowStore, "events");
+const { data: steps } = useStoreView(workflowStore, "steps", (record) => {
+    return record[props.workflow.identity] ?? [];
+});
+
+const { data: events } = useStoreView(workflowStore, "events", (record) => {
+    return record[props.workflow.identity] ?? [];
+});
 
 const { execute: executeGetSteps, loading: loadingSteps } = useStoreAction(workflowStore, "getStepsById", {
     isolated: true,
@@ -122,14 +127,6 @@ const { lines: logs, start: startLogs, stop: stopLogs } = useWorkflow().logs();
 
 const loading = computed(() => {
     return loadingSteps.value || loadingEvents.value;
-});
-
-const steps = computed<WorkflowStep[]>(() => {
-    return stepsRecord.value[props.workflow.identity] ?? [];
-});
-
-const events = computed<WorkflowEvent[]>(() => {
-    return eventsRecord.value[props.workflow.identity] ?? [];
 });
 
 const phases = computed(() => {

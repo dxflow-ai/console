@@ -54,7 +54,17 @@ const emit = defineEmits({
     toggle: null,
 });
 
-const { data: nodes } = useStoreView(artifactStore, "nodes");
+const { data: artifacts } = useStoreView(artifactStore, "list", (items) => {
+    const identities = new Set(
+        items.map((item) => {
+            return item.identity;
+        }),
+    );
+
+    return items.filter((item) => {
+        return !identities.has(parentOf(item.identity));
+    });
+});
 
 const { execute: executeList, loading } = useStoreAction(artifactStore, "list", {
     isolated: true,
@@ -65,10 +75,6 @@ const { makeDirectory, upload, uploading } = useArtifactActions();
 const fileDialog = useFileDialog({
     reset: true,
     multiple: true,
-});
-
-const artifacts = computed<Artifact[]>(() => {
-    return nodes.value[props.root] ?? [];
 });
 
 const menu = computed<ContextMenuItem[]>(() => {

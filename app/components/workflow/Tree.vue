@@ -116,18 +116,17 @@ const emit = defineEmits({
     open: null,
 });
 
-const { data: stepsRecord } = useStoreView(workflowStore, "steps");
+const { data: steps } = useStoreView(workflowStore, "steps", (record) => {
+    return record[props.workflow.identity] ?? [];
+});
 
 const { execute: executeGetSteps, loading: loadingSteps } = useStoreAction(workflowStore, "getStepsById", {
     isolated: true,
 });
 
+const loaded = ref(false);
 const expanded = ref(false);
 const stepsExpanded = ref(false);
-
-const steps = computed<WorkflowStep[]>(() => {
-    return stepsRecord.value[props.workflow.identity] ?? [];
-});
 
 function open(view: string, step?: number) {
     emit("open", { workflow: props.workflow, view, step });
@@ -143,9 +142,11 @@ async function toggleSteps() {
         return;
     }
 
-    if (!stepsRecord.value[props.workflow.identity]) {
+    if (!loaded.value) {
         try {
             await executeGetSteps({ payload: { identity: props.workflow.identity } });
+
+            loaded.value = true;
         } catch (error) {
             return dangerToast("Failed to load steps", error as Error);
         }

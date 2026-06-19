@@ -96,7 +96,11 @@ const emit = defineEmits({
     open: null,
 });
 
-const { data: nodes } = useStoreView(artifactStore, "nodes");
+const { data: children } = useStoreView(artifactStore, "list", (items) => {
+    return items.filter((item) => {
+        return parentOf(item.identity) === props.artifact.identity;
+    });
+});
 
 const { execute: executeList, loading } = useStoreAction(artifactStore, "list", {
     isolated: true,
@@ -124,6 +128,7 @@ const confirmDelete = useConfirmToast({
 });
 
 const draft = ref("");
+const loaded = ref(false);
 const expanded = ref(false);
 const inputEl = ref<HTMLInputElement | null>(null);
 
@@ -137,10 +142,6 @@ const isZip = computed(() => {
 
 const editing = computed(() => {
     return actions.isRenaming(props.artifact.identity);
-});
-
-const children = computed<Artifact[]>(() => {
-    return nodes.value[props.artifact.identity] ?? [];
 });
 
 const menu = computed<ContextMenuItem[][]>(() => {
@@ -273,13 +274,15 @@ function onOpen(artifact: Artifact) {
 }
 
 async function loadChildren() {
-    if (!nodes.value[props.artifact.identity]) {
+    if (!loaded.value) {
         try {
             await executeList({
                 payload: {
                     directory: props.artifact.identity,
                 },
             });
+
+            loaded.value = true;
         } catch (error) {
             dangerToast("Failed to load directory", error as Error);
             return false;
