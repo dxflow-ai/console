@@ -3,20 +3,22 @@
         <div
             class="absolute inset-0 overflow-hidden"
             :class="{
-                'opacity-0': !loaded,
+                'opacity-0': loading,
             }"
         >
             <div ref="element" class="relative size-full flex items-center justify-center overflow-visible" />
         </div>
-        <template v-if="!loaded">
+        <template v-if="loading">
             <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <UiIcon name="i-mingcute:loading-3-fill" class="size-5 animate-spin text-muted" />
+                <UiIcon class="size-5 animate-spin text-muted" name="i-mingcute:loading-3-fill" />
             </div>
         </template>
     </div>
 </template>
 
 <script lang="ts" setup>
+import { defer } from "radash";
+
 const props = defineProps({
     identity: {
         type: String,
@@ -24,19 +26,20 @@ const props = defineProps({
     },
 });
 
-const { authorizedToken } = useSession();
-const { scale } = useScale();
-const { data: orderedShells } = useStoreView(shellStore, "list");
-
 const theme = useColorMode();
+
+const { scale } = useScale();
+const { authorizedToken } = useSession();
+const { data: shells } = useStoreView(shellStore, "list");
 
 const element = useTemplateRef("element");
 const { width, height } = useElementSize(element);
 
-const loaded = ref(false);
+const loading = ref(false);
 
 const webSocketWrapper = newWebSocketWrapper();
 const terminalWrapper = newTerminalWrapper();
+
 watchDebounced(
     () => {
         return width.value * height.value;
@@ -50,13 +53,14 @@ watchDebounced(
 );
 
 watchDebounced(
-    scale,
+    () => {
+        return scale.value;
+    },
     (value) => {
         terminalWrapper.setScale(value);
     },
     {
         debounce: 250,
-        immediate: true,
     },
 );
 
@@ -69,22 +73,25 @@ watchDebounced(
     },
     {
         debounce: 250,
-        immediate: true,
     },
 );
 
 async function load() {
-    loaded.value = false;
+    terminalWrapper.setScale(scale.value);
+    terminalWrapper.setTheme(theme.value);
 
-    const shell = orderedShells.value.find((s) => {
-        return s.identity === props.identity;
+    const shell = shells.value.find(({ identity }) => {
+        return identity === props.identity;
     });
 
     if (shell?.state != "executed") {
         try {
-            await shellStore.action.executeById({ payload: { identity: props.identity } });
+            await shellStore.action.executeById({
+                payload: {
+                    identity: props.identity,
+                },
+            });
         } catch (error) {
-            loaded.value = true;
             return dangerToast("Failed to load terminal", error as Error);
         }
     }
@@ -97,7 +104,6 @@ async function load() {
     });
 
     if (connectError) {
-        loaded.value = true;
         return dangerToast("Failed to load terminal", connectError);
     }
 
@@ -107,15 +113,31 @@ async function load() {
             webSocketWrapper.tryWrite(value);
         },
         onResize(columns, rows) {
-            shellStore.action.resizeById({ payload: { identity: props.identity, columns, rows } });
+            shellStore.action.resizeById({
+                payload: {
+                    identity: props.identity,
+                    columns,
+                    rows,
+                },
+            });
         },
     });
+}
 
-    loaded.value = true;
+async function loadWrapper() {
+    return defer((cleanup) => {
+        loading.value = true;
+
+        cleanup(() => {
+            loading.value = false;
+        });
+
+        return load();
+    });
 }
 
 onMounted(() => {
-    load();
+    loadWrapper();
 });
 
 onUnmounted(() => {
@@ -123,12 +145,3 @@ onUnmounted(() => {
     terminalWrapper.dispose();
 });
 </script>
-
-<style lang="css">
-@import "@xterm/xterm/css/xterm.css";
-
-.xterm-viewport,
-.xterm-screen {
-    cursor: text !important;
-}
-</style>

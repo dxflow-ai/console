@@ -7,4 +7,9 @@ html {
         background: color-mix(in oklab, var(--ui-primary) 50%, transparent);
         color: var(--ui-text);
     }
+
+    .xterm-viewport,
+    .xterm-screen {
+        cursor: text !important;
+    }
 }
