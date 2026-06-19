@@ -110,8 +110,6 @@ const props = defineProps({
 const { data: stepsRecord } = useStoreView(workflowStore, "steps");
 const { data: eventsRecord } = useStoreView(workflowStore, "events");
 
-const { lines: logs, start: startLogs, stop: stopLogs } = useWorkflow().logs();
-
 const { execute: executeGetSteps, loading: loadingSteps } = useStoreAction(workflowStore, "getStepsById", {
     isolated: true,
 });
@@ -119,6 +117,8 @@ const { execute: executeGetSteps, loading: loadingSteps } = useStoreAction(workf
 const { execute: executeGetEvents, loading: loadingEvents } = useStoreAction(workflowStore, "getEventsById", {
     isolated: true,
 });
+
+const { lines: logs, start: startLogs, stop: stopLogs } = useWorkflow().logs();
 
 const loading = computed(() => {
     return loadingSteps.value || loadingEvents.value;
@@ -136,38 +136,53 @@ const phases = computed(() => {
     const grouped = new Map<number, WorkflowStep[]>();
     for (const step of steps.value) {
         const bucket = grouped.get(step.phase) ?? [];
+
         bucket.push(step);
         grouped.set(step.phase, bucket);
     }
 
-    return Array.from(grouped.entries())
+    const sorted = Array.from(grouped.entries())
         .sort((first, second) => {
             return first[0] - second[0];
         })
         .map(([phase, value]) => {
-            return { phase, steps: value };
+            return {
+                phase,
+                steps: value,
+            };
         });
+
+    return sorted;
 });
 
 const activeStep = computed<WorkflowStep | null>(() => {
-    return (
-        steps.value.find((item) => {
-            return item.index === props.step;
-        }) ?? null
-    );
+    const active = steps.value.find((item) => {
+        return item.index === props.step;
+    });
+
+    return active ?? null;
 });
 
 async function load() {
     if (props.view === "logs") {
         startLogs(props.workflow.identity);
+
         return;
     }
 
     try {
         if (props.view === "events") {
-            await executeGetEvents({ payload: { identity: props.workflow.identity } });
+            await executeGetEvents({
+                payload: {
+                    identity: props.workflow.identity,
+                },
+            });
         } else {
-            await executeGetSteps({ payload: { identity: props.workflow.identity } });
+            await executeGetSteps({
+                payload: {
+                    identity: props.workflow.identity,
+                },
+            });
         }
     } catch (error) {
         return dangerToast("Failed to load workflow", error as Error);
