@@ -2,7 +2,7 @@ function fileKey(name: string): string {
     return (name.split(".").pop() ?? name).toLowerCase();
 }
 
-const FILE_ICON: Record<string, string> = {
+const fileIcons: Record<string, string> = {
     // specific glyphs
     py: "i-hugeicons:python",
     php: "i-hugeicons:php",
@@ -131,15 +131,13 @@ const FILE_ICON: Record<string, string> = {
     gitattributes: "i-hugeicons:file-02",
 };
 
-const FILE_ICON_FALLBACK = "i-hugeicons:file-01";
-
 export function fileIcon(name: string): string {
-    return FILE_ICON[fileKey(name)] ?? FILE_ICON_FALLBACK;
+    return fileIcons[fileKey(name)] ?? "i-hugeicons:file-01";
 }
 
-const IMAGE_EXTENSIONS = new Set(["png", "jpg", "jpeg", "gif", "webp", "svg", "ico", "bmp", "tiff"]);
+const imageExtensions = new Set(["png", "jpg", "jpeg", "gif", "webp", "svg", "ico", "bmp", "tiff"]);
 
-const TEXT_EXTENSIONS = new Set([
+const textExtensions = new Set([
     // source code
     "js",
     "mjs",
@@ -254,11 +252,11 @@ const TEXT_EXTENSIONS = new Set([
 ]);
 
 export function isImageFile(name: string): boolean {
-    return IMAGE_EXTENSIONS.has(fileKey(name));
+    return imageExtensions.has(fileKey(name));
 }
 
 export function isTextFile(name: string): boolean {
-    return TEXT_EXTENSIONS.has(fileKey(name));
+    return textExtensions.has(fileKey(name));
 }
 
 export function isOpenableFile(name: string): boolean {

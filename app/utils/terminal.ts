@@ -80,73 +80,75 @@ type TerminalWrapperCallback = {
     onResize?: (columns: number, rows: number) => void;
 };
 
-export function newTerminalWrapper() {
-    class TerminalWrapper extends Terminal {
-        fitAddon: FitAddon;
-        webglAddon: WebglAddon;
+class TerminalWrapper extends Terminal {
+    fitAddon: FitAddon;
+    webglAddon: WebglAddon;
 
-        constructor() {
-            super({ cols: 1, rows: 1, ...config });
+    constructor() {
+        super({ cols: 1, rows: 1, ...config });
 
-            this.fitAddon = new FitAddon();
-            this.webglAddon = new WebglAddon();
+        this.fitAddon = new FitAddon();
+        this.webglAddon = new WebglAddon();
 
-            this.loadAddon(this.fitAddon);
-        }
+        this.loadAddon(this.fitAddon);
+    }
 
-        async attach({ element, onData, onResize }: { element: HTMLElement } & TerminalWrapperCallback) {
-            await sleep(250);
-            this.open(element);
-            this.loadAddon(this.webglAddon);
+    async attach({ element, onData, onResize }: { element: HTMLElement } & TerminalWrapperCallback) {
+        await sleep(250);
+        this.open(element);
+        this.loadAddon(this.webglAddon);
 
-            this.onData((data) => {
-                if (onData) {
-                    onData(data);
-                }
-            });
-
-            this.onResize((size) => {
-                if (onResize) {
-                    onResize(size.cols, size.rows);
-                }
-            });
-
-            await new Promise<void>((resolve) => {
-                load({
-                    custom: { families: [primaryFont] },
-                    active: resolve,
-                    inactive: resolve,
-                });
-            });
-
-            this.webglAddon.clearTextureAtlas();
-
-            await sleep(500);
-            this.fitAddon.fit();
-        }
-
-        setScale(scale: number) {
-            this.options.fontSize = config.fontSize * scale;
-            this.options.lineHeight = config.lineHeight * scale;
-        }
-
-        setTheme(theme: string) {
-            if (themes[theme]) {
-                this.options.theme = themes[theme];
+        this.onData((data) => {
+            if (onData) {
+                onData(data);
             }
-        }
+        });
 
-        tryWrite(data: string): MaybeError {
-            try {
-                this.write(data);
-
-                return null;
-            } catch (error: any) {
-                return new Error(error?.message || error);
+        this.onResize((size) => {
+            if (onResize) {
+                onResize(size.cols, size.rows);
             }
+        });
+
+        await new Promise<void>((resolve) => {
+            load({
+                custom: {
+                    families: [primaryFont],
+                },
+                active: resolve,
+                inactive: resolve,
+            });
+        });
+
+        this.webglAddon.clearTextureAtlas();
+
+        await sleep(500);
+        this.fitAddon.fit();
+    }
+
+    setScale(scale: number) {
+        this.options.fontSize = config.fontSize * scale;
+        this.options.lineHeight = config.lineHeight * scale;
+    }
+
+    setTheme(theme: string) {
+        if (themes[theme]) {
+            this.options.theme = themes[theme];
         }
     }
 
+    tryWrite(data: string): MaybeError {
+        try {
+            this.write(data);
+
+            return null;
+        } catch (error: any) {
+            return new Error(error?.message || error);
+        }
+    }
+}
+
+export function newTerminalWrapper() {
     const terminalWrapper = new TerminalWrapper();
 
     return terminalWrapper;
