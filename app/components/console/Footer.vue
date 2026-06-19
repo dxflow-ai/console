@@ -11,6 +11,7 @@
             color="neutral"
             icon="i-mingcute:layout-bottom-line"
             class="pr-0!"
+            :disabled="!tabs.secondary.length"
             @click="toggleSecondary()"
             square
         />
@@ -19,4 +20,5 @@
 
 <script lang="ts" setup>
 const { toggleSecondary } = useWorkspace();
+const { tabs } = useTabs();
 </script>

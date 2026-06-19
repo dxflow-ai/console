@@ -51,8 +51,8 @@
                 </template>
             </div>
         </template>
-        <template v-else>
-            <ConsoleIntro :position="props.position" />
+        <template v-else-if="props.position === 'primary'">
+            <ConsoleIntro />
         </template>
     </div>
 </template>
@@ -73,10 +73,10 @@ const { tabs, activeKey, closeTab, setActive } = useTabs();
 const { secondaryFull, toggleSecondaryFull } = useWorkspace();
 
 const activeTab = computed<PaneTab | null>(() => {
-    return (
-        tabs[props.position].find((tab) => {
-            return tab.key === activeKey[props.position];
-        }) ?? null
-    );
+    const tab = tabs[props.position].find(({ key }) => {
+        return key === activeKey[props.position];
+    });
+
+    return tab ?? null;
 });
 </script>
