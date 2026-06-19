@@ -317,9 +317,16 @@ export const shellStore = createStore({
     },
     compose({ action }) {
         async function createAndExecute(options?: { identity?: string; path?: string; args?: string[] }) {
-            const shell = await action.create({ payload: options });
+            const shell = await action.create({
+                payload: options,
+            });
+
             if (shell) {
-                await action.executeById({ payload: { identity: shell.identity } });
+                await action.executeById({
+                    payload: {
+                        identity: shell.identity,
+                    },
+                });
             }
         }
 

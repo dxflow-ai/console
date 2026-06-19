@@ -620,14 +620,27 @@ export const workflowStore = createStore({
     compose({ action }) {
         async function loadDetail(identity: string) {
             await all([
-                action.getStepsById({ payload: { identity } }),
-                action.getEventsById({ payload: { identity } }),
+                action.getStepsById({
+                    payload: {
+                        identity,
+                    },
+                }),
+                action.getEventsById({
+                    payload: {
+                        identity,
+                    },
+                }),
             ]);
         }
 
         async function loadAndWatch(identity: string) {
             await loadDetail(identity);
-            await action.startSignals({ payload: { identity } });
+
+            await action.startSignals({
+                payload: {
+                    identity,
+                },
+            });
         }
 
         return {
