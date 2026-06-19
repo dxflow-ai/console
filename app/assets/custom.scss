@@ -10,16 +10,10 @@ html {
         background: color-mix(in oklab, var(--ui-primary) 50%, transparent);
         color: var(--ui-text);
     }
-}
 
-input,
-textarea,
-.xterm {
-    -webkit-user-select: text;
-    user-select: text;
-}
-
-.xterm-viewport,
-.xterm-screen {
-    cursor: text !important;
+    input,
+    textarea {
+        -webkit-user-select: text;
+        user-select: text;
+    }
 }

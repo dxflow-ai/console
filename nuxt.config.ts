@@ -34,7 +34,7 @@ export default defineNuxtConfig({
             },
         },
     },
-    css: ["~/assets/tailwind.css", "~/assets/custom.scss", "@xterm/xterm/css/xterm.css"],
+    css: ["~/assets/tailwind.css", "~/assets/custom.scss", "~/assets/terminal.css", "~/assets/editor.css"],
     modules: ["@diphyx/harlemify", "@nuxt/ui", "@vueuse/nuxt", "@nuxtjs/device"],
     harlemify: {
         logger: -999,
