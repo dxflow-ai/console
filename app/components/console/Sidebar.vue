@@ -17,7 +17,7 @@ const { openSecondary } = useWorkspace();
 const { expanded, toggle } = useExplorer();
 
 function openWorkflow(payload: { workflow: Workflow; view: string; step?: number }) {
-    const position: PanePosition = payload.view === "logs" ? "secondary" : "primary";
+    const position: PanePosition = payload.view === "logs" || payload.view === "events" ? "secondary" : "primary";
 
     openTab(position, {
         key: `workflow:${payload.workflow.identity}:${payload.view}${payload.step ?? ""}`,
