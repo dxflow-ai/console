@@ -43,7 +43,7 @@
                         <span class="truncate">{{ props.artifact.name }}</span>
                     </div>
                     <input
-                        ref="rename-input"
+                        ref="rename-element"
                         v-model="draft"
                         class="absolute inset-0 bg-transparent outline-none"
                         autocomplete="off"
@@ -100,7 +100,7 @@ const { execute: executeList, loading } = useStoreAction(artifactStore, "list", 
 
 const actions = useArtifactActions();
 
-const renameInput = useTemplateRef<HTMLInputElement>("rename-input");
+const renameElement = useTemplateRef<HTMLInputElement>("rename-element");
 
 const fileDialog = useFileDialog({
     reset: true,
@@ -247,9 +247,9 @@ watch(
 
         draft.value = props.artifact.name;
 
-        sleep(50).then(() => {
-            renameInput.value?.focus();
-            renameInput.value?.select();
+        sleep(0).then(() => {
+            renameElement.value?.focus();
+            renameElement.value?.select();
         });
     },
     {

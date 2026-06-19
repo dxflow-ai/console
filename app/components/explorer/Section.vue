@@ -1,6 +1,6 @@
 <template>
     <ExplorerMenu :items="props.menu">
-        <div class="flex bg-muted/25 flex-col" :class="props.expanded ? 'min-h-0 flex-1' : 'shrink-0'">
+        <div class="flex bg-muted/10 flex-col" :class="props.expanded ? 'min-h-0 flex-1' : 'shrink-0'">
             <ExplorerHeader
                 :title="props.title"
                 :expanded="props.expanded"

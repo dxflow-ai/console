@@ -1,5 +1,5 @@
 <template>
-    <div class="relative flex h-8 shrink-0 items-center justify-between bg-muted/50 px-3">
+    <div class="relative flex h-8 shrink-0 items-center justify-between bg-muted/40 px-3">
         <div
             class="absolute inset-[-0.5px] border-default pointer-events-none"
             :class="{
