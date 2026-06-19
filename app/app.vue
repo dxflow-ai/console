@@ -1,12 +1,8 @@
 <template>
     <UiApp
-        :tooltip="{
-            delayDuration: 250,
-        }"
         :toaster="{
             position: 'bottom-right',
-            duration: 7500,
-            expand: false,
+            duration: 5000,
             progress: false,
         }"
     >
@@ -16,3 +12,12 @@
         <Standby />
     </UiApp>
 </template>
+
+<script lang="ts" setup>
+useEventListener(document, "contextmenu", (event) => {
+    const target = event.target as HTMLElement | null;
+    if (!target?.closest("input, textarea, .xterm")) {
+        event.preventDefault();
+    }
+});
+</script>
