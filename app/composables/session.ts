@@ -1,5 +1,3 @@
-import { jwtDecode } from "jwt-decode";
-
 export const useSharedTimestamp = createGlobalState(() => {
     return useTimestamp({
         interval: 1000,
@@ -7,7 +5,7 @@ export const useSharedTimestamp = createGlobalState(() => {
 });
 
 export function useTokenCookie() {
-    const token = useCookie<string>("authorization", {
+    return useCookie<string>("authorization", {
         watch: "shallow",
         sameSite: "strict",
         secure: !import.meta.dev,
@@ -15,50 +13,16 @@ export function useTokenCookie() {
             return "";
         },
     });
-
-    function get(fallback: Session = sessionShape.defaults()): Session {
-        if (!token.value) {
-            return fallback;
-        }
-
-        let payload: JwtPayload = {};
-        try {
-            payload = jwtDecode<JwtPayload>(token.value);
-        } catch {
-            return fallback;
-        }
-
-        return {
-            token: token.value,
-            sub: payload.sub || fallback.sub,
-            exp: payload.exp || fallback.exp,
-            identity: payload.identity || fallback.identity,
-            writable: payload.writable ?? fallback.writable,
-            permissions: payload.permissions || fallback.permissions,
-        };
-    }
-
-    function set(value: string) {
-        token.value = value;
-    }
-
-    function reset() {
-        token.value = "";
-    }
-
-    return {
-        get,
-        set,
-        reset,
-    };
 }
 
 export function useSession() {
     const { data: session } = useStoreView(sessionStore, "session");
-    const { data: payload } = useStoreView(sessionStore, "payload");
-    const { data: provided } = useStoreView(sessionStore, "provided");
 
     const timestamp = useSharedTimestamp();
+
+    const provided = computed(() => {
+        return session.value.exp > 0;
+    });
 
     const expiration = computed(() => {
         return (session.value.exp || 0) * 1000;
@@ -80,23 +44,11 @@ export function useSession() {
         return "";
     });
 
-    const authorizedPermissions = computed(() => {
-        if (authorized.value) {
-            return session.value.permissions;
-        }
-
-        return [];
-    });
-
     return {
-        session,
-        payload,
         provided,
         expiration,
-        lifetime,
         authorized,
         authorizedToken,
-        authorizedPermissions,
     };
 }
 
@@ -121,10 +73,6 @@ export function useSessionActions() {
         }
 
         await executeSignout();
-
-        await navigateTo({
-            name: "auth",
-        });
     }
 
     return {

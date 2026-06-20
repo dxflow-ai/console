@@ -1,8 +1,11 @@
 <template>
-    <div class="flex h-screen flex-col">
-        <ConsoleHeader />
-        <ConsoleMain />
-        <ConsoleFooter />
+    <div class="flex h-screen flex-col bg-default">
+        <template v-if="ready">
+            <ConsoleHeader />
+            <ConsoleMain />
+            <ConsoleFooter />
+        </template>
+        <AuthOverlay />
     </div>
 </template>
 
@@ -12,18 +15,23 @@ definePageMeta({
     layout: false,
 });
 
-const session = useSession();
-
-if (!session.authorized.value) {
-    await navigateTo({
-        name: "auth",
-    });
-}
-
 const { styles } = useScale();
+const { provided, authorized } = useSession();
+
+const everAuthorized = ref(authorized.value);
+
+const ready = computed(() => {
+    return everAuthorized.value && provided.value;
+});
+
+watch(authorized, (value) => {
+    if (value) {
+        everAuthorized.value = true;
+    }
+});
 
 watchDebounced(
-    session.authorized,
+    authorized,
     (value) => {
         if (value) {
             load();
