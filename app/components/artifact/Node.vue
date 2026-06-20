@@ -15,7 +15,7 @@
                 <div class="absolute w-px h-full bg-elevated left-px" />
             </div>
         </template>
-        <ExplorerMenu :items="menu">
+        <ContextMenu :items="menu">
             <div
                 class="flex w-full items-center gap-1.5 rounded-sm py-1.5 pr-2 pl-[--spacing(var(--tree-indent))] text-xs hover:bg-elevated cursor-pointer"
                 :class="{
@@ -60,7 +60,7 @@
                     />
                 </div>
             </div>
-        </ExplorerMenu>
+        </ContextMenu>
         <template v-if="isDirectory && expanded">
             <template v-for="child in children" :key="child.identity">
                 <ArtifactNode :artifact="child" :depth="props.depth + 1" @open="onOpen" />
@@ -105,20 +105,6 @@ const renameElement = useTemplateRef<HTMLInputElement>("rename-element");
 const fileDialog = useFileDialog({
     reset: true,
     multiple: true,
-});
-
-const confirmDelete = useConfirmToast({
-    id: `artifact-delete:${props.artifact.identity}`,
-    color: "red",
-    title() {
-        return isDirectory.value ? "Delete folder" : "Delete file";
-    },
-    description() {
-        return `Delete '${props.artifact.name}'?`;
-    },
-    confirm() {
-        actions.remove(props.artifact);
-    },
 });
 
 const draft = ref("");
@@ -230,7 +216,7 @@ const menu = computed(() => {
             color: "red",
             disabled: busy.value,
             onSelect() {
-                confirmDelete.open();
+                actions.remove(props.artifact);
             },
         },
     ]);

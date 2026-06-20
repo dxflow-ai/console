@@ -1,6 +1,6 @@
 <template>
     <div class="px-1">
-        <ExplorerMenu :items="menu">
+        <ContextMenu :items="menu">
             <div
                 class="flex w-full items-center gap-1.5 rounded-sm py-1.5 pr-2 pl-2 text-xs hover:bg-elevated"
                 :class="{
@@ -17,7 +17,7 @@
                 />
                 <span class="truncate">{{ props.shell.identity }}</span>
             </div>
-        </ExplorerMenu>
+        </ContextMenu>
     </div>
 </template>
 
@@ -37,20 +37,6 @@ const emit = defineEmits({
 
 const actions = useShellActions();
 
-const confirmDelete = useConfirmToast({
-    id: `shell-delete:${props.shell.identity}`,
-    color: "red",
-    title() {
-        return "Delete shell";
-    },
-    description() {
-        return `Delete '${props.shell.identity}'?`;
-    },
-    confirm() {
-        actions.remove(props.shell);
-    },
-});
-
 const busy = computed(() => {
     return actions.isBusy(props.shell.identity);
 });
@@ -62,7 +48,7 @@ const menu = computed(() => {
             color: "red",
             disabled: busy.value,
             onSelect() {
-                confirmDelete.open();
+                actions.remove(props.shell);
             },
         },
     ];

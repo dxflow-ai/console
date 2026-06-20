@@ -52,20 +52,6 @@ const { execute: executeGet, loading } = useStoreAction(shellStore, "get", {
 
 const { create, prune, creating, pruning } = useShellActions();
 
-const confirmPrune = useConfirmToast({
-    id: "shell-prune",
-    color: "red",
-    title() {
-        return "Prune shells";
-    },
-    description() {
-        return "Remove all terminated shells?";
-    },
-    confirm() {
-        prune();
-    },
-});
-
 const menu = computed(() => {
     const output: ContextMenuItem[][] = [
         [
@@ -82,7 +68,7 @@ const menu = computed(() => {
                 color: "red",
                 disabled: !shells.value.length,
                 onSelect() {
-                    confirmPrune.open();
+                    prune();
                 },
             },
         ],

@@ -15,6 +15,17 @@ export function useShellActions() {
         isolated: true,
     });
 
+    const confirmPrune = useConfirmToast({
+        id: "shell-prune",
+        color: "red",
+        title() {
+            return "Prune shells";
+        },
+        description() {
+            return "Remove all terminated shells?";
+        },
+    });
+
     function isBusy(identity: string) {
         return busyIdentities.value.has(identity);
     }
@@ -44,6 +55,11 @@ export function useShellActions() {
     }
 
     async function prune() {
+        const confirmed = await confirmPrune.open();
+        if (!confirmed) {
+            return;
+        }
+
         try {
             const removed = await executePrune();
 

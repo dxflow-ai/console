@@ -27,42 +27,27 @@ export interface UseConfirmToastOptions<T = any> {
     color: "neutral" | "primary" | "green" | "red" | "blue" | "yellow";
     title: (payload: T) => string;
     description: (payload: T) => string;
-    confirm: (payload: T) => void | Promise<void>;
-    cancel?: (payload: T) => void | Promise<void>;
 }
+
+type ConfirmResolver = (confirmed: boolean) => void;
 
 export function useConfirmToast<T = any>(options: UseConfirmToastOptions<T>) {
     const toast = useToast();
 
     const opened = ref(false);
 
-    let payload = {} as T;
+    let resolve: ConfirmResolver | null = null;
 
-    function close() {
+    function settle(confirmed: boolean) {
         if (!opened.value) {
             return;
         }
 
         opened.value = false;
         toast.remove(options.id);
-    }
 
-    function cancel() {
-        if (!opened.value) {
-            return;
-        }
-
-        close();
-        options.cancel?.(payload);
-    }
-
-    function confirm() {
-        if (!opened.value) {
-            return;
-        }
-
-        close();
-        options.confirm(payload);
+        resolve?.(confirmed);
+        resolve = null;
     }
 
     defineShortcuts(
@@ -73,21 +58,20 @@ export function useConfirmToast<T = any>(options: UseConfirmToastOptions<T>) {
 
             return {
                 escape() {
-                    cancel();
+                    settle(false);
                 },
                 enter() {
-                    confirm();
+                    settle(true);
                 },
             };
         }),
     );
 
-    function open(nextPayload: T = {} as T) {
+    function open(payload: T = {} as T) {
         if (opened.value) {
-            return;
+            return Promise.resolve(false);
         }
 
-        payload = nextPayload;
         opened.value = true;
 
         toast.add({
@@ -103,22 +87,25 @@ export function useConfirmToast<T = any>(options: UseConfirmToastOptions<T>) {
                     variant: "soft",
                     color: options.color,
                     onClick() {
-                        cancel();
+                        settle(false);
                     },
                 },
                 {
                     label: "Confirm",
                     color: options.color,
                     onClick() {
-                        confirm();
+                        settle(true);
                     },
                 },
             ],
+        });
+
+        return new Promise<boolean>((next) => {
+            resolve = next;
         });
     }
 
     return {
         open,
-        close,
     };
 }

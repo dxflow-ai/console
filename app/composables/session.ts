@@ -99,3 +99,35 @@ export function useSession() {
         authorizedPermissions,
     };
 }
+
+export function useSessionActions() {
+    const { execute: executeSignout } = useStoreAction(sessionStore, "signout");
+
+    const confirmSignout = useConfirmToast({
+        id: "signout-confirm",
+        color: "neutral",
+        title() {
+            return "Sign Out";
+        },
+        description() {
+            return "Are you sure you want to sign out?";
+        },
+    });
+
+    async function signout() {
+        const confirmed = await confirmSignout.open();
+        if (!confirmed) {
+            return;
+        }
+
+        await executeSignout();
+
+        await navigateTo({
+            name: "auth",
+        });
+    }
+
+    return {
+        signout,
+    };
+}
