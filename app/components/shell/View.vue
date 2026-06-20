@@ -15,6 +15,11 @@
 <script lang="ts" setup>
 import { defer } from "radash";
 
+type ShellTerminalControl = {
+    attach: () => Promise<void>;
+    write: (data: string) => void;
+};
+
 const props = defineProps({
     identity: {
         type: String,
@@ -25,7 +30,7 @@ const props = defineProps({
 const { authorizedToken } = useSession();
 const { data: shells } = useStoreView(shellStore, "list");
 
-const terminal = useTemplateRef<{ attach: () => Promise<void>; write: (data: string) => void }>("terminal");
+const terminal = useTemplateRef<ShellTerminalControl>("terminal");
 
 const loading = ref(false);
 
