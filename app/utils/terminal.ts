@@ -68,7 +68,7 @@ const config: ITerminalOptions = {
     fontSize: 14,
     fontWeight: 400,
     fontWeightBold: 700,
-    lineHeight: 1.35,
+    lineHeight: 1.1,
     cursorBlink: true,
     allowTransparency: true,
     cursorStyle: "block",
@@ -128,7 +128,6 @@ class TerminalWrapper extends Terminal {
 
     setScale(scale: number) {
         this.options.fontSize = config.fontSize * scale;
-        this.options.lineHeight = config.lineHeight * scale;
     }
 
     setTheme(theme: string) {
