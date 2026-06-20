@@ -7,8 +7,6 @@
 </template>
 
 <script lang="ts" setup>
-import { disableStandby } from "~/components/Standby.vue";
-
 definePageMeta({
     name: "index",
     layout: false,
@@ -57,8 +55,6 @@ function unload() {
 
 onBeforeUnmount(() => {
     unload();
-
-    disableStandby();
 });
 
 useHead({

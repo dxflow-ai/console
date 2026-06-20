@@ -40,9 +40,6 @@
 </template>
 
 <script lang="ts" setup>
-import { sleep } from "radash";
-import { enableStandby } from "~/components/Standby.vue";
-
 const { provided, expiration } = useSession();
 const { loading: signingByFile, execute: executeSigninByFile } = useStoreAction(sessionStore, "signinByFile");
 
@@ -82,10 +79,6 @@ async function signinByFile(file: File) {
         return dangerToast("Failed to sign-in", error as Error);
     }
 
-    enableStandby();
-
-    await sleep(750);
-
     await navigateTo({
         name: "index",
     });
@@ -99,10 +92,6 @@ async function signinByDatabase() {
 
         return fileDialog.open();
     }
-
-    enableStandby();
-
-    await sleep(750);
 
     await navigateTo({
         name: "index",

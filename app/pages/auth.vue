@@ -5,8 +5,6 @@
 </template>
 
 <script lang="ts" setup>
-import { disableStandby } from "~/components/Standby.vue";
-
 definePageMeta({
     name: "auth",
     layout: false,
@@ -14,9 +12,5 @@ definePageMeta({
 
 useHead({
     title: "Sign In",
-});
-
-onBeforeUnmount(() => {
-    disableStandby();
 });
 </script>
