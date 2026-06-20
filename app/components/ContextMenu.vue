@@ -1,5 +1,5 @@
 <template>
-    <template v-if="hasItems">
+    <template v-if="props.items?.length">
         <UiContextMenu
             :items="props.items"
             :ui="{
@@ -16,18 +16,14 @@
 </template>
 
 <script lang="ts" setup>
-import { isArray } from "radash";
-
 import type { ContextMenuItem } from "@nuxt/ui";
 
 const props = defineProps({
     items: {
         type: Array as PropType<ContextMenuItem[] | ContextMenuItem[][]>,
-        default: undefined,
+        default() {
+            return [] as any;
+        },
     },
-});
-
-const hasItems = computed(() => {
-    return isArray(props.items) && props.items.length > 0;
 });
 </script>
