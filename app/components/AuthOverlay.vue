@@ -46,7 +46,7 @@
                                     value: '1h',
                                 },
                                 {
-                                    label: '1 day',
+                                    label: '24 hours',
                                     value: '24h',
                                 },
                             ]"
