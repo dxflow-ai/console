@@ -10,21 +10,29 @@
                 />
                 <div class="h-3.5 w-px shrink-0 bg-default" />
                 <template v-for="tab in tabs[props.position]" :key="tab.key">
-                    <UiBadge
-                        size="sm"
-                        variant="soft"
-                        class="shrink-0 cursor-pointer items-center gap-1"
-                        :color="tab.key === activeKey[props.position] ? 'primary' : 'neutral'"
-                        @click="setActive(props.position, tab.key)"
-                    >
-                        <UiIcon class="size-3 shrink-0" :name="tab.icon" />
-                        <span class="truncate">{{ tab.label }}</span>
-                        <UiIcon
-                            name="i-mingcute:close-small-fill"
-                            class="ml-1 size-4 shrink-0"
-                            @click.stop="closeTab(props.position, tab.key)"
-                        />
-                    </UiBadge>
+                    <ContextMenu :items="tabMenu(tab)">
+                        <UiBadge
+                            size="sm"
+                            variant="soft"
+                            class="shrink-0 cursor-pointer items-center gap-1"
+                            :color="tab.key === activeKey[props.position] ? 'primary' : 'neutral'"
+                            @click="setActive(props.position, tab.key)"
+                        >
+                            <UiIcon
+                                class="size-3 shrink-0"
+                                :class="{
+                                    'animate-spin': tabBusy(tab),
+                                }"
+                                :name="tabBusy(tab) ? 'i-mingcute:loading-3-fill' : tab.icon"
+                            />
+                            <span class="truncate">{{ tab.label }}</span>
+                            <UiIcon
+                                name="i-mingcute:close-small-fill"
+                                class="ml-1 size-4 shrink-0"
+                                @click.stop="closeTab(props.position, tab.key)"
+                            />
+                        </UiBadge>
+                    </ContextMenu>
                 </template>
                 <template v-if="props.fullscreenable">
                     <div class="flex-1" />
@@ -63,6 +71,8 @@
 </template>
 
 <script lang="ts" setup>
+import type { ContextMenuItem } from "@nuxt/ui";
+
 const props = defineProps({
     position: {
         type: String as PropType<PanePosition>,
@@ -77,6 +87,9 @@ const props = defineProps({
 const { tabs, activeKey, closeTab, setActive } = useTabs();
 const { secondaryFull, toggleSecondaryFull } = useWorkspace();
 
+const artifactActions = useArtifactActions();
+const shellActions = useShellActions();
+
 const activeTab = computed<PaneTab | null>(() => {
     const tab = tabs[props.position].find(({ key }) => {
         return key === activeKey[props.position];
@@ -84,4 +97,39 @@ const activeTab = computed<PaneTab | null>(() => {
 
     return tab ?? null;
 });
+
+function tabBusy(tab: PaneTab) {
+    if (tab.kind === "artifact") {
+        return artifactActions.isBusy(tab.payload.identity);
+    }
+
+    if (tab.kind === "shell") {
+        return shellActions.isBusy(tab.payload.identity);
+    }
+
+    return false;
+}
+
+function tabMenu(tab: PaneTab): ContextMenuItem[][] | undefined {
+    const output: ContextMenuItem[][] = [];
+
+    if (tab.kind === "artifact" || tab.kind === "shell") {
+        output.push([
+            {
+                label: "Remove",
+                color: "red",
+                disabled: tabBusy(tab),
+                onSelect() {
+                    if (tab.kind === "artifact") {
+                        artifactActions.remove(tab.payload);
+                    } else {
+                        shellActions.remove(tab.payload);
+                    }
+                },
+            },
+        ]);
+    }
+
+    return output;
+}
 </script>
