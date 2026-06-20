@@ -11,7 +11,19 @@ export function useArtifactActions() {
     const { execute: executeZip, active: zipping } = useStoreCompose(artifactStore, "zipAndRefresh");
     const { execute: executeUnzip, active: unzipping } = useStoreCompose(artifactStore, "unzipAndRefresh");
     const { execute: executeDownload, active: downloading } = useStoreCompose(artifactStore, "downloadAndSave");
+    const { execute: executeSave, active: saving } = useStoreCompose(artifactStore, "saveFile");
     const { execute: executeUpload, active: uploading } = useStoreCompose(artifactStore, "uploadDirectory");
+
+    const confirmRemove = useConfirmToast<Artifact>({
+        id: "artifact-remove",
+        color: "red",
+        title({ permission }) {
+            return permission[0] === "d" ? "Delete folder" : "Delete file";
+        },
+        description({ name }) {
+            return `Delete '${name}'?`;
+        },
+    });
 
     function startRename(identity: string, options?: { draft?: boolean }) {
         renamingIdentity.value = identity;
@@ -108,23 +120,20 @@ export function useArtifactActions() {
         stopRename();
     }
 
-    async function upload(directory: string, files: File[]) {
-        try {
-            await withBusy(directory, () => {
-                return executeUpload(directory, files);
-            });
-        } catch (error) {
-            dangerToast("Failed to upload", error as Error);
+    async function remove(artifact: Artifact) {
+        const confirmed = await confirmRemove.open(artifact);
+        if (!confirmed) {
+            return;
         }
-    }
 
-    async function download(artifact: Artifact) {
         try {
             await withBusy(artifact.identity, () => {
-                return executeDownload(artifact.identity);
+                return executeRemove(artifact.identity);
             });
+
+            closeTabs(artifact.identity);
         } catch (error) {
-            dangerToast("Failed to download", error as Error);
+            dangerToast("Failed to delete", error as Error);
         }
     }
 
@@ -148,15 +157,37 @@ export function useArtifactActions() {
         }
     }
 
-    async function remove(artifact: Artifact) {
+    async function download(artifact: Artifact) {
         try {
             await withBusy(artifact.identity, () => {
-                return executeRemove(artifact.identity);
+                return executeDownload(artifact.identity);
+            });
+        } catch (error) {
+            dangerToast("Failed to download", error as Error);
+        }
+    }
+
+    async function save(artifact: Artifact, content: string) {
+        try {
+            await withBusy(artifact.identity, () => {
+                return executeSave(artifact.identity, artifact.name, content);
             });
 
-            closeTabs(artifact.identity);
+            return true;
         } catch (error) {
-            dangerToast("Failed to delete", error as Error);
+            dangerToast(`Failed to save '${artifact.name}'`, error as Error);
+
+            return false;
+        }
+    }
+
+    async function upload(directory: string, files: File[]) {
+        try {
+            await withBusy(directory, () => {
+                return executeUpload(directory, files);
+            });
+        } catch (error) {
+            dangerToast("Failed to upload", error as Error);
         }
     }
 
@@ -167,6 +198,7 @@ export function useArtifactActions() {
         zipping,
         unzipping,
         downloading,
+        saving,
         uploading,
         isRenaming,
         isBusy,
@@ -174,10 +206,11 @@ export function useArtifactActions() {
         makeDirectory,
         commitRename,
         cancelRename,
-        upload,
-        download,
+        remove,
         zip,
         unzip,
-        remove,
+        download,
+        save,
+        upload,
     };
 }

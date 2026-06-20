@@ -533,6 +533,20 @@ export const artifactStore = createStore({
             }
         }
 
+        async function saveFile(identity: string, name: string, content: string) {
+            const file = new File([content], name, {
+                type: "text/plain",
+            });
+
+            await action.upload({
+                payload: {
+                    identity,
+                    file,
+                    force: true,
+                },
+            });
+        }
+
         async function uploadDirectory(directory: string, files: File[]) {
             for (const file of files) {
                 await action.upload({
@@ -554,6 +568,7 @@ export const artifactStore = createStore({
             zipAndRefresh,
             unzipAndRefresh,
             downloadAndSave,
+            saveFile,
             uploadDirectory,
         };
     },

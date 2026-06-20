@@ -29,9 +29,7 @@ const { execute: executeDownload, loading } = useStoreAction(artifactStore, "dow
     isolated: true,
 });
 
-const { execute: executeUpload, loading: saving } = useStoreAction(artifactStore, "upload", {
-    isolated: true,
-});
+const actions = useArtifactActions();
 
 const text = ref("");
 const draft = ref("");
@@ -43,6 +41,10 @@ const view = computed(() => {
 
 const dirty = computed(() => {
     return draft.value !== text.value;
+});
+
+const saving = computed(() => {
+    return actions.isBusy(props.artifact.identity);
 });
 
 function release() {
@@ -79,26 +81,13 @@ async function load() {
 }
 
 async function save() {
-    if (!dirty.value) {
+    if (!dirty.value || saving.value) {
         return;
     }
 
-    try {
-        const file = new File([draft.value], props.artifact.name, {
-            type: "text/plain",
-        });
-
-        await executeUpload({
-            payload: {
-                identity: props.artifact.identity,
-                file,
-                force: true,
-            },
-        });
-
+    const saved = await actions.save(props.artifact, draft.value);
+    if (saved) {
         text.value = draft.value;
-    } catch (error) {
-        dangerToast(`Failed to save '${props.artifact.name}'`, error as Error);
     }
 }
 
