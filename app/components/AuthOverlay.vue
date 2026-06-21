@@ -71,9 +71,9 @@
                     <UiButton :loading="signing" :label="title" @click="signin()" block />
                     <template v-if="hasStoredKey">
                         <UiButton
-                            label="Sign out & forget key"
                             variant="soft"
                             color="neutral"
+                            label="Sign out & forget key"
                             :disabled="signing"
                             @click="signout()"
                             block

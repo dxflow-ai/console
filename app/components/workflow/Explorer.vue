@@ -30,11 +30,11 @@
             >
                 <template #action>
                     <UiButton
-                        label="New workflow"
+                        class="underline"
                         size="xs"
                         variant="link"
                         color="neutral"
-                        class="underline"
+                        label="New workflow"
                         :loading="creating"
                         :disabled="loading"
                         @click="fileDialog.open()"

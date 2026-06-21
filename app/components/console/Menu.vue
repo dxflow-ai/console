@@ -14,10 +14,10 @@
         arrow
     >
         <UiButton
-            label="dxflow"
             size="sm"
             variant="ghost"
             color="neutral"
+            label="dxflow"
             :ui="{
                 base: 'font-semibold',
             }"
@@ -36,7 +36,7 @@
         }"
         arrow
     >
-        <UiButton label="View" size="sm" variant="ghost" color="neutral" />
+        <UiButton size="sm" variant="ghost" color="neutral" label="View" />
     </UiDropdownMenu>
     <UiDropdownMenu
         :items="workflowItems"
@@ -51,7 +51,7 @@
         }"
         arrow
     >
-        <UiButton label="Workflow" size="sm" variant="ghost" color="neutral" />
+        <UiButton size="sm" variant="ghost" color="neutral" label="Workflow" />
     </UiDropdownMenu>
     <UiDropdownMenu
         :items="artifactItems"
@@ -66,7 +66,7 @@
         }"
         arrow
     >
-        <UiButton label="Artifact" size="sm" variant="ghost" color="neutral" />
+        <UiButton size="sm" variant="ghost" color="neutral" label="Artifact" />
     </UiDropdownMenu>
     <UiDropdownMenu
         :items="shellItems"
@@ -81,7 +81,7 @@
         }"
         arrow
     >
-        <UiButton label="Shell" size="sm" variant="ghost" color="neutral" />
+        <UiButton size="sm" variant="ghost" color="neutral" label="Shell" />
     </UiDropdownMenu>
     <UiModal
         v-model:open="systemOpen"

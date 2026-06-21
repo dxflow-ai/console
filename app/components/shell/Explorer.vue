@@ -24,11 +24,11 @@
             >
                 <template #action>
                     <UiButton
-                        label="New shell"
+                        class="underline"
                         size="xs"
                         variant="link"
                         color="neutral"
-                        class="underline"
+                        label="New shell"
                         :loading="creating"
                         :disabled="loading"
                         @click="createShell()"

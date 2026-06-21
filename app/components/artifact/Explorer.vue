@@ -30,11 +30,11 @@
             >
                 <template #action>
                     <UiButton
-                        label="New Artifact"
+                        class="underline"
                         size="xs"
                         variant="link"
                         color="neutral"
-                        class="underline"
+                        label="New Artifact"
                         :loading="creating"
                         :disabled="loading || creatingDirectory"
                         @click="fileDialog.open()"
