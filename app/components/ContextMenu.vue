@@ -1,10 +1,12 @@
 <template>
     <template v-if="props.items?.length">
         <UiContextMenu
+            size="xs"
             :items="props.items"
             :ui="{
                 content: 'min-w-0',
-                item: 'px-2 py-1 text-xs',
+                group: 'p-0.5',
+                item: 'px-1.5 py-0.75 text-xs',
             }"
         >
             <slot />
