@@ -1,5 +1,5 @@
 <template>
-    <ExplorerSection title="Shell" :expanded="props.expanded" :empty="!shells.length" :menu="menu" @toggle="toggle">
+    <ExplorerSection title="Shells" :expanded="props.expanded" :empty="!shells.length" :menu="menu" @toggle="toggle">
         <template #actions>
             <UiButton
                 icon="i-mingcute:refresh-2-line"
