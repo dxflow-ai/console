@@ -2,7 +2,7 @@ export default defineAppConfig({
     ui: {
         colors: {
             primary: "zodiac",
-            neutral: "slate",
+            neutral: "zinc",
         },
         icons: {
             arrowDown: "i-mingcute-arrow-down-fill",
