@@ -8,7 +8,6 @@
                     class="size-3.5 shrink-0"
                     :name="props.position === 'primary' ? 'i-mingcute:target-line' : 'i-mingcute:inbox-line'"
                 />
-                <div class="h-3.5 w-px shrink-0 bg-default" />
                 <template v-for="tab in tabs[props.position]" :key="tab.key">
                     <UiBadge
                         size="sm"
