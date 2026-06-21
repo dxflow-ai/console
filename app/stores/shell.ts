@@ -41,16 +41,14 @@ export const shellStore = createStore({
                 const readError = await read((chunk) => {
                     if (chunk.isEntity) {
                         shells.push(chunk.payload);
-
-                        model.list.add(chunk.payload, {
-                            unique: true,
-                        });
                     }
                 });
 
                 if (readError) {
                     throw readError;
                 }
+
+                model.list.set(shells);
 
                 return shells;
             },
@@ -222,45 +220,6 @@ export const shellStore = createStore({
             },
         );
 
-        const removeBatch = handler<{ identities: string[] }, Array<{ identity: string; error?: string }>>(
-            async ({ model, payload }) => {
-                const { call, read } = newHttpRequest("/api/shell/batch/");
-
-                const callError = await call({
-                    method: "DELETE",
-                    body: {
-                        identities: payload.identities,
-                    },
-                });
-
-                if (callError) {
-                    throw callError;
-                }
-
-                const results: Array<{ identity: string; error?: string }> = [];
-                const readError = await read((chunk) => {
-                    if (chunk.isEntity) {
-                        results.push(chunk.payload);
-
-                        if (!chunk.payload.error) {
-                            model.list.remove({
-                                identity: chunk.payload.identity,
-                            });
-                        }
-                    }
-                });
-
-                if (readError) {
-                    throw readError;
-                }
-
-                return results;
-            },
-            {
-                concurrent: ActionConcurrent.BLOCK,
-            },
-        );
-
         const prune = handler<unknown, string[]>(
             async ({ model }) => {
                 const { call, read } = newHttpRequest("/api/shell/prune/");
@@ -276,14 +235,14 @@ export const shellStore = createStore({
                 const identities: string[] = [];
                 const readError = await read((chunk) => {
                     if (chunk.isEntity) {
-                        if (isArray(chunk.payload)) {
-                            for (const identity of chunk.payload) {
-                                identities.push(identity);
+                        const payload: string[] = isArray(chunk.payload) ? chunk.payload : [chunk.payload];
 
-                                model.list.remove({
-                                    identity,
-                                });
-                            }
+                        for (const identity of payload) {
+                            identities.push(identity);
+
+                            model.list.remove({
+                                identity,
+                            });
                         }
                     }
                 });
@@ -310,7 +269,6 @@ export const shellStore = createStore({
             executeById,
             killById,
             removeById,
-            removeBatch,
             prune,
             reset,
         };

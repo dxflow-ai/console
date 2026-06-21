@@ -72,16 +72,14 @@ export const workflowStore = createStore({
                 const readError = await read((chunk) => {
                     if (chunk.isEntity) {
                         workflows.push(chunk.payload);
-
-                        model.list.add(chunk.payload, {
-                            unique: true,
-                        });
                     }
                 });
 
                 if (readError) {
                     throw readError;
                 }
+
+                model.list.set(workflows);
 
                 return workflows;
             },
@@ -278,89 +276,6 @@ export const workflowStore = createStore({
 
                 model.steps.remove(payload.identity);
                 model.events.remove(payload.identity);
-            },
-            {
-                concurrent: ActionConcurrent.BLOCK,
-            },
-        );
-
-        const removeBatch = handler<{ identities: string[] }, Array<{ identity: string; error?: string }>>(
-            async ({ model, payload }) => {
-                const { call, read } = newHttpRequest("/api/workflow/batch/");
-
-                const callError = await call({
-                    method: "DELETE",
-                    body: {
-                        identities: payload.identities,
-                    },
-                });
-
-                if (callError) {
-                    throw callError;
-                }
-
-                const results: Array<{ identity: string; error?: string }> = [];
-                const readError = await read((chunk) => {
-                    if (chunk.isEntity) {
-                        results.push(chunk.payload);
-
-                        if (!chunk.payload.error) {
-                            model.list.remove({
-                                identity: chunk.payload.identity,
-                            });
-
-                            model.steps.remove(chunk.payload.identity);
-                            model.events.remove(chunk.payload.identity);
-                        }
-                    }
-                });
-
-                if (readError) {
-                    throw readError;
-                }
-
-                return results;
-            },
-            {
-                concurrent: ActionConcurrent.BLOCK,
-            },
-        );
-
-        const prune = handler<unknown, string[]>(
-            async ({ model }) => {
-                const { call, read } = newHttpRequest("/api/workflow/prune/");
-
-                const callError = await call({
-                    method: "DELETE",
-                });
-
-                if (callError) {
-                    throw callError;
-                }
-
-                const identities: string[] = [];
-                const readError = await read((chunk) => {
-                    if (chunk.isEntity) {
-                        if (isArray(chunk.payload)) {
-                            for (const identity of chunk.payload) {
-                                identities.push(identity);
-
-                                model.list.remove({
-                                    identity,
-                                });
-
-                                model.steps.remove(identity);
-                                model.events.remove(identity);
-                            }
-                        }
-                    }
-                });
-
-                if (readError) {
-                    throw readError;
-                }
-
-                return identities;
             },
             {
                 concurrent: ActionConcurrent.BLOCK,
@@ -602,6 +517,47 @@ export const workflowStore = createStore({
             },
         );
 
+        const prune = handler<unknown, string[]>(
+            async ({ model }) => {
+                const { call, read } = newHttpRequest("/api/workflow/prune/");
+
+                const callError = await call({
+                    method: "DELETE",
+                });
+
+                if (callError) {
+                    throw callError;
+                }
+
+                const identities: string[] = [];
+                const readError = await read((chunk) => {
+                    if (chunk.isEntity) {
+                        const payload: string[] = isArray(chunk.payload) ? chunk.payload : [chunk.payload];
+
+                        for (const identity of payload) {
+                            identities.push(identity);
+
+                            model.list.remove({
+                                identity,
+                            });
+
+                            model.steps.remove(identity);
+                            model.events.remove(identity);
+                        }
+                    }
+                });
+
+                if (readError) {
+                    throw readError;
+                }
+
+                return identities;
+            },
+            {
+                concurrent: ActionConcurrent.BLOCK,
+            },
+        );
+
         const reset = handler(async ({ model }) => {
             model.list.reset();
             model.steps.reset();
@@ -616,13 +572,12 @@ export const workflowStore = createStore({
             startById,
             stopById,
             removeById,
-            removeBatch,
-            prune,
             getStepsById,
             getEventsById,
             getLogsById,
             startLogsLive,
             startSignals,
+            prune,
             reset,
         };
     },
