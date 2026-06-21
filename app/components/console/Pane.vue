@@ -10,29 +10,27 @@
                 />
                 <div class="h-3.5 w-px shrink-0 bg-default" />
                 <template v-for="tab in tabs[props.position]" :key="tab.key">
-                    <ContextMenu :items="tabMenu(tab)">
-                        <UiBadge
-                            size="sm"
-                            variant="soft"
-                            class="shrink-0 cursor-pointer items-center gap-1"
-                            :color="tab.key === activeKey[props.position] ? 'primary' : 'neutral'"
-                            @click="setActive(props.position, tab.key)"
-                        >
-                            <UiIcon
-                                class="size-3 shrink-0"
-                                :class="{
-                                    'animate-spin': tabBusy(tab),
-                                }"
-                                :name="tabBusy(tab) ? 'i-mingcute:loading-3-fill' : tab.icon"
-                            />
-                            <span class="truncate">{{ tab.label }}</span>
-                            <UiIcon
-                                name="i-mingcute:close-small-fill"
-                                class="ml-1 size-4 shrink-0"
-                                @click.stop="closeTab(props.position, tab.key)"
-                            />
-                        </UiBadge>
-                    </ContextMenu>
+                    <UiBadge
+                        size="sm"
+                        variant="soft"
+                        class="shrink-0 cursor-pointer items-center gap-1"
+                        :color="tab.key === activeKey[props.position] ? 'primary' : 'neutral'"
+                        @click="setActive(props.position, tab.key)"
+                    >
+                        <UiIcon
+                            class="size-3 shrink-0"
+                            :class="{
+                                'animate-spin': tabBusy(tab),
+                            }"
+                            :name="tabBusy(tab) ? 'i-mingcute:loading-3-fill' : tab.icon"
+                        />
+                        <span class="truncate">{{ tab.label }}</span>
+                        <UiIcon
+                            name="i-mingcute:close-small-fill"
+                            class="ml-1 size-4 shrink-0"
+                            @click.stop="closeTab(props.position, tab.key)"
+                        />
+                    </UiBadge>
                 </template>
                 <template v-if="props.fullscreenable">
                     <div class="flex-1" />
@@ -48,10 +46,7 @@
                 </template>
             </div>
             <div class="h-full min-h-0 flex-1 overflow-hidden">
-                <template v-if="activeTab?.kind === 'artifact'">
-                    <ArtifactView :key="activeTab.key" :artifact="activeTab.payload" />
-                </template>
-                <template v-else-if="activeTab?.kind === 'workflow'">
+                <template v-if="activeTab?.kind === 'workflow'">
                     <WorkflowView
                         :key="activeTab.key"
                         :workflow="activeTab.payload.workflow"
@@ -59,8 +54,11 @@
                         :step="activeTab.payload.step"
                     />
                 </template>
-                <template v-else-if="activeTab?.kind === 'shell'">
-                    <ShellView :key="activeTab.key" class="size-full" :identity="activeTab.payload.identity" />
+                <template v-if="activeTab?.kind === 'artifact'">
+                    <ArtifactView :key="activeTab.key" :artifact="activeTab.payload.artifact" />
+                </template>
+                <template v-if="activeTab?.kind === 'shell'">
+                    <ShellView :key="activeTab.key" :identity="activeTab.payload.shell.identity" />
                 </template>
             </div>
         </template>
@@ -100,36 +98,13 @@ const activeTab = computed<PaneTab | null>(() => {
 
 function tabBusy(tab: PaneTab) {
     if (tab.kind === "artifact") {
-        return artifactActions.isBusy(tab.payload.identity);
+        return artifactActions.isBusy(tab.payload.artifact.identity);
     }
 
     if (tab.kind === "shell") {
-        return shellActions.isBusy(tab.payload.identity);
+        return shellActions.isBusy(tab.payload.shell.identity);
     }
 
     return false;
-}
-
-function tabMenu(tab: PaneTab): ContextMenuItem[][] | undefined {
-    const output: ContextMenuItem[][] = [];
-
-    if (tab.kind === "artifact" || tab.kind === "shell") {
-        output.push([
-            {
-                label: "Remove",
-                color: "red",
-                disabled: tabBusy(tab),
-                onSelect() {
-                    if (tab.kind === "artifact") {
-                        artifactActions.remove(tab.payload);
-                    } else {
-                        shellActions.remove(tab.payload);
-                    }
-                },
-            },
-        ]);
-    }
-
-    return output;
 }
 </script>
