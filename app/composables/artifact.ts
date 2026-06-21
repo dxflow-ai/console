@@ -2,21 +2,34 @@ const renamingIdentity = ref<MaybeString>(undefined);
 const draftIdentity = ref<MaybeString>(undefined);
 const busyIdentities = ref<Set<string>>(new Set());
 
+export function useArtifactFileDialog() {
+    const dialog = useFileDialog({
+        reset: true,
+        multiple: true,
+    });
+
+    return dialog;
+}
+
 export function useArtifactActions() {
     const { closeTabsWhere } = useTabs();
 
-    const { execute: executeCreateDirectory, active: creating } = useStoreCompose(artifactStore, "createDirectory");
+    const { execute: executeCreateDirectory, active: creatingDirectory } = useStoreCompose(
+        artifactStore,
+        "createDirectory",
+    );
+
     const { execute: executeRename, active: renaming } = useStoreCompose(artifactStore, "renameAndRefresh");
     const { execute: executeRemove, active: removing } = useStoreCompose(artifactStore, "removeAndRefresh");
     const { execute: executeZip, active: zipping } = useStoreCompose(artifactStore, "zipAndRefresh");
     const { execute: executeUnzip, active: unzipping } = useStoreCompose(artifactStore, "unzipAndRefresh");
     const { execute: executeDownload, active: downloading } = useStoreCompose(artifactStore, "downloadAndSave");
     const { execute: executeSave, active: saving } = useStoreCompose(artifactStore, "saveFile");
-    const { execute: executeUpload, active: uploading } = useStoreCompose(artifactStore, "uploadDirectory");
+    const { execute: executeUpload, active: creating } = useStoreCompose(artifactStore, "uploadDirectory");
 
     const confirmRemove = useConfirmToast<Artifact>({
         id: "artifact-remove",
-        color: "red",
+        color: "neutral",
         title({ permission }) {
             return permission[0] === "d" ? "Delete folder" : "Delete file";
         },
@@ -66,12 +79,12 @@ export function useArtifactActions() {
         });
     }
 
-    async function makeDirectory(directory: string, siblings: Artifact[]) {
+    async function createDirectory(directory: string, siblings: Artifact[]) {
         const names = siblings.map((item) => {
             return item.name;
         });
 
-        const identity = `${directory}/${uniqueName(names, "new-folder")}`;
+        const identity = `${directory}/${uniqueName(names, "new-directory")}`;
 
         try {
             await withBusy(directory, () => {
@@ -82,7 +95,7 @@ export function useArtifactActions() {
                 draft: true,
             });
         } catch (error) {
-            dangerToast("Failed to create folder", error as Error);
+            dangerToast("Failed to create directory", error as Error);
         }
     }
 
@@ -113,7 +126,7 @@ export function useArtifactActions() {
                     return executeRemove(artifact.identity);
                 });
             } catch (error) {
-                dangerToast("Failed to discard folder", error as Error);
+                dangerToast("Failed to discard directory", error as Error);
             }
         }
 
@@ -181,29 +194,29 @@ export function useArtifactActions() {
         }
     }
 
-    async function upload(directory: string, files: File[]) {
+    async function create(directory: string, files: File[]) {
         try {
             await withBusy(directory, () => {
                 return executeUpload(directory, files);
             });
         } catch (error) {
-            dangerToast("Failed to upload", error as Error);
+            dangerToast("Failed to create artifact", error as Error);
         }
     }
 
     return {
         creating,
+        creatingDirectory,
         renaming,
         removing,
         zipping,
         unzipping,
         downloading,
         saving,
-        uploading,
         isRenaming,
         isBusy,
         startRename,
-        makeDirectory,
+        createDirectory,
         commitRename,
         cancelRename,
         remove,
@@ -211,6 +224,6 @@ export function useArtifactActions() {
         unzip,
         download,
         save,
-        upload,
+        create,
     };
 }

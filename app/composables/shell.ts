@@ -7,17 +7,15 @@ export function useShellActions() {
         isolated: true,
     });
 
-    const { execute: executePrune, loading: pruning } = useStoreAction(shellStore, "prune", {
-        isolated: true,
-    });
-
     const { execute: executeRemove, loading: removing } = useStoreAction(shellStore, "removeById", {
         isolated: true,
     });
 
+    const { execute: executePrune, loading: pruning } = useStoreAction(shellStore, "prune");
+
     const confirmPrune = useConfirmToast({
         id: "shell-prune",
-        color: "red",
+        color: "neutral",
         title() {
             return "Prune shells";
         },
@@ -54,21 +52,6 @@ export function useShellActions() {
         }
     }
 
-    async function prune() {
-        const confirmed = await confirmPrune.open();
-        if (!confirmed) {
-            return;
-        }
-
-        try {
-            const removed = await executePrune();
-
-            removed?.forEach(closeTabs);
-        } catch (error) {
-            dangerToast("Failed to prune shells", error as Error);
-        }
-    }
-
     async function remove(shell: Shell) {
         try {
             await withBusy(shell.identity, () => {
@@ -85,13 +68,28 @@ export function useShellActions() {
         }
     }
 
+    async function prune() {
+        const confirmed = await confirmPrune.open();
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+            const removed = await executePrune();
+
+            removed?.forEach(closeTabs);
+        } catch (error) {
+            dangerToast("Failed to prune shells", error as Error);
+        }
+    }
+
     return {
         creating,
         pruning,
         removing,
         isBusy,
         create,
-        prune,
         remove,
+        prune,
     };
 }

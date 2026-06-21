@@ -1,3 +1,13 @@
+export function useWorkflowFileDialog() {
+    const dialog = useFileDialog({
+        reset: true,
+        multiple: false,
+        accept: ".yaml,.yml,application/x-yaml,text/yaml",
+    });
+
+    return dialog;
+}
+
 export function useWorkflowLogs() {
     const lines = ref<WorkflowLog[]>([]);
     const activeIdentity = ref<MaybeString>();
@@ -101,11 +111,32 @@ export function useWorkflowEvents(identity: string) {
 }
 
 export function useWorkflowActions() {
+    const { closeTabsWhere } = useTabs();
+
     const { execute: executeCreate, loading: creating } = useStoreAction(workflowStore, "create", {
         isolated: true,
     });
 
-    async function createFromFile(file: File) {
+    const { execute: executePrune, loading: pruning } = useStoreAction(workflowStore, "prune");
+
+    const confirmPrune = useConfirmToast({
+        id: "workflow-prune",
+        color: "neutral",
+        title() {
+            return "Prune workflows";
+        },
+        description() {
+            return "Remove all finished workflows?";
+        },
+    });
+
+    function closeTabs(identity: string) {
+        closeTabsWhere((tab) => {
+            return tab.key.startsWith(`workflow:${identity}:`);
+        });
+    }
+
+    async function create(file: File) {
         try {
             const source = await file.text();
 
@@ -119,8 +150,25 @@ export function useWorkflowActions() {
         }
     }
 
+    async function prune() {
+        const confirmed = await confirmPrune.open();
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+            const removed = await executePrune();
+
+            removed?.forEach(closeTabs);
+        } catch (error) {
+            dangerToast("Failed to prune workflows", error as Error);
+        }
+    }
+
     return {
         creating,
-        createFromFile,
+        pruning,
+        create,
+        prune,
     };
 }
