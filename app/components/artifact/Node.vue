@@ -85,7 +85,9 @@ const props = defineProps({
 });
 
 const emit = defineEmits({
-    open: null,
+    open(payload: { artifact: Artifact }) {
+        return true;
+    },
 });
 
 const { data: children } = useStoreView(artifactStore, "list", (items) => {
@@ -99,13 +101,9 @@ const { execute: executeList, loading } = useStoreAction(artifactStore, "list", 
 });
 
 const actions = useArtifactActions();
+const fileDialog = useArtifactFileDialog();
 
 const renameElement = useTemplateRef<HTMLInputElement>("rename-element");
-
-const fileDialog = useFileDialog({
-    reset: true,
-    multiple: true,
-});
 
 const draft = ref("");
 const loaded = ref(false);
@@ -149,6 +147,23 @@ const menu = computed(() => {
     if (isDirectory.value) {
         output.push([
             {
+                label: "New Artifact",
+                disabled: busy.value,
+                onSelect() {
+                    fileDialog.open();
+                },
+            },
+            {
+                label: "New directory",
+                disabled: busy.value,
+                onSelect() {
+                    onCreateDirectory();
+                },
+            },
+        ]);
+
+        output.push([
+            {
                 label: "Rename",
                 disabled: busy.value,
                 onSelect() {
@@ -160,20 +175,6 @@ const menu = computed(() => {
                 disabled: busy.value,
                 onSelect() {
                     actions.zip(props.artifact);
-                },
-            },
-            {
-                label: "Make directory",
-                disabled: busy.value,
-                onSelect() {
-                    onMakeDirectory();
-                },
-            },
-            {
-                label: "Upload file",
-                disabled: busy.value,
-                onSelect() {
-                    fileDialog.open();
                 },
             },
         ]);
@@ -196,24 +197,23 @@ const menu = computed(() => {
                 },
             },
         ]);
-    }
 
-    if (!isDirectory.value && isZip.value) {
-        output.push([
-            {
-                label: "Unzip",
-                disabled: busy.value,
-                onSelect() {
-                    actions.unzip(props.artifact);
+        if (isZip.value) {
+            output.push([
+                {
+                    label: "Unzip",
+                    disabled: busy.value,
+                    onSelect() {
+                        actions.unzip(props.artifact);
+                    },
                 },
-            },
-        ]);
+            ]);
+        }
     }
 
     output.push([
         {
             label: "Delete",
-            color: "red",
             disabled: busy.value,
             onSelect() {
                 actions.remove(props.artifact);
@@ -259,10 +259,6 @@ function cancel() {
     actions.cancelRename(props.artifact);
 }
 
-function onOpen(artifact: Artifact) {
-    emit("open", artifact);
-}
-
 async function loadChildren() {
     if (!loaded.value) {
         try {
@@ -285,7 +281,9 @@ async function loadChildren() {
 async function toggle() {
     if (!isDirectory.value) {
         if (isOpenableFile(props.artifact.name)) {
-            emit("open", props.artifact);
+            emit("open", {
+                artifact: props.artifact,
+            });
         }
 
         return;
@@ -302,25 +300,27 @@ async function toggle() {
     }
 }
 
-async function onMakeDirectory() {
+async function onCreateDirectory() {
     const loaded = await loadChildren();
     if (!loaded) {
         return;
     }
 
     expanded.value = true;
-    actions.makeDirectory(props.artifact.identity, children.value);
+    actions.createDirectory(props.artifact.identity, children.value);
 }
 
-async function onUpload(files: FileList | null) {
+function onOpen(payload: { artifact: Artifact }) {
+    emit("open", payload);
+}
+
+fileDialog.onChange(async (files: FileList | null) => {
     if (!files?.length) {
         return;
     }
 
-    await actions.upload(props.artifact.identity, Array.from(files));
+    await actions.create(props.artifact.identity, Array.from(files));
 
     expanded.value = true;
-}
-
-fileDialog.onChange(onUpload);
+});
 </script>

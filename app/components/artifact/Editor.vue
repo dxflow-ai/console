@@ -34,7 +34,9 @@ const model = defineModel<string>({
 });
 
 const emit = defineEmits({
-    save: null,
+    save() {
+        return true;
+    },
 });
 
 const editorElement = useTemplateRef<HTMLTextAreaElement>("editor-element");

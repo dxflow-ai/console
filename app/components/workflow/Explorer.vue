@@ -13,7 +13,7 @@
                 variant="link"
                 color="neutral"
                 class="pr-0!"
-                :loading="loading || creating"
+                :loading="loading || creating || pruning"
                 :ui="{
                     leadingIcon: 'size-3.5',
                 }"
@@ -46,8 +46,12 @@ const props = defineProps({
 });
 
 const emit = defineEmits({
-    open: null,
-    toggle: null,
+    open(payload: { workflow: Workflow; view: string; step?: number }) {
+        return true;
+    },
+    toggle() {
+        return true;
+    },
 });
 
 const { data: workflows } = useStoreView(workflowStore, "list");
@@ -56,13 +60,9 @@ const { execute: executeGet, loading } = useStoreAction(workflowStore, "get", {
     isolated: true,
 });
 
-const { createFromFile, creating } = useWorkflowActions();
+const { create, creating, pruning } = useWorkflowActions();
 
-const fileDialog = useFileDialog({
-    reset: true,
-    multiple: false,
-    accept: ".yaml,.yml,application/x-yaml,text/yaml",
-});
+const fileDialog = useWorkflowFileDialog();
 
 const menu = computed(() => {
     const output: ContextMenuItem[] = [
@@ -96,7 +96,7 @@ async function load() {
 fileDialog.onChange((files) => {
     const file = files?.[0];
     if (file) {
-        createFromFile(file);
+        create(file);
     }
 });
 

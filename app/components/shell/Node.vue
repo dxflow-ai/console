@@ -32,7 +32,9 @@ const props = defineProps({
 });
 
 const emit = defineEmits({
-    open: null,
+    open(payload: { shell: Shell }) {
+        return true;
+    },
 });
 
 const actions = useShellActions();
@@ -45,7 +47,6 @@ const menu = computed(() => {
     const output: ContextMenuItem[] = [
         {
             label: "Delete",
-            color: "red",
             disabled: busy.value,
             onSelect() {
                 actions.remove(props.shell);
@@ -57,6 +58,8 @@ const menu = computed(() => {
 });
 
 function onOpen() {
-    emit("open", props.shell);
+    emit("open", {
+        shell: props.shell,
+    });
 }
 </script>

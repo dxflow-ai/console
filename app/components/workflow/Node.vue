@@ -107,7 +107,9 @@ const props = defineProps({
 });
 
 const emit = defineEmits({
-    open: null,
+    open(payload: { workflow: Workflow; view: string; step?: number }) {
+        return true;
+    },
 });
 
 const { data: steps } = useStoreView(workflowStore, "steps", (record) => {

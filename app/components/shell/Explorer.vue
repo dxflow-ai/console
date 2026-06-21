@@ -40,8 +40,12 @@ const props = defineProps({
 });
 
 const emit = defineEmits({
-    open: null,
-    toggle: null,
+    open(payload: { shell: Shell }) {
+        return true;
+    },
+    toggle() {
+        return true;
+    },
 });
 
 const { data: shells } = useStoreView(shellStore, "list");
@@ -50,28 +54,16 @@ const { execute: executeGet, loading } = useStoreAction(shellStore, "get", {
     isolated: true,
 });
 
-const { create, prune, creating, pruning } = useShellActions();
+const { create, creating, pruning } = useShellActions();
 
 const menu = computed(() => {
-    const output: ContextMenuItem[][] = [
-        [
-            {
-                label: "New shell",
-                onSelect() {
-                    createShell();
-                },
+    const output: ContextMenuItem[] = [
+        {
+            label: "New shell",
+            onSelect() {
+                createShell();
             },
-        ],
-        [
-            {
-                label: "Prune all",
-                color: "red",
-                disabled: !shells.value.length,
-                onSelect() {
-                    prune();
-                },
-            },
-        ],
+        },
     ];
 
     return output;
@@ -81,8 +73,8 @@ function toggle() {
     emit("toggle");
 }
 
-function onOpen(shell: Shell) {
-    emit("open", shell);
+function onOpen(payload: { shell: Shell }) {
+    emit("open", payload);
 }
 
 async function load() {
@@ -95,9 +87,10 @@ async function load() {
 
 async function createShell() {
     const shell = await create();
-
     if (shell) {
-        onOpen(shell);
+        onOpen({
+            shell,
+        });
     }
 }
 

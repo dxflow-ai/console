@@ -13,7 +13,7 @@
                 variant="link"
                 color="neutral"
                 class="pr-0!"
-                :loading="loading || uploading || creating"
+                :loading="loading || creating || creatingDirectory"
                 :ui="{
                     leadingIcon: 'size-3.5',
                 }"
@@ -50,8 +50,12 @@ const props = defineProps({
 });
 
 const emit = defineEmits({
-    open: null,
-    toggle: null,
+    open(payload: { artifact: Artifact }) {
+        return true;
+    },
+    toggle() {
+        return true;
+    },
 });
 
 const { data: artifacts } = useStoreView(artifactStore, "list", (items) => {
@@ -70,25 +74,22 @@ const { execute: executeList, loading } = useStoreAction(artifactStore, "list", 
     isolated: true,
 });
 
-const { makeDirectory, upload, uploading, creating } = useArtifactActions();
+const { createDirectory, create, creating, creatingDirectory } = useArtifactActions();
 
-const fileDialog = useFileDialog({
-    reset: true,
-    multiple: true,
-});
+const fileDialog = useArtifactFileDialog();
 
 const menu = computed(() => {
     const output: ContextMenuItem[] = [
         {
-            label: "Upload file",
+            label: "New Artifact",
             onSelect() {
                 fileDialog.open();
             },
         },
         {
-            label: "Make directory",
+            label: "New directory",
             onSelect() {
-                makeDirectory(props.root, artifacts.value);
+                createDirectory(props.root, artifacts.value);
             },
         },
     ];
@@ -100,8 +101,8 @@ function toggle() {
     emit("toggle");
 }
 
-function onOpen(artifact: Artifact) {
-    emit("open", artifact);
+function onOpen(payload: { artifact: Artifact }) {
+    emit("open", payload);
 }
 
 async function load() {
@@ -118,7 +119,7 @@ async function load() {
 
 fileDialog.onChange((files) => {
     if (files?.length) {
-        upload(props.root, Array.from(files));
+        create(props.root, Array.from(files));
     }
 });
 

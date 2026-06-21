@@ -4,8 +4,12 @@
 
 <script lang="ts" setup>
 const emit = defineEmits({
-    data: null,
-    resize: null,
+    data(value: string) {
+        return true;
+    },
+    resize(columns: number, rows: number) {
+        return true;
+    },
 });
 
 const theme = useColorMode();

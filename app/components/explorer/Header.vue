@@ -48,7 +48,9 @@ const props = defineProps({
 });
 
 const emit = defineEmits({
-    toggle: null,
+    toggle() {
+        return true;
+    },
 });
 
 function toggle() {
