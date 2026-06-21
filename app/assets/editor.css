@@ -1,27 +1,27 @@
 .editor {
     color: var(--editor-plain);
 
-    --editor-plain: #0f172a;
-    --editor-comment: #64748b;
-    --editor-punctuation: #475569;
-    --editor-keyword: #9333ea;
+    --editor-plain: #18181b;
+    --editor-comment: #71717a;
+    --editor-punctuation: #52525b;
+    --editor-keyword: #7c3aed;
     --editor-string: #16a34a;
-    --editor-number: #ca8a04;
+    --editor-number: #d97706;
     --editor-function: #2563eb;
     --editor-tag: #dc2626;
     --editor-attribute: #0891b2;
 }
 
 .dark .editor {
-    --editor-plain: #e2e8f0;
-    --editor-comment: #64748b;
-    --editor-punctuation: #94a3b8;
-    --editor-keyword: #a855f7;
-    --editor-string: #22c55e;
-    --editor-number: #eab308;
-    --editor-function: #3b82f6;
-    --editor-tag: #ef4444;
-    --editor-attribute: #06b6d4;
+    --editor-plain: #e4e4e7;
+    --editor-comment: #71717a;
+    --editor-punctuation: #a1a1aa;
+    --editor-keyword: #a78bfa;
+    --editor-string: #4ade80;
+    --editor-number: #fbbf24;
+    --editor-function: #60a5fa;
+    --editor-tag: #f87171;
+    --editor-attribute: #22d3ee;
 }
 
 .editor .token.comment,
