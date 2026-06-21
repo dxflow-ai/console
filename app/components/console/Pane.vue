@@ -1,17 +1,21 @@
 <template>
     <div class="flex min-h-0 flex-1 flex-col">
         <template v-if="tabs[props.position].length">
-            <div class="flex h-8 shrink-0 items-center gap-1.5 bg-muted/50 border-b border-default px-3">
+            <div
+                ref="toolbar-element"
+                class="flex h-8 shrink-0 items-center gap-1.5 bg-muted/50 border-b border-default px-3"
+            >
                 <UiIcon
                     class="size-3.5 shrink-0"
                     :name="props.position === 'primary' ? 'i-mingcute:target-line' : 'i-mingcute:inbox-line'"
                 />
-                <div class="flex items-center gap-1 overflow-x-hidden">
-                    <template v-for="tab in tabs[props.position]" :key="tab.key">
+                <div ref="strip-element" class="relative flex min-w-0 flex-1 items-center gap-1 overflow-hidden">
+                    <template v-for="tab in visibleTabs" :key="tab.key">
                         <UiBadge
                             size="sm"
                             variant="soft"
                             class="shrink-0 cursor-pointer items-center gap-1"
+                            :data-tab="tab.key"
                             :color="tab.key === activeKey[props.position] ? 'primary' : 'neutral'"
                             @click="setActive(props.position, tab.key)"
                         >
@@ -30,9 +34,21 @@
                             />
                         </UiBadge>
                     </template>
+                    <template v-if="overflowTabs.length">
+                        <UiDropdownMenu
+                            size="xs"
+                            :items="overflowItems"
+                            :content="{
+                                align: 'end',
+                            }"
+                        >
+                            <UiBadge size="sm" variant="soft" color="neutral" class="shrink-0 cursor-pointer">
+                                <UiIcon name="i-mingcute:more-1-fill" class="size-4 shrink-0" />
+                            </UiBadge>
+                        </UiDropdownMenu>
+                    </template>
                 </div>
                 <template v-if="props.fullscreenable">
-                    <div class="flex-1" />
                     <UiButton
                         size="xs"
                         variant="link"
@@ -68,7 +84,7 @@
 </template>
 
 <script lang="ts" setup>
-import type { ContextMenuItem } from "@nuxt/ui";
+import type { DropdownMenuItem } from "@nuxt/ui";
 
 const props = defineProps({
     position: {
@@ -81,19 +97,82 @@ const props = defineProps({
     },
 });
 
+const { scale } = useScale();
 const { tabs, activeKey, closeTab, setActive } = useTabs();
 const { secondaryFull, toggleSecondaryFull } = useWorkspace();
+
+const toolbarElement = useTemplateRef<HTMLDivElement>("toolbar-element");
+const stripElement = useTemplateRef<HTMLDivElement>("strip-element");
 
 const artifactActions = useArtifactActions();
 const shellActions = useShellActions();
 
-const activeTab = computed<PaneTab | null>(() => {
-    const tab = tabs[props.position].find(({ key }) => {
-        return key === activeKey[props.position];
+const measuring = ref(true);
+const visibleCount = ref(Number.POSITIVE_INFINITY);
+
+const activeTab = computed(() => {
+    const tab = tabs[props.position].find((item) => {
+        return item.key === activeKey[props.position];
     });
 
     return tab ?? null;
 });
+
+const visibleTabs = computed(() => {
+    if (measuring.value) {
+        return tabs[props.position];
+    }
+
+    const head = tabs[props.position].slice(0, visibleCount.value);
+    const activeHidden = head.every(({ key }) => {
+        return key !== activeTab.value?.key;
+    });
+
+    if (activeTab.value && head.length && activeHidden) {
+        return [...head.slice(0, -1), activeTab.value];
+    }
+
+    return head;
+});
+
+const overflowTabs = computed(() => {
+    if (measuring.value) {
+        return [];
+    }
+
+    const shown = new Set(
+        visibleTabs.value.map(({ key }) => {
+            return key;
+        }),
+    );
+
+    return tabs[props.position].filter((tab) => {
+        return !shown.has(tab.key);
+    });
+});
+
+const overflowItems = computed(() => {
+    return overflowTabs.value.map(({ key, label, icon }) => {
+        const item: DropdownMenuItem = {
+            label,
+            icon,
+            onSelect: () => {
+                setActive(props.position, key);
+            },
+        };
+
+        return item;
+    });
+});
+
+watch(
+    () => {
+        return tabs[props.position].length;
+    },
+    () => {
+        relayout();
+    },
+);
 
 function tabBusy(tab: PaneTab) {
     if (tab.kind === "artifact") {
@@ -106,4 +185,32 @@ function tabBusy(tab: PaneTab) {
 
     return false;
 }
+
+async function relayout() {
+    measuring.value = true;
+
+    await nextTick();
+
+    const strip = stripElement.value;
+    if (strip) {
+        const limit = strip.clientWidth - 66 * scale.value;
+
+        const nodes = strip.querySelectorAll<HTMLElement>("[data-tab]");
+        const count = [...nodes].reduce((total, node) => {
+            if (node.offsetLeft + node.offsetWidth > limit) {
+                return total;
+            }
+
+            return total + 1;
+        }, 0);
+
+        visibleCount.value = Math.max(count, 1);
+    }
+
+    measuring.value = false;
+}
+
+useResizeObserver(toolbarElement, () => {
+    relayout();
+});
 </script>

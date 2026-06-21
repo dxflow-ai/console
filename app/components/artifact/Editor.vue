@@ -57,7 +57,9 @@ const language = computed(() => {
 });
 
 const lineCount = computed(() => {
-    return model.value.split("\n").length;
+    const lines = model.value.split("\n");
+
+    return lines.length || 0;
 });
 
 const highlighted = computed(() => {
