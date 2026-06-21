@@ -1,36 +1,36 @@
 <template>
     <div class="flex min-h-0 flex-1 flex-col">
         <template v-if="tabs[props.position].length">
-            <div
-                class="flex h-8 shrink-0 items-center gap-1.5 overflow-x-auto bg-muted/50 border-b border-default px-3"
-            >
+            <div class="flex h-8 shrink-0 items-center gap-1.5 bg-muted/50 border-b border-default px-3">
                 <UiIcon
                     class="size-3.5 shrink-0"
                     :name="props.position === 'primary' ? 'i-mingcute:target-line' : 'i-mingcute:inbox-line'"
                 />
-                <template v-for="tab in tabs[props.position]" :key="tab.key">
-                    <UiBadge
-                        size="sm"
-                        variant="soft"
-                        class="shrink-0 cursor-pointer items-center gap-1"
-                        :color="tab.key === activeKey[props.position] ? 'primary' : 'neutral'"
-                        @click="setActive(props.position, tab.key)"
-                    >
-                        <UiIcon
-                            class="size-3 shrink-0"
-                            :class="{
-                                'animate-spin': tabBusy(tab),
-                            }"
-                            :name="tabBusy(tab) ? 'i-mingcute:loading-3-fill' : tab.icon"
-                        />
-                        <span class="truncate">{{ tab.label }}</span>
-                        <UiIcon
-                            name="i-mingcute:close-small-fill"
-                            class="ml-1 size-4 shrink-0"
-                            @click.stop="closeTab(props.position, tab.key)"
-                        />
-                    </UiBadge>
-                </template>
+                <div class="flex items-center gap-1 overflow-x-hidden">
+                    <template v-for="tab in tabs[props.position]" :key="tab.key">
+                        <UiBadge
+                            size="sm"
+                            variant="soft"
+                            class="shrink-0 cursor-pointer items-center gap-1"
+                            :color="tab.key === activeKey[props.position] ? 'primary' : 'neutral'"
+                            @click="setActive(props.position, tab.key)"
+                        >
+                            <UiIcon
+                                class="size-3 shrink-0"
+                                :class="{
+                                    'animate-spin': tabBusy(tab),
+                                }"
+                                :name="tabBusy(tab) ? 'i-mingcute:loading-3-fill' : tab.icon"
+                            />
+                            <span class="truncate">{{ tab.label }}</span>
+                            <UiIcon
+                                name="i-mingcute:close-small-fill"
+                                class="ml-1 size-4 shrink-0"
+                                @click.stop="closeTab(props.position, tab.key)"
+                            />
+                        </UiBadge>
+                    </template>
+                </div>
                 <template v-if="props.fullscreenable">
                     <div class="flex-1" />
                     <UiButton
