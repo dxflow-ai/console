@@ -28,8 +28,8 @@ type IntroItem = {
     action: () => void;
 };
 
-const { sidebarOpen, toggleSidebar } = useWorkspace();
 const { expand } = useExplorer();
+const { sidebarOpen, toggleSidebar } = useWorkspace();
 
 const explorerItems: IntroItem[] = [
     {

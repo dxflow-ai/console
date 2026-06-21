@@ -1,5 +1,5 @@
 <template>
-    <div class="relative bg-default overflow-hidden">
+    <div class="relative size-full bg-default overflow-hidden">
         <div
             class="absolute inset-0 overflow-hidden"
             :class="{
