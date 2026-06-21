@@ -42,7 +42,7 @@ export default defineNuxtConfig({
     ui: {
         prefix: "ui",
         theme: {
-            colors: ["zodiac", "neutral", "green", "red", "blue", "yellow"],
+            colors: ["secondary", "neutral", "green", "red", "blue", "yellow"],
             defaultVariants: {
                 size: "sm",
             },

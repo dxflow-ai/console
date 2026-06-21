@@ -7,8 +7,7 @@ html {
     ::selection,
     ::-moz-selection,
     ::-webkit-selection {
-        background: color-mix(in oklab, var(--ui-primary) 50%, transparent);
-        color: var(--ui-text);
+        background: color-mix(in oklab, var(--ui-secondary) 25%, transparent);
     }
 
     input,
