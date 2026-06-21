@@ -51,7 +51,7 @@
                     :unit="networkRate.unit"
                     :points="network.history"
                     :caption="`${network.count} ${network.count === 1 ? 'interface' : 'interfaces'}`"
-                    :meta="`↑ ${prettyBytes(network.sent)}/s`"
+                    :meta="`upload ${prettyBytes(network.sent)}/s`"
                 />
             </template>
         </div>
