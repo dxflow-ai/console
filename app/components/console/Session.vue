@@ -5,7 +5,7 @@
             <RelativeTime :timestamp="expiration" />
         </div>
         <UiButton
-            icon="i-mingcute:exit-line"
+            icon="i-mingcute:open-door-line"
             size="xs"
             variant="link"
             color="neutral"
