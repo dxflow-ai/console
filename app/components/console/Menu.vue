@@ -177,28 +177,42 @@ const viewItems = computed(() => {
         ],
         [
             {
-                label: "Small · 100%",
-                type: "checkbox",
-                checked: scale.value === 1,
-                onSelect() {
-                    scale.value = 1;
+                label: "Interface Scale",
+                ui: {
+                    content: "rounded-t-md",
                 },
-            },
-            {
-                label: "Medium · 125%",
-                type: "checkbox",
-                checked: scale.value === 1.25,
-                onSelect() {
-                    scale.value = 1.25;
-                },
-            },
-            {
-                label: "Large · 150%",
-                type: "checkbox",
-                checked: scale.value === 1.5,
-                onSelect() {
-                    scale.value = 1.5;
-                },
+                children: [
+                    {
+                        label: "Small · 100%",
+                        icon: "i-mingcute:check-fill",
+                        ui: {
+                            itemLeadingIcon: ["size-2.5 mt-0.75", scale.value !== 1 && "opacity-0"],
+                        },
+                        onSelect() {
+                            scale.value = 1;
+                        },
+                    },
+                    {
+                        label: "Medium · 125%",
+                        icon: "i-mingcute:check-fill",
+                        ui: {
+                            itemLeadingIcon: ["size-2.5 mt-0.75", scale.value !== 1.25 && "opacity-0"],
+                        },
+                        onSelect() {
+                            scale.value = 1.25;
+                        },
+                    },
+                    {
+                        label: "Large · 150%",
+                        icon: "i-mingcute:check-fill",
+                        ui: {
+                            itemLeadingIcon: ["size-2.5 mt-0.75", scale.value !== 1.5 && "opacity-0"],
+                        },
+                        onSelect() {
+                            scale.value = 1.5;
+                        },
+                    },
+                ],
             },
         ],
     ];
