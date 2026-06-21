@@ -27,7 +27,20 @@
                 description="Pipelines imported or run here"
                 :title="loading ? 'Loading workflows' : 'No workflows yet'"
                 :loading="loading"
-            />
+            >
+                <template #action>
+                    <UiButton
+                        label="New workflow"
+                        size="xs"
+                        variant="link"
+                        color="neutral"
+                        class="underline"
+                        :loading="creating"
+                        :disabled="loading"
+                        @click="fileDialog.open()"
+                    />
+                </template>
+            </ExplorerEmpty>
         </template>
         <template v-for="workflow in workflows" :key="workflow.identity">
             <WorkflowNode :workflow="workflow" @open="onOpen" />

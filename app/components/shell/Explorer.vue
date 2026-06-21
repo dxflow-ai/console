@@ -21,7 +21,20 @@
                 description="Sessions opened or resumed here"
                 :title="loading ? 'Loading shells' : 'No shells yet'"
                 :loading="loading"
-            />
+            >
+                <template #action>
+                    <UiButton
+                        label="New shell"
+                        size="xs"
+                        variant="link"
+                        color="neutral"
+                        class="underline"
+                        :loading="creating"
+                        :disabled="loading"
+                        @click="createShell()"
+                    />
+                </template>
+            </ExplorerEmpty>
         </template>
         <template v-for="shell in shells" :key="shell.identity">
             <ShellNode :shell="shell" @open="onOpen" />

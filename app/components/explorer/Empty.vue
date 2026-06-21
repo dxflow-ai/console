@@ -13,6 +13,7 @@
             <span class="font-semibold text-default">{{ props.title }}</span>
             <span class="text-muted">{{ props.description }}</span>
         </div>
+        <slot name="action" />
     </div>
 </template>
 

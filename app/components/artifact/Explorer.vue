@@ -27,7 +27,20 @@
                 description="Files generated or uploaded here"
                 :title="loading ? 'Loading artifacts' : 'No artifacts yet'"
                 :loading="loading"
-            />
+            >
+                <template #action>
+                    <UiButton
+                        label="New Artifact"
+                        size="xs"
+                        variant="link"
+                        color="neutral"
+                        class="underline"
+                        :loading="creating"
+                        :disabled="loading || creatingDirectory"
+                        @click="fileDialog.open()"
+                    />
+                </template>
+            </ExplorerEmpty>
         </template>
         <template v-for="child in artifacts" :key="child.identity">
             <ArtifactNode :artifact="child" @open="onOpen" />
