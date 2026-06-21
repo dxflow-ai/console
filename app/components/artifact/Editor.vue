@@ -1,17 +1,24 @@
 <template>
-    <div class="editor relative min-h-full font-mono text-xs leading-relaxed">
-        <pre class="pointer-events-none m-0 p-4 wrap-break-word whitespace-pre-wrap" v-html="highlighted" />
-        <textarea
-            ref="editor-element"
-            v-model="model"
-            spellcheck="false"
-            autocomplete="off"
-            class="absolute inset-0 m-0 resize-none overflow-hidden border-0 bg-transparent p-4 wrap-break-word whitespace-pre-wrap text-transparent caret-(--ui-text) outline-none"
-            :readonly="props.readonly"
-            @keydown.tab.prevent="tab()"
-            @keydown.ctrl.s.prevent="save()"
-            @keydown.meta.s.prevent="save()"
-        />
+    <div class="editor relative flex min-h-full w-fit min-w-full font-mono text-xs leading-relaxed">
+        <div class="sticky left-0 z-10 shrink-0 select-none border-r border-default bg-default p-3">
+            <template v-for="line in lineCount" :key="line">
+                <div class="font-mono text-right text-muted">{{ line }}</div>
+            </template>
+        </div>
+        <div class="relative flex-1">
+            <pre class="pointer-events-none m-0 p-3 whitespace-pre" v-html="highlighted" />
+            <textarea
+                ref="editor-element"
+                v-model="model"
+                spellcheck="false"
+                autocomplete="off"
+                class="absolute inset-0 m-0 resize-none overflow-hidden border-0 bg-transparent p-3 whitespace-pre text-transparent caret-(--ui-text) outline-none"
+                :readonly="props.readonly"
+                @keydown.tab.prevent="tab()"
+                @keydown.ctrl.s.prevent="save()"
+                @keydown.meta.s.prevent="save()"
+            />
+        </div>
     </div>
 </template>
 
@@ -47,6 +54,10 @@ const grammar = shallowRef<EditorGrammar>(null);
 
 const language = computed(() => {
     return editor.language(props.name);
+});
+
+const lineCount = computed(() => {
+    return model.value.split("\n").length;
 });
 
 const highlighted = computed(() => {
