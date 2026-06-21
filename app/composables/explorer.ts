@@ -1,6 +1,8 @@
 export type ExplorerKey = "workflow" | "artifact" | "shell";
 
-const expandedExplorers = ref<Set<ExplorerKey>>(new Set(["workflow"]));
+const expandedExplorers = useLocalStorage("explorer-expanded", new Set<ExplorerKey>(["workflow"]), {
+    initOnMounted: true,
+});
 
 export function useExplorer() {
     function toggle(key: ExplorerKey) {
