@@ -1,22 +1,5 @@
-import { all, isArray } from "radash";
+import { isArray } from "radash";
 import { ModelManyKind, ViewClone, ActionConcurrent } from "@diphyx/harlemify/runtime";
-
-let workflowLogsLiveAbortController: AbortController | null = null;
-let workflowSignalsAbortController: AbortController | null = null;
-
-function stopWorkflowLogsLive() {
-    if (workflowLogsLiveAbortController) {
-        workflowLogsLiveAbortController.abort();
-        workflowLogsLiveAbortController = null;
-    }
-}
-
-function stopWorkflowSignals() {
-    if (workflowSignalsAbortController) {
-        workflowSignalsAbortController.abort();
-        workflowSignalsAbortController = null;
-    }
-}
 
 export const workflowStore = createStore({
     name: "workflow",
@@ -27,14 +10,9 @@ export const workflowStore = createStore({
             kind: ModelManyKind.RECORD,
         });
 
-        const events = many(workflowEventShape, {
-            kind: ModelManyKind.RECORD,
-        });
-
         return {
             list,
             steps,
-            events,
         };
     },
     view({ from }) {
@@ -51,11 +29,10 @@ export const workflowStore = createStore({
         );
 
         const steps = from("steps");
-        const events = from("events");
+
         return {
             list,
             steps,
-            events,
         };
     },
     action({ handler }) {
@@ -275,7 +252,6 @@ export const workflowStore = createStore({
                 });
 
                 model.steps.remove(payload.identity);
-                model.events.remove(payload.identity);
             },
             {
                 concurrent: ActionConcurrent.BLOCK,
@@ -314,44 +290,6 @@ export const workflowStore = createStore({
                 });
 
                 return steps;
-            },
-            {
-                concurrent: ActionConcurrent.SKIP,
-            },
-        );
-
-        const getEventsById = handler<{ identity: string }, WorkflowEvent[]>(
-            async ({ model, payload }) => {
-                const { call, read } = newHttpRequest("/api/workflow/events/");
-
-                const callError = await call({
-                    timeout: 5000,
-                    query: {
-                        identity: payload.identity,
-                    },
-                });
-
-                if (callError) {
-                    throw callError;
-                }
-
-                const events: WorkflowEvent[] = [];
-                const readError = await read((chunk) => {
-                    if (chunk.isEntity) {
-                        events.push(chunk.payload);
-                    }
-                });
-
-                if (readError) {
-                    throw readError;
-                }
-
-                model.events.add({
-                    key: payload.identity,
-                    value: events,
-                });
-
-                return events;
             },
             {
                 concurrent: ActionConcurrent.SKIP,
@@ -404,118 +342,40 @@ export const workflowStore = createStore({
             },
         );
 
-        const startLogsLive = handler<{
-            identity: string;
-            stdout?: boolean;
-            stderr?: boolean;
-            onLog?: (log: WorkflowLog) => void;
-        }>(
-            async ({ payload }) => {
-                stopWorkflowLogsLive();
+        const applySignal = handler<{ identity: string; signal: WorkflowSignal }>(async ({ model, view, payload }) => {
+            const { identity, signal } = payload;
 
-                workflowLogsLiveAbortController = new AbortController();
-
-                const { call, read } = newHttpRequest("/api/workflow/logs/live/");
-
-                const callError = await call({
-                    timeout: 0,
-                    signal: workflowLogsLiveAbortController.signal,
-                    query: {
-                        identity: payload.identity,
-                        stdout: payload.stdout,
-                        stderr: payload.stderr,
-                    },
+            if (signal.identity && signal.status) {
+                model.list.patch({
+                    identity: signal.identity,
+                    status: signal.status,
                 });
+            }
 
-                if (callError) {
-                    throw callError;
-                }
+            if (signal.step_index !== undefined && signal.step_status) {
+                const steps = view.steps.value[identity];
+                if (steps) {
+                    const stepIndex = steps.findIndex((step) => {
+                        return step.index === signal.step_index;
+                    });
 
-                const readError = await read((chunk) => {
-                    if (chunk.isEntity) {
-                        payload.onLog?.(chunk.payload);
-                    }
-                });
+                    if (stepIndex !== -1) {
+                        const updatedSteps = [...steps];
+                        updatedSteps[stepIndex] = {
+                            ...steps[stepIndex],
+                            status: signal.step_status,
+                            phase: signal.step_phase ?? steps[stepIndex].phase,
+                            exit_code: signal.step_exit_code ?? steps[stepIndex].exit_code,
+                        };
 
-                if (readError) {
-                    throw readError;
-                }
-            },
-            {
-                concurrent: ActionConcurrent.CANCEL,
-            },
-        );
-
-        const startSignals = handler<{
-            identity: string;
-            onSignal?: (signal: WorkflowSignal) => void;
-        }>(
-            async ({ model, view, payload }) => {
-                stopWorkflowSignals();
-
-                workflowSignalsAbortController = new AbortController();
-
-                const { call, read } = newHttpRequest("/api/workflow/signals/");
-
-                const callError = await call({
-                    timeout: 0,
-                    signal: workflowSignalsAbortController.signal,
-                    query: {
-                        identity: payload.identity,
-                    },
-                });
-
-                if (callError) {
-                    throw callError;
-                }
-
-                const readError = await read((chunk) => {
-                    if (!chunk.isEntity) {
-                        return;
-                    }
-
-                    const signal: WorkflowSignal = chunk.payload;
-                    if (signal.identity && signal.status) {
-                        model.list.patch({
-                            identity: signal.identity,
-                            status: signal.status,
+                        model.steps.add({
+                            key: identity,
+                            value: updatedSteps,
                         });
                     }
-
-                    if (signal.step_index !== undefined && signal.step_status) {
-                        const steps = view.steps.value[payload.identity];
-                        if (steps) {
-                            const stepIndex = steps.findIndex((s) => {
-                                return s.index === signal.step_index;
-                            });
-
-                            if (stepIndex !== -1) {
-                                const updatedSteps = [...steps];
-                                updatedSteps[stepIndex] = {
-                                    ...steps[stepIndex],
-                                    status: signal.step_status,
-                                    phase: signal.step_phase ?? steps[stepIndex].phase,
-                                };
-
-                                model.steps.add({
-                                    key: payload.identity,
-                                    value: updatedSteps,
-                                });
-                            }
-                        }
-                    }
-
-                    payload.onSignal?.(signal);
-                });
-
-                if (readError) {
-                    throw readError;
                 }
-            },
-            {
-                concurrent: ActionConcurrent.CANCEL,
-            },
-        );
+            }
+        });
 
         const prune = handler<unknown, string[]>(
             async ({ model }) => {
@@ -542,7 +402,6 @@ export const workflowStore = createStore({
                             });
 
                             model.steps.remove(identity);
-                            model.events.remove(identity);
                         }
                     }
                 });
@@ -561,9 +420,6 @@ export const workflowStore = createStore({
         const reset = handler(async ({ model }) => {
             model.list.reset();
             model.steps.reset();
-            model.events.reset();
-            stopWorkflowLogsLive();
-            stopWorkflowSignals();
         });
 
         return {
@@ -573,43 +429,10 @@ export const workflowStore = createStore({
             stopById,
             removeById,
             getStepsById,
-            getEventsById,
             getLogsById,
-            startLogsLive,
-            startSignals,
+            applySignal,
             prune,
             reset,
-        };
-    },
-    compose({ action }) {
-        async function loadDetail(identity: string) {
-            await all([
-                action.getStepsById({
-                    payload: {
-                        identity,
-                    },
-                }),
-                action.getEventsById({
-                    payload: {
-                        identity,
-                    },
-                }),
-            ]);
-        }
-
-        async function loadAndWatch(identity: string) {
-            await loadDetail(identity);
-
-            await action.startSignals({
-                payload: {
-                    identity,
-                },
-            });
-        }
-
-        return {
-            loadDetail,
-            loadAndWatch,
         };
     },
 });
