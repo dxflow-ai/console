@@ -12,23 +12,21 @@
         </template>
         <template v-else>
             <div
-                ref="viewport"
-                class="diagram-canvas relative flex-1 overflow-hidden -m-4"
-                :class="panning ? 'cursor-grabbing' : 'cursor-grab'"
-                @wheel="onWheel"
+                ref="viewport-element"
+                class="diagram-canvas relative flex-1 overflow-hidden -m-4 transition-opacity"
+                :class="[
+                    panning ? 'cursor-grabbing' : 'cursor-grab',
+                    {
+                        'opacity-0': !centered,
+                    },
+                ]"
                 @pointerdown="onPointerDown"
                 @pointermove="onPointerMove"
                 @pointerup="onPointerUp"
                 @pointerleave="onPointerUp"
+                @wheel="onWheel"
             >
-                <div
-                    ref="content"
-                    class="flex w-max items-center p-4"
-                    :class="{
-                        'transition-transform duration-50': !panning,
-                    }"
-                    :style="style"
-                >
+                <div ref="content-element" class="flex w-max items-center p-4" :style="style">
                     <template v-for="(phase, phaseIndex) in phases" :key="phase.phase">
                         <div
                             class="flex shrink-0 flex-col gap-2"
@@ -116,8 +114,8 @@ const props = defineProps({
 
 const actions = useWorkflowActions();
 
-const viewport = useTemplateRef<HTMLElement>("viewport");
-const content = useTemplateRef<HTMLElement>("content");
+const viewport = useTemplateRef<HTMLElement>("viewport-element");
+const content = useTemplateRef<HTMLElement>("content-element");
 
 const { data: list } = useStoreView(workflowStore, "list");
 
@@ -206,6 +204,7 @@ watchDebounced(
         }
 
         center(viewport.value, content.value);
+
         centered.value = true;
     },
     {
