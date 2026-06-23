@@ -66,7 +66,6 @@
                         :key="activeTab.key"
                         :workflow="activeTab.payload.workflow"
                         :view="activeTab.payload.view"
-                        :step="activeTab.payload.step"
                     />
                 </template>
                 <template v-if="activeTab?.kind === 'artifact'">

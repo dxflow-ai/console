@@ -31,6 +31,10 @@ export function useTabs() {
         }
 
         activeKey[position] = tab.key;
+
+        if (position === "secondary") {
+            openSecondary();
+        }
     }
 
     function closeTab(position: PanePosition, key: string) {
@@ -70,20 +74,28 @@ export function useTabs() {
         }
     }
 
-    function openWorkflow(payload: { workflow: Workflow; view: string; step?: number }) {
-        const position: PanePosition = payload.view === "logs" || payload.view === "events" ? "secondary" : "primary";
-
-        openTab(position, {
-            key: `workflow:${payload.workflow.identity}:${payload.view}${payload.step ?? ""}`,
+    function openWorkflow(payload: { workflow: Workflow }) {
+        openTab("primary", {
+            key: `workflow:${payload.workflow.identity}:diagram`,
             kind: "workflow",
-            label: `${payload.workflow.name} · ${payload.view}`,
-            icon: "i-mingcute:git-branch-line",
-            payload,
+            label: payload.workflow.name,
+            icon: "i-hugeicons:git-branch",
+            payload: {
+                workflow: payload.workflow,
+                view: "diagram",
+            },
         });
 
-        if (position === "secondary") {
-            openSecondary();
-        }
+        openTab("secondary", {
+            key: `workflow:${payload.workflow.identity}:logs`,
+            kind: "workflow",
+            label: payload.workflow.name,
+            icon: "i-hugeicons:git-branch",
+            payload: {
+                workflow: payload.workflow,
+                view: "logs",
+            },
+        });
     }
 
     function openArtifact(payload: { artifact: Artifact }) {
@@ -104,8 +116,6 @@ export function useTabs() {
             icon: "i-hugeicons:command-line",
             payload,
         });
-
-        openSecondary();
     }
 
     return {

@@ -22,7 +22,7 @@
             />
         </template>
         <template #empty>
-            <ExplorerEmpty
+            <Empty
                 icon="i-hugeicons:git-branch"
                 description="Pipelines imported or run here"
                 :title="loading ? 'Loading workflows' : 'No workflows yet'"
@@ -40,7 +40,7 @@
                         @click="fileDialog.open()"
                     />
                 </template>
-            </ExplorerEmpty>
+            </Empty>
         </template>
         <template v-for="workflow in workflows" :key="workflow.identity">
             <WorkflowNode :workflow="workflow" @open="onOpen" />
@@ -59,7 +59,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits({
-    open(payload: { workflow: Workflow; view: string; step?: number }) {
+    open(payload: { workflow: Workflow }) {
         return true;
     },
     toggle() {
@@ -94,7 +94,7 @@ function toggle() {
     emit("toggle");
 }
 
-function onOpen(payload: { workflow: Workflow; view: string; step?: number }) {
+function onOpen(payload: { workflow: Workflow }) {
     emit("open", payload);
 }
 
