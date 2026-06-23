@@ -7,13 +7,31 @@
             }"
         >
             <template v-if="view === 'media'">
-                <ArtifactMedia :source="imageUrl" :alt="props.artifact.identity" />
+                <template v-if="imageUrl">
+                    <ArtifactMedia :source="imageUrl" :alt="props.artifact.identity" />
+                </template>
+                <template v-else-if="!loading">
+                    <Empty
+                        icon="i-hugeicons:image-not-found-01"
+                        title="No preview"
+                        description="This file can't be previewed"
+                    />
+                </template>
             </template>
             <template v-else-if="view === 'editor'">
                 <ArtifactEditor v-model="draft" :name="props.artifact.name" :readonly="saving" @save="save" />
             </template>
         </div>
-        <Loading :active="loading" />
+        <template v-if="loading">
+            <div class="absolute inset-0 bg-default">
+                <Empty
+                    icon="i-hugeicons:file-01"
+                    title="Loading file"
+                    description="Fetching the artifact contents"
+                    :loading="true"
+                />
+            </div>
+        </template>
     </div>
 </template>
 

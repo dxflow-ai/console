@@ -8,7 +8,16 @@
         >
             <ShellTerminal ref="terminal" @data="onData" @resize="onResize" />
         </div>
-        <Loading :active="loading" />
+        <template v-if="loading">
+            <div class="absolute inset-0">
+                <Empty
+                    icon="i-hugeicons:command-line"
+                    title="Connecting terminal"
+                    description="Establishing the shell session"
+                    :loading="true"
+                />
+            </div>
+        </template>
     </div>
 </template>
 

@@ -16,7 +16,7 @@
             />
         </template>
         <template #empty>
-            <ExplorerEmpty
+            <Empty
                 icon="i-hugeicons:command-line"
                 description="Sessions opened or resumed here"
                 :title="loading ? 'Loading shells' : 'No shells yet'"
@@ -34,7 +34,7 @@
                         @click="createShell()"
                     />
                 </template>
-            </ExplorerEmpty>
+            </Empty>
         </template>
         <template v-for="shell in shells" :key="shell.identity">
             <ShellNode :shell="shell" @open="onOpen" />

@@ -22,7 +22,7 @@
             />
         </template>
         <template #empty>
-            <ExplorerEmpty
+            <Empty
                 icon="i-hugeicons:file-01"
                 description="Files generated or uploaded here"
                 :title="loading ? 'Loading artifacts' : 'No artifacts yet'"
@@ -40,7 +40,7 @@
                         @click="fileDialog.open()"
                     />
                 </template>
-            </ExplorerEmpty>
+            </Empty>
         </template>
         <template v-for="child in artifacts" :key="child.identity">
             <ArtifactNode :artifact="child" @open="onOpen" />
