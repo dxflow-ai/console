@@ -49,6 +49,8 @@
 </template>
 
 <script lang="ts" setup>
+import { sleep } from "radash";
+
 import type { ContextMenuItem } from "@nuxt/ui";
 
 const props = defineProps({
@@ -98,7 +100,11 @@ function onOpen(payload: { workflow: Workflow }) {
     emit("open", payload);
 }
 
-async function load() {
+async function load(delay?: number) {
+    if (delay) {
+        await sleep(delay);
+    }
+
     try {
         await executeGet();
     } catch (error) {
@@ -114,6 +120,6 @@ fileDialog.onChange((files) => {
 });
 
 onMounted(() => {
-    load();
+    load(500);
 });
 </script>

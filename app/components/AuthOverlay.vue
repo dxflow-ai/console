@@ -107,7 +107,7 @@ const { loading: signingByDatabase, execute: executeSigninByDatabase } = useStor
     "signinByDatabase",
 );
 
-const { execute: executeSignout } = useStoreAction(sessionStore, "signout");
+const { execute: executeSignout } = useStoreCompose(sessionStore, "signout");
 
 const fileDialog = useFileDialog({
     multiple: false,
@@ -168,7 +168,7 @@ function signin() {
 }
 
 async function signout() {
-    await executeSignout();
+    await executeSignout(true);
 
     hasStoredKey.value = false;
 }

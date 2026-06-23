@@ -1,6 +1,6 @@
 <template>
     <ContextMenu :items="menu">
-        <div class="min-h-full">
+        <div class="min-h-full h-full">
             <template v-if="logs.length">
                 <div class="font-mono text-sm/[1.1] text-default antialiased tab-4 select-text">
                     <template v-for="(log, index) in logs" :key="index">

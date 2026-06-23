@@ -18,6 +18,8 @@ definePageMeta({
 const { styles } = useScale();
 const { provided, authorized } = useSession();
 
+const { execute: executeSignout } = useStoreCompose(sessionStore, "signout");
+
 const everAuthorized = ref(authorized.value);
 
 const ready = computed(() => {
@@ -40,26 +42,25 @@ watchDebounced(
         }
     },
     {
-        immediate: true,
         debounce: 250,
     },
 );
 
-async function load() {
-    try {
-        await engineStore.compose.loadAll();
-    } catch (error) {
-        return dangerToast("Failed to load engine", error);
-    }
+function load() {
+    engineStore.compose.loadAll();
 
-    engineStore.action.startPingLive();
-    engineStore.action.startStatLive();
+    engineStore.compose.startLive(() => {
+        executeSignout(false);
+    });
 }
 
 function unload() {
-    engineStore.action.stopPingLive();
-    engineStore.action.stopStatLive();
+    engineStore.compose.stopLive();
 }
+
+onMounted(() => {
+    load();
+});
 
 onBeforeUnmount(() => {
     unload();

@@ -4,6 +4,7 @@
             position: 'bottom-right',
             duration: 5000,
             progress: false,
+            expand: false,
         }"
     >
         <NuxtLayout>

@@ -53,7 +53,7 @@ export function useSession() {
 }
 
 export function useSessionActions() {
-    const { execute: executeSignout } = useStoreAction(sessionStore, "signout");
+    const { execute: executeSignout } = useStoreCompose(sessionStore, "signout");
 
     const confirmSignout = useConfirmToast({
         id: "signout-confirm",
@@ -72,7 +72,7 @@ export function useSessionActions() {
             return;
         }
 
-        await executeSignout();
+        await executeSignout(true);
     }
 
     return {

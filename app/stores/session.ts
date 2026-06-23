@@ -123,20 +123,21 @@ export const sessionStore = createStore({
             },
         );
 
-        const signout = handler(
-            async ({ model }) => {
-                await newDatabaseWrapper("auth").clear();
-
-                model.session.set(sessionShape.defaults());
-            },
-            {
-                concurrent: ActionConcurrent.BLOCK,
-            },
-        );
-
         return {
             signinByFile,
             signinByDatabase,
+        };
+    },
+    compose({ model }) {
+        async function signout(cleanup?: boolean) {
+            if (cleanup) {
+                await newDatabaseWrapper("auth").clear();
+            }
+
+            model.session.set(sessionShape.defaults());
+        }
+
+        return {
             signout,
         };
     },

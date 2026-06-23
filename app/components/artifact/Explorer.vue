@@ -49,6 +49,8 @@
 </template>
 
 <script lang="ts" setup>
+import { sleep } from "radash";
+
 import type { ContextMenuItem } from "@nuxt/ui";
 
 const props = defineProps({
@@ -118,7 +120,11 @@ function onOpen(payload: { artifact: Artifact }) {
     emit("open", payload);
 }
 
-async function load() {
+async function load(delay?: number) {
+    if (delay) {
+        await sleep(delay);
+    }
+
     try {
         await executeList({
             payload: {
@@ -137,6 +143,6 @@ fileDialog.onChange((files) => {
 });
 
 onMounted(() => {
-    load();
+    load(500);
 });
 </script>

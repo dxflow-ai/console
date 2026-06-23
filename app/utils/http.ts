@@ -50,7 +50,7 @@ export const httpStatus: Record<number, string> = {
     502: "Bad Gateway",
 };
 
-class HttpError extends Error {
+export class HttpError extends Error {
     code: number;
 
     constructor(code: number, message: string) {
@@ -164,18 +164,14 @@ class HttpRequest {
     }
 
     async call(options?: FetchOptions<"stream", any>, delay: number = 1200): Promise<MaybeError> {
-        try {
-            this.response = await tryAwait({
-                delay,
-                handler: () => {
-                    return this.fetchClient(String(this.path), options);
-                },
-            });
+        this.response = await tryAwait({
+            delay,
+            handler: () => {
+                return this.fetchClient(String(this.path), options);
+            },
+        });
 
-            return null;
-        } catch (error: any) {
-            return new Error(error?.message || error);
-        }
+        return null;
     }
 
     async read(
