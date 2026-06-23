@@ -10,30 +10,48 @@
         "Inconsolata", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
         monospace;
 
-    --color-zodiac-50: #eef2ff;
-    --color-zodiac-100: #e1e8fe;
-    --color-zodiac-200: #c8d4fd;
-    --color-zodiac-300: #a7b7fa;
-    --color-zodiac-400: #8492f5;
-    --color-zodiac-500: #676eed;
-    --color-zodiac-600: #4f4ae1;
-    --color-zodiac-700: #423cc6;
-    --color-zodiac-800: #3733a0;
-    --color-zodiac-900: #31307f;
-    --color-zodiac-950: #26245e;
+    --color-iris-50: #f3f1fb;
+    --color-iris-100: #e9e5f6;
+    --color-iris-200: #d5cdee;
+    --color-iris-300: #b8abe0;
+    --color-iris-400: #9281cb;
+    --color-iris-500: #7762b8;
+    --color-iris-600: #564398;
+    --color-iris-700: #463880;
+    --color-iris-800: #3a3066;
+    --color-iris-900: #2d2558;
+    --color-iris-950: #1e1840;
+
+    --color-azure-50: #eff9fd;
+    --color-azure-100: #d8f0fa;
+    --color-azure-200: #b6e4f6;
+    --color-azure-300: #83d0ef;
+    --color-azure-400: #54b8e5;
+    --color-azure-500: #2ea7dd;
+    --color-azure-600: #1d86bb;
+    --color-azure-700: #1a6c97;
+    --color-azure-800: #1b5a7d;
+    --color-azure-900: #1b4b68;
+    --color-azure-950: #123047;
 }
 
 :root {
-    --ui-radius: 0.5rem;
+    --ui-radius: 0.25rem;
 
-    --ui-zodiac: var(--color-zodiac-500);
-    --ui-neutral: var(--color-slate-500);
-    --ui-teal: var(--color-teal-500);
-    --ui-emerald: var(--color-emerald-500);
-    --ui-indigo: var(--color-indigo-500);
-    --ui-cyan: var(--color-cyan-500);
+    --ui-primary: var(--color-iris-600);
+    --ui-secondary: var(--color-azure-600);
+    --ui-neutral: var(--color-zinc-500);
     --ui-green: var(--color-green-500);
     --ui-red: var(--color-red-500);
     --ui-blue: var(--color-blue-500);
-    --ui-amber: var(--color-amber-500);
+    --ui-yellow: var(--color-yellow-500);
+}
+
+.dark {
+    --ui-primary: var(--color-iris-400);
+    --ui-secondary: var(--color-azure-400);
+    --ui-green: var(--color-green-400);
+    --ui-red: var(--color-red-400);
+    --ui-blue: var(--color-blue-400);
+    --ui-yellow: var(--color-yellow-400);
 }

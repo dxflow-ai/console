@@ -1,18 +1,23 @@
 <template>
     <UiApp
-        :tooltip="{
-            delayDuration: 250,
-        }"
         :toaster="{
-            position: 'bottom-center',
-            duration: 7500,
-            expand: false,
+            position: 'bottom-right',
+            duration: 5000,
             progress: false,
+            expand: false,
         }"
     >
         <NuxtLayout>
             <NuxtPage />
         </NuxtLayout>
-        <Standby />
     </UiApp>
 </template>
+
+<script lang="ts" setup>
+useEventListener(document, "contextmenu", (event) => {
+    const target = event.target as HTMLElement | null;
+    if (!target?.closest("input, textarea, .xterm")) {
+        event.preventDefault();
+    }
+});
+</script>

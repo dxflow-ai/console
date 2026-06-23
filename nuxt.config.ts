@@ -1,21 +1,5 @@
 export default defineNuxtConfig({
     ssr: false,
-    nitro: {
-        prerender: {
-            // SPA (ssr: false) renders no content, so the crawler can't discover the
-            // in-app routes. List them explicitly so each gets an index.html shell and
-            // a hard reload / deep link resolves instead of 404ing on a static host.
-            crawlLinks: false,
-            routes: [
-                "/",
-                "/login",
-                "/console/engine/overview/",
-                "/console/workflow/list/",
-                "/console/artifact/list/",
-                "/console/shell/sessions/",
-            ],
-        },
-    },
     app: {
         baseURL: "/",
         head: {
@@ -50,7 +34,7 @@ export default defineNuxtConfig({
             },
         },
     },
-    css: ["~/assets/tailwind.css", "~/assets/custom.scss"],
+    css: ["~/assets/tailwind.css", "~/assets/custom.scss", "~/assets/terminal.css", "~/assets/editor.css"],
     modules: ["@diphyx/harlemify", "@nuxt/ui", "@vueuse/nuxt", "@nuxtjs/device"],
     harlemify: {
         logger: -999,
@@ -58,7 +42,10 @@ export default defineNuxtConfig({
     ui: {
         prefix: "ui",
         theme: {
-            colors: ["zodiac", "neutral", "teal", "emerald", "indigo", "cyan", "green", "red", "blue", "amber"],
+            colors: ["secondary", "neutral", "green", "red", "blue", "yellow"],
+            defaultVariants: {
+                size: "sm",
+            },
         },
     },
     colorMode: {
@@ -80,11 +67,6 @@ export default defineNuxtConfig({
                 globInclude: ["app/**/*.{vue,ts}"],
                 globExclude: ["node_modules", ".nuxt", ".output", "dist"],
             },
-        },
-    },
-    runtimeConfig: {
-        public: {
-            version: "0.0.0",
         },
     },
     typescript: {

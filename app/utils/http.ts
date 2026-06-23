@@ -50,423 +50,420 @@ export const httpStatus: Record<number, string> = {
     502: "Bad Gateway",
 };
 
-export function newHttpRequest(url: string) {
-    class HttpError extends Error {
-        code: number;
+export class HttpError extends Error {
+    code: number;
 
-        constructor(code: number, message: string) {
-            super(message);
+    constructor(code: number, message: string) {
+        super(message);
 
-            this.code = code;
-        }
+        this.code = code;
+    }
+}
+
+class HttpStatus {
+    code: number;
+    message: string;
+
+    constructor(value: any) {
+        this.code = value?.status || value?.code || 520;
+        this.message = value?.statusText || value?.message || "Unknown error";
     }
 
-    class HttpStatus {
-        code: number;
-        message: string;
-
-        constructor(value: any) {
-            this.code = value?.status || value?.code || 520;
-            this.message = value?.statusText || value?.message || "Unknown error";
-        }
-
-        get isError() {
-            return this.code < 200 || this.code > 299;
-        }
-
-        getError() {
-            return new HttpError(this.code, this.message);
-        }
+    get isError() {
+        return this.code < 200 || this.code > 299;
     }
 
-    class HttpChunk {
-        kind: string;
-        payload: any;
+    getError() {
+        return new HttpError(this.code, this.message);
+    }
+}
 
-        constructor(value: any) {
-            this.kind = value?.kind || "unknown";
-            this.payload = value?.payload || {};
-        }
+class HttpChunk {
+    kind: string;
+    payload: any;
 
-        get isEmpty() {
-            return !this.kind || this.payload === undefined;
-        }
-
-        get isStatus() {
-            return this.kind == "status";
-        }
-
-        get isEntity() {
-            return this.kind.startsWith("entity");
-        }
-
-        get isTotal() {
-            return this.kind == "total";
-        }
-
-        get entityTag() {
-            if (this.kind.startsWith("entity:")) {
-                return this.kind.slice(7);
-            }
-
-            return "";
-        }
-
-        isEntityWithTag(tag: string) {
-            return this.isEntity && this.entityTag === tag;
-        }
-
-        getStatus() {
-            return new HttpStatus(this.payload);
-        }
+    constructor(value: any) {
+        this.kind = value?.kind || "unknown";
+        this.payload = value?.payload || {};
     }
 
-    class HttpRequest {
-        path: URL;
+    get isEmpty() {
+        return !this.kind || this.payload === undefined;
+    }
 
-        fetchClient: $Fetch;
+    get isStatus() {
+        return this.kind == "status";
+    }
 
-        status!: HttpStatus;
-        response!: ReadableStream<Uint8Array>;
+    get isEntity() {
+        return this.kind.startsWith("entity");
+    }
 
-        constructor(path: string) {
-            if (path[0] === "/") {
-                path = path.slice(1);
-            }
+    get isTotal() {
+        return this.kind == "total";
+    }
 
-            this.path = new URL(path, `${window.location.origin}/`);
-
-            this.fetchClient = ofetch.create({
-                responseType: "stream",
-                headers: {
-                    Accept: "application/stream+json",
-                },
-                retry: false,
-                onRequestError: ({ error }) => {
-                    this.status = new HttpStatus(error);
-
-                    if (this.status.isError) {
-                        throw this.status.getError();
-                    }
-                },
-                onResponse: ({ response }) => {
-                    this.status = new HttpStatus(response);
-
-                    if (this.status.isError) {
-                        throw this.status.getError();
-                    }
-                },
-            });
-
-            this.call = this.call.bind(this);
-            this.read = this.read.bind(this);
-            this.upload = this.upload.bind(this);
-            this.download = this.download.bind(this);
+    get entityTag() {
+        if (this.kind.startsWith("entity:")) {
+            return this.kind.slice(7);
         }
 
-        async call(options?: FetchOptions<"stream", any>, delay: number = 1200): Promise<MaybeError> {
-            try {
-                this.response = await tryAwait({
-                    delay,
-                    handler: () => {
-                        return this.fetchClient(String(this.path), options);
-                    },
-                });
+        return "";
+    }
 
-                return null;
-            } catch (error: any) {
-                return new Error(error?.message || error);
-            }
+    isEntityWithTag(tag: string) {
+        return this.isEntity && this.entityTag === tag;
+    }
+
+    getStatus() {
+        return new HttpStatus(this.payload);
+    }
+}
+
+class HttpRequest {
+    path: URL;
+
+    fetchClient: $Fetch;
+
+    status!: HttpStatus;
+    response!: ReadableStream<Uint8Array>;
+
+    constructor(path: string) {
+        if (path[0] === "/") {
+            path = path.slice(1);
         }
 
-        async read(
-            callback?: (chunk: HttpChunk) => Promise<void> | void,
-            options?: {
-                timeout?: number;
+        this.path = new URL(path, `${window.location.origin}/`);
+
+        this.fetchClient = ofetch.create({
+            responseType: "stream",
+            headers: {
+                Accept: "application/stream+json",
             },
-        ): Promise<MaybeError> {
-            let reader: ReadableStreamDefaultReader<Uint8Array>;
+            retry: false,
+            onRequestError: ({ error }) => {
+                this.status = new HttpStatus(error);
+
+                if (this.status.isError) {
+                    throw this.status.getError();
+                }
+            },
+            onResponse: ({ response }) => {
+                this.status = new HttpStatus(response);
+
+                if (this.status.isError) {
+                    throw this.status.getError();
+                }
+            },
+        });
+
+        this.call = this.call.bind(this);
+        this.read = this.read.bind(this);
+        this.upload = this.upload.bind(this);
+        this.download = this.download.bind(this);
+    }
+
+    async call(options?: FetchOptions<"stream", any>, delay: number = 1200): Promise<MaybeError> {
+        this.response = await tryAwait({
+            delay,
+            handler: () => {
+                return this.fetchClient(String(this.path), options);
+            },
+        });
+
+        return null;
+    }
+
+    async read(
+        callback?: (chunk: HttpChunk) => Promise<void> | void,
+        options?: {
+            timeout?: number;
+        },
+    ): Promise<MaybeError> {
+        let reader: ReadableStreamDefaultReader<Uint8Array>;
+        try {
+            reader = this.response.getReader();
+        } catch (error: any) {
+            return new Error(error?.message || error);
+        }
+
+        const decoder = new TextDecoder("utf-8");
+
+        let readAt = 0;
+        let readError: Error | null = null;
+        let readInterval: ReturnType<typeof setInterval> | undefined;
+        if (options?.timeout) {
+            readInterval = setInterval(() => {
+                if (!readAt) {
+                    return;
+                }
+
+                const now = Date.now();
+                if (now - readAt > options.timeout!) {
+                    readError = new Error(`Timeout exceeded`);
+
+                    reader.cancel().catch(() => {
+                        // stream already closing
+                    });
+                }
+            }, 1000);
+        }
+
+        const processLine = async (line: string): Promise<MaybeError> => {
+            if (line.length <= 2) {
+                return null;
+            }
+
+            let chunks = [] as HttpChunk[];
             try {
-                reader = this.response.getReader();
+                chunks = JSON.parse(`[${line.replace(/^,/, "")}]`);
             } catch (error: any) {
                 return new Error(error?.message || error);
             }
 
-            const decoder = new TextDecoder("utf-8");
+            for (const index in chunks) {
+                const chunk = new HttpChunk(chunks[index]);
+                if (chunk.isEmpty) {
+                    continue;
+                }
 
-            let readAt = 0;
-            let readError: Error | null = null;
-            let readInterval: ReturnType<typeof setInterval> | undefined;
-            if (options?.timeout) {
-                readInterval = setInterval(() => {
-                    if (!readAt) {
-                        return;
+                if (chunk.isStatus) {
+                    this.status = chunk.getStatus();
+
+                    if (this.status.isError) {
+                        return this.status.getError();
                     }
 
-                    const now = Date.now();
-                    if (now - readAt > options.timeout!) {
-                        readError = new Error(`Timeout exceeded`);
+                    continue;
+                }
 
-                        reader.cancel().catch(() => {
-                            // stream already closing
-                        });
-                    }
-                }, 1000);
+                if (callback) {
+                    await callback(chunk);
+                }
             }
 
-            const processLine = async (line: string): Promise<MaybeError> => {
-                if (line.length <= 2) {
-                    return null;
-                }
+            return null;
+        };
 
-                let chunks = [] as HttpChunk[];
+        let buffer = "";
+        try {
+            while (true) {
+                let done: boolean;
+                let value: Uint8Array<ArrayBufferLike> | undefined;
                 try {
-                    chunks = JSON.parse(`[${line.replace(/^,/, "")}]`);
+                    const response = await reader.read();
+                    done = response.done;
+                    value = response.value;
                 } catch (error: any) {
-                    return new Error(error?.message || error);
+                    return readError || new Error(error?.message || error);
                 }
 
-                for (const index in chunks) {
-                    const chunk = new HttpChunk(chunks[index]);
-                    if (chunk.isEmpty) {
+                readAt = Date.now();
+
+                if (readError) {
+                    return readError;
+                }
+
+                if (done) {
+                    break;
+                }
+
+                // Buffer across reads so an entity split across two network chunks is
+                // only parsed once its terminating newline has arrived.
+                buffer += decoder.decode(value, { stream: true });
+
+                const lines = buffer.split(/\n/);
+                buffer = lines.pop() ?? "";
+
+                for (const line of lines) {
+                    const lineError = await processLine(line);
+                    if (lineError) {
+                        return lineError;
+                    }
+                }
+            }
+
+            buffer += decoder.decode();
+
+            const flushError = await processLine(buffer);
+            if (flushError) {
+                return flushError;
+            }
+
+            return readError;
+        } finally {
+            if (readInterval) {
+                clearInterval(readInterval);
+            }
+
+            reader.cancel().catch(() => {
+                // stream already closed/cancelled
+            });
+        }
+    }
+
+    async upload({
+        method,
+        file,
+        header,
+        query,
+        progress,
+    }: {
+        method: string;
+        file: File;
+        header?: Record<string, string>;
+        query?: Record<string, any>;
+        progress?: (percent: number) => void;
+    }): Promise<MaybeError> {
+        return new Promise<MaybeError>((resolve) => {
+            const xhrClient = new XMLHttpRequest();
+            const url = new URL(String(this.path));
+            if (query) {
+                const searchParams = new URLSearchParams();
+                for (const key in query) {
+                    const value = query[key];
+                    if (!value) {
                         continue;
                     }
 
-                    if (chunk.isStatus) {
-                        this.status = chunk.getStatus();
-
-                        if (this.status.isError) {
-                            return this.status.getError();
-                        }
-
-                        continue;
-                    }
-
-                    if (callback) {
-                        await callback(chunk);
-                    }
+                    searchParams.append(key, value);
                 }
 
-                return null;
+                url.search = String(searchParams);
+            }
+
+            xhrClient.upload.onprogress = ({ loaded }) => {
+                if (progress) {
+                    progress(Math.floor((loaded / file.size) * 100 * 100) / 100);
+                }
             };
 
-            let buffer = "";
-            try {
-                while (true) {
-                    let done: boolean;
-                    let value: Uint8Array<ArrayBufferLike> | undefined;
+            xhrClient.onreadystatechange = () => {
+                if (xhrClient.readyState != 4) {
+                    return;
+                }
+
+                let error: Error | null = null;
+                if (xhrClient.status < 200 || xhrClient.status > 299) {
                     try {
-                        const response = await reader.read();
-                        done = response.done;
-                        value = response.value;
-                    } catch (error: any) {
-                        return readError || new Error(error?.message || error);
-                    }
-
-                    readAt = Date.now();
-
-                    if (readError) {
-                        return readError;
-                    }
-
-                    if (done) {
-                        break;
-                    }
-
-                    // Buffer across reads so an entity split across two network chunks is
-                    // only parsed once its terminating newline has arrived.
-                    buffer += decoder.decode(value, { stream: true });
-
-                    const lines = buffer.split(/\n/);
-                    buffer = lines.pop() ?? "";
-
-                    for (const line of lines) {
-                        const lineError = await processLine(line);
-                        if (lineError) {
-                            return lineError;
-                        }
-                    }
-                }
-
-                buffer += decoder.decode();
-
-                const flushError = await processLine(buffer);
-                if (flushError) {
-                    return flushError;
-                }
-
-                return readError;
-            } finally {
-                if (readInterval) {
-                    clearInterval(readInterval);
-                }
-
-                reader.cancel().catch(() => {
-                    // stream already closed/cancelled
-                });
-            }
-        }
-
-        async upload({
-            method,
-            file,
-            header,
-            query,
-            progress,
-        }: {
-            method: string;
-            file: File;
-            header?: Record<string, string>;
-            query?: Record<string, any>;
-            progress?: (percent: number) => void;
-        }): Promise<MaybeError> {
-            return new Promise<MaybeError>((resolve) => {
-                const xhrClient = new XMLHttpRequest();
-                const url = new URL(String(this.path));
-                if (query) {
-                    const searchParams = new URLSearchParams();
-                    for (const key in query) {
-                        const value = query[key];
-                        if (!value) {
-                            continue;
-                        }
-
-                        searchParams.append(key, value);
-                    }
-
-                    url.search = String(searchParams);
-                }
-
-                xhrClient.upload.onprogress = ({ loaded }) => {
-                    if (progress) {
-                        progress(Math.floor((loaded / file.size) * 100 * 100) / 100);
-                    }
-                };
-
-                xhrClient.onreadystatechange = () => {
-                    if (xhrClient.readyState != 4) {
-                        return;
-                    }
-
-                    let error: Error | null = null;
-                    if (xhrClient.status < 200 || xhrClient.status > 299) {
-                        try {
-                            const response = JSON.parse(xhrClient.responseText);
-                            const chunk = new HttpChunk(response[0]);
-                            const status = chunk.getStatus();
-                            error = status.getError();
-                        } catch {
-                            let message = xhrClient.getResponseHeader("x-error-message");
-                            if (!message) {
-                                message = "Failed to upload file";
-                            }
-
-                            error = new Error(message);
-                        }
-                    }
-
-                    resolve(error);
-                };
-
-                try {
-                    xhrClient.open(method, url);
-
-                    if (header) {
-                        for (const key in header) {
-                            xhrClient.setRequestHeader(key, header[key] as string);
-                        }
-                    }
-
-                    xhrClient.send(file);
-                } catch (error: any) {
-                    resolve(new Error(error?.message || error));
-                }
-            });
-        }
-
-        async download({
-            method,
-            header,
-            query,
-            progress,
-        }: {
-            method: string;
-            header?: Record<string, string>;
-            query?: Record<string, any>;
-            progress?: (percent: number) => void;
-        }): Promise<[{ blob: Blob; name: string } | null, MaybeError]> {
-            return new Promise<[{ blob: Blob; name: string } | null, MaybeError]>((resolve) => {
-                const xhrClient = new XMLHttpRequest();
-                const url = new URL(String(this.path));
-                if (query) {
-                    const searchParams = new URLSearchParams();
-                    for (const key in query) {
-                        const value = query[key];
-                        if (!value) {
-                            continue;
-                        }
-
-                        searchParams.append(key, value);
-                    }
-
-                    url.search = String(searchParams);
-                }
-
-                xhrClient.responseType = "blob";
-
-                xhrClient.onprogress = ({ loaded, total }) => {
-                    if (progress && total) {
-                        progress(Math.floor((loaded / total) * 100 * 100) / 100);
-                    }
-                };
-
-                xhrClient.onreadystatechange = () => {
-                    if (xhrClient.readyState != 4) {
-                        return;
-                    }
-
-                    let error: Error | null = null;
-                    let result: { blob: Blob; name: string } | null = null;
-                    if (xhrClient.status < 200 || xhrClient.status > 299) {
+                        const response = JSON.parse(xhrClient.responseText);
+                        const chunk = new HttpChunk(response[0]);
+                        const status = chunk.getStatus();
+                        error = status.getError();
+                    } catch {
                         let message = xhrClient.getResponseHeader("x-error-message");
                         if (!message) {
-                            message = "Failed to download file";
+                            message = "Failed to upload file";
                         }
 
                         error = new Error(message);
-                    } else {
-                        const contentDisposition = xhrClient.getResponseHeader("content-disposition");
-                        const filename = contentDisposition?.match(/filename="?(.+?)"?$/)?.[1];
-                        if (!filename) {
-                            error = new Error("Cannot determine file name");
-                        } else {
-                            result = {
-                                blob: xhrClient.response as Blob,
-                                name: filename,
-                            };
-                        }
                     }
-
-                    resolve([result, error]);
-                };
-
-                try {
-                    xhrClient.open(method, url);
-
-                    if (header) {
-                        for (const key in header) {
-                            xhrClient.setRequestHeader(key, header[key] as string);
-                        }
-                    }
-
-                    xhrClient.send();
-                } catch (error: any) {
-                    resolve([null, new Error(error?.message || error)]);
                 }
-            });
-        }
+
+                resolve(error);
+            };
+
+            try {
+                xhrClient.open(method, url);
+
+                if (header) {
+                    for (const key in header) {
+                        xhrClient.setRequestHeader(key, header[key] as string);
+                    }
+                }
+
+                xhrClient.send(file);
+            } catch (error: any) {
+                resolve(new Error(error?.message || error));
+            }
+        });
     }
 
+    async download({
+        method,
+        header,
+        query,
+        progress,
+    }: {
+        method: string;
+        header?: Record<string, string>;
+        query?: Record<string, any>;
+        progress?: (percent: number) => void;
+    }): Promise<[{ blob: Blob; name: string } | null, MaybeError]> {
+        return new Promise<[{ blob: Blob; name: string } | null, MaybeError]>((resolve) => {
+            const xhrClient = new XMLHttpRequest();
+            const url = new URL(String(this.path));
+            if (query) {
+                const searchParams = new URLSearchParams();
+                for (const key in query) {
+                    const value = query[key];
+                    if (!value) {
+                        continue;
+                    }
+
+                    searchParams.append(key, value);
+                }
+
+                url.search = String(searchParams);
+            }
+
+            xhrClient.responseType = "blob";
+
+            xhrClient.onprogress = ({ loaded, total }) => {
+                if (progress && total) {
+                    progress(Math.floor((loaded / total) * 100 * 100) / 100);
+                }
+            };
+
+            xhrClient.onreadystatechange = () => {
+                if (xhrClient.readyState != 4) {
+                    return;
+                }
+
+                let error: Error | null = null;
+                let result: { blob: Blob; name: string } | null = null;
+                if (xhrClient.status < 200 || xhrClient.status > 299) {
+                    let message = xhrClient.getResponseHeader("x-error-message");
+                    if (!message) {
+                        message = "Failed to download file";
+                    }
+
+                    error = new Error(message);
+                } else {
+                    const contentDisposition = xhrClient.getResponseHeader("content-disposition");
+                    const filename = contentDisposition?.match(/filename="?(.+?)"?$/)?.[1];
+                    if (!filename) {
+                        error = new Error("Cannot determine file name");
+                    } else {
+                        result = {
+                            blob: xhrClient.response as Blob,
+                            name: filename,
+                        };
+                    }
+                }
+
+                resolve([result, error]);
+            };
+
+            try {
+                xhrClient.open(method, url);
+
+                if (header) {
+                    for (const key in header) {
+                        xhrClient.setRequestHeader(key, header[key] as string);
+                    }
+                }
+
+                xhrClient.send();
+            } catch (error: any) {
+                resolve([null, new Error(error?.message || error)]);
+            }
+        });
+    }
+}
+
+export function newHttpRequest(url: string) {
     const httpRequest = new HttpRequest(url);
+
     return httpRequest;
 }

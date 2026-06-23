@@ -5,20 +5,11 @@ export const sessionStore = createStore({
     model({ one }) {
         const session = one(sessionShape, {
             default() {
-                return useTokenCookie().get();
+                return decodeToken(useTokenCookie().value);
             },
             post({ mode, state }) {
-                const tokenCookie = useTokenCookie();
-
-                switch (mode) {
-                    case ModelOneMode.SET: {
-                        tokenCookie.set(state.token);
-                        break;
-                    }
-                    case ModelOneMode.RESET: {
-                        tokenCookie.reset();
-                        break;
-                    }
+                if (mode === ModelOneMode.SET) {
+                    useTokenCookie().value = state.token;
                 }
             },
         });
@@ -30,32 +21,12 @@ export const sessionStore = createStore({
     view({ from }) {
         const session = from("session");
 
-        const token = from("session", (value) => {
-            return value.token;
-        });
-
-        const payload = from("session", ({ token, ...sessionWithoutToken }) => {
-            return sessionWithoutToken;
-        });
-
-        const provided = from("session", (value) => {
-            return value.exp > 0;
-        });
-
-        const permissions = from("session", (value) => {
-            return value.permissions;
-        });
-
         return {
             session,
-            token,
-            payload,
-            provided,
-            permissions,
         };
     },
     action({ handler }) {
-        async function authenticate(key: string): Promise<Session> {
+        async function authenticate(key: string, lifetime: string): Promise<Session> {
             const rsaWrapper = newRsaWrapper();
             const readKeyError = rsaWrapper.readPrivateKey(key);
             if (readKeyError) {
@@ -68,8 +39,8 @@ export const sessionStore = createStore({
                 throw challengeCallError;
             }
 
-            let identity = "";
             let nonce = "";
+            let identity = "";
             const challengeReadError = await challengeRequest.read((chunk) => {
                 if (chunk.isEntity) {
                     identity = chunk.payload?.identity;
@@ -93,7 +64,7 @@ export const sessionStore = createStore({
                 body: {
                     identity,
                     signature,
-                    lifetime: "1h",
+                    lifetime,
                 },
             });
 
@@ -101,10 +72,10 @@ export const sessionStore = createStore({
                 throw verifyCallError;
             }
 
-            const tokenCookie = useTokenCookie();
+            let token = "";
             const verifyReadError = await verifyRequest.read((chunk) => {
                 if (chunk.isEntity) {
-                    tokenCookie.set(chunk.payload.token);
+                    token = chunk.payload.token;
                 }
             });
 
@@ -112,19 +83,10 @@ export const sessionStore = createStore({
                 throw verifyReadError;
             }
 
-            return tokenCookie.get();
+            return decodeToken(token);
         }
 
-        const signin = handler<{ key: string }>(
-            async ({ model, payload }) => {
-                model.session.set(await authenticate(payload.key));
-            },
-            {
-                concurrent: ActionConcurrent.BLOCK,
-            },
-        );
-
-        const signinByFile = handler<{ file: File }>(
+        const signinByFile = handler<{ file: File; lifetime: string }>(
             async ({ model, payload }) => {
                 const fileReaderWrapper = newFileReaderWrapper();
                 const [keyString, readError] = await fileReaderWrapper.readString(payload.file);
@@ -132,7 +94,9 @@ export const sessionStore = createStore({
                     throw readError;
                 }
 
-                model.session.set(await authenticate(keyString));
+                const session = await authenticate(keyString, payload.lifetime);
+
+                model.session.set(session);
 
                 await newDatabaseWrapper("auth").write("key", keyString);
             },
@@ -141,8 +105,8 @@ export const sessionStore = createStore({
             },
         );
 
-        const signinByDatabase = handler(
-            async ({ model }) => {
+        const signinByDatabase = handler<{ lifetime: string }>(
+            async ({ model, payload }) => {
                 const [keyString, readError] = await newDatabaseWrapper("auth").read("key");
                 if (readError) {
                     throw readError;
@@ -152,18 +116,7 @@ export const sessionStore = createStore({
                     throw new Error("No stored key");
                 }
 
-                model.session.set(await authenticate(keyString));
-            },
-            {
-                concurrent: ActionConcurrent.BLOCK,
-            },
-        );
-
-        const signout = handler(
-            async ({ model }) => {
-                await newDatabaseWrapper("auth").clear();
-
-                model.session.reset();
+                model.session.set(await authenticate(keyString, payload.lifetime));
             },
             {
                 concurrent: ActionConcurrent.BLOCK,
@@ -171,9 +124,20 @@ export const sessionStore = createStore({
         );
 
         return {
-            signin,
             signinByFile,
             signinByDatabase,
+        };
+    },
+    compose({ model }) {
+        async function signout(cleanup?: boolean) {
+            if (cleanup) {
+                await newDatabaseWrapper("auth").clear();
+            }
+
+            model.session.set(sessionShape.defaults());
+        }
+
+        return {
             signout,
         };
     },

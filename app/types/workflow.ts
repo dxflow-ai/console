@@ -35,6 +35,26 @@ export const workflowStepResourcesShape = shape((factory) => {
 
 export type WorkflowStepResources = ShapeInfer<typeof workflowStepResourcesShape>;
 
+export const workflowStepPortShape = shape((factory) => {
+    return {
+        host: factory.string(),
+        container: factory.string(),
+        protocol: factory.string(),
+    };
+});
+
+export type WorkflowStepPort = ShapeInfer<typeof workflowStepPortShape>;
+
+export const workflowStepVolumeShape = shape((factory) => {
+    return {
+        host: factory.string(),
+        container: factory.string(),
+        mode: factory.string(),
+    };
+});
+
+export type WorkflowStepVolume = ShapeInfer<typeof workflowStepVolumeShape>;
+
 export const workflowStepDefinitionShape = shape((factory) => {
     return {
         name: factory.string(),
@@ -48,8 +68,8 @@ export const workflowStepDefinitionShape = shape((factory) => {
         image: factory.string(),
         command: factory.array(factory.string()),
         env: factory.array(factory.string()),
-        bind: factory.array(factory.string()),
-        ports: factory.array(factory.string()),
+        volumes: factory.array(workflowStepVolumeShape),
+        ports: factory.array(workflowStepPortShape),
         resources: workflowStepResourcesShape,
     };
 });
@@ -74,15 +94,6 @@ export const workflowStepShape = shape((factory) => {
 
 export type WorkflowStep = ShapeInfer<typeof workflowStepShape>;
 
-export const workflowEventShape = shape((factory) => {
-    return {
-        message: factory.string(),
-        time: factory.number(),
-    };
-});
-
-export type WorkflowEvent = ShapeInfer<typeof workflowEventShape>;
-
 export const workflowSignalShape = shape((factory) => {
     return {
         identity: factory.string().optional(),
@@ -95,6 +106,7 @@ export const workflowSignalShape = shape((factory) => {
             .enum([WorkflowStepStatus.PENDING, WorkflowStepStatus.RUNNING, WorkflowStepStatus.EXITED])
             .optional()
             .meta({ alias: "step-status" }),
+        step_exit_code: factory.number().optional().meta({ alias: "step-exit-code" }),
     };
 });
 

@@ -1,0 +1,229 @@
+const renamingIdentity = ref<MaybeString>(undefined);
+const draftIdentity = ref<MaybeString>(undefined);
+const busyIdentities = ref<Set<string>>(new Set());
+
+export function useArtifactFileDialog() {
+    const dialog = useFileDialog({
+        reset: true,
+        multiple: true,
+    });
+
+    return dialog;
+}
+
+export function useArtifactActions() {
+    const { closeTabsWhere } = useTabs();
+
+    const { execute: executeCreateDirectory, active: creatingDirectory } = useStoreCompose(
+        artifactStore,
+        "createDirectory",
+    );
+
+    const { execute: executeRename, active: renaming } = useStoreCompose(artifactStore, "renameAndRefresh");
+    const { execute: executeRemove, active: removing } = useStoreCompose(artifactStore, "removeAndRefresh");
+    const { execute: executeZip, active: zipping } = useStoreCompose(artifactStore, "zipAndRefresh");
+    const { execute: executeUnzip, active: unzipping } = useStoreCompose(artifactStore, "unzipAndRefresh");
+    const { execute: executeDownload, active: downloading } = useStoreCompose(artifactStore, "downloadAndSave");
+    const { execute: executeSave, active: saving } = useStoreCompose(artifactStore, "saveFile");
+    const { execute: executeUpload, active: creating } = useStoreCompose(artifactStore, "uploadDirectory");
+
+    const confirmRemove = useConfirmToast<Artifact>({
+        id: "artifact-remove",
+        color: "neutral",
+        title({ permission }) {
+            return permission[0] === "d" ? "Delete folder" : "Delete file";
+        },
+        description({ name }) {
+            return `Delete '${name}'?`;
+        },
+    });
+
+    function startRename(identity: string, options?: { draft?: boolean }) {
+        renamingIdentity.value = identity;
+        draftIdentity.value = options?.draft ? identity : undefined;
+    }
+
+    function stopRename() {
+        renamingIdentity.value = undefined;
+        draftIdentity.value = undefined;
+    }
+
+    function isRenaming(identity: string) {
+        return renamingIdentity.value === identity;
+    }
+
+    function isDraft(identity: string) {
+        return draftIdentity.value === identity;
+    }
+
+    function isBusy(identity: string) {
+        return busyIdentities.value.has(identity);
+    }
+
+    async function withBusy<T>(identity: string, run: () => Promise<T>) {
+        busyIdentities.value.add(identity);
+
+        try {
+            return await run();
+        } finally {
+            busyIdentities.value.delete(identity);
+        }
+    }
+
+    function closeTabs(identity: string) {
+        const exact = `artifact:${identity}`;
+        const prefix = `${exact}/`;
+
+        closeTabsWhere(({ key }) => {
+            return key === exact || key.startsWith(prefix);
+        });
+    }
+
+    async function createDirectory(directory: string, siblings: Artifact[]) {
+        const names = siblings.map((item) => {
+            return item.name;
+        });
+
+        const identity = `${directory}/${uniqueName(names, "new-directory")}`;
+
+        try {
+            await withBusy(directory, () => {
+                return executeCreateDirectory(identity);
+            });
+
+            startRename(identity, {
+                draft: true,
+            });
+        } catch (error) {
+            dangerToast("Failed to create directory", error as Error);
+        }
+    }
+
+    async function commitRename(artifact: Artifact, next: string) {
+        const name = next.trim();
+
+        if (!name || name === artifact.name) {
+            return stopRename();
+        }
+
+        try {
+            await withBusy(artifact.identity, () => {
+                return executeRename(artifact.identity, `${parentOf(artifact.identity)}/${name}`);
+            });
+
+            closeTabs(artifact.identity);
+        } catch (error) {
+            dangerToast("Failed to rename", error as Error);
+        } finally {
+            stopRename();
+        }
+    }
+
+    async function cancelRename(artifact: Artifact) {
+        if (isDraft(artifact.identity)) {
+            try {
+                await withBusy(artifact.identity, () => {
+                    return executeRemove(artifact.identity);
+                });
+            } catch (error) {
+                dangerToast("Failed to discard directory", error as Error);
+            }
+        }
+
+        stopRename();
+    }
+
+    async function remove(artifact: Artifact) {
+        const confirmed = await confirmRemove.open(artifact);
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+            await withBusy(artifact.identity, () => {
+                return executeRemove(artifact.identity);
+            });
+
+            closeTabs(artifact.identity);
+        } catch (error) {
+            dangerToast("Failed to delete", error as Error);
+        }
+    }
+
+    async function zip(artifact: Artifact) {
+        try {
+            await withBusy(artifact.identity, () => {
+                return executeZip(artifact.identity);
+            });
+        } catch (error) {
+            dangerToast("Failed to zip", error as Error);
+        }
+    }
+
+    async function unzip(artifact: Artifact) {
+        try {
+            await withBusy(artifact.identity, () => {
+                return executeUnzip(artifact.identity);
+            });
+        } catch (error) {
+            dangerToast("Failed to unzip", error as Error);
+        }
+    }
+
+    async function download(artifact: Artifact) {
+        try {
+            await withBusy(artifact.identity, () => {
+                return executeDownload(artifact.identity);
+            });
+        } catch (error) {
+            dangerToast("Failed to download", error as Error);
+        }
+    }
+
+    async function save(artifact: Artifact, content: string) {
+        try {
+            await withBusy(artifact.identity, () => {
+                return executeSave(artifact.identity, artifact.name, content);
+            });
+
+            return true;
+        } catch (error) {
+            dangerToast(`Failed to save '${artifact.name}'`, error as Error);
+
+            return false;
+        }
+    }
+
+    async function create(directory: string, files: File[]) {
+        try {
+            await withBusy(directory, () => {
+                return executeUpload(directory, files);
+            });
+        } catch (error) {
+            dangerToast("Failed to create artifact", error as Error);
+        }
+    }
+
+    return {
+        creating,
+        creatingDirectory,
+        renaming,
+        removing,
+        zipping,
+        unzipping,
+        downloading,
+        saving,
+        isRenaming,
+        isBusy,
+        startRename,
+        createDirectory,
+        commitRename,
+        cancelRename,
+        remove,
+        zip,
+        unzip,
+        download,
+        save,
+        create,
+    };
+}

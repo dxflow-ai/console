@@ -1,0 +1,119 @@
+<template>
+    <div class="relative flex h-full min-h-0 flex-1 flex-col">
+        <div
+            class="min-h-0 flex-1 overflow-auto"
+            :class="{
+                'opacity-0': loading,
+            }"
+        >
+            <template v-if="view === 'media'">
+                <template v-if="imageUrl">
+                    <ArtifactMedia :source="imageUrl" :alt="props.artifact.identity" />
+                </template>
+                <template v-else-if="!loading">
+                    <Empty
+                        icon="i-hugeicons:image-not-found-01"
+                        title="No preview"
+                        description="This file can't be previewed"
+                    />
+                </template>
+            </template>
+            <template v-else-if="view === 'editor'">
+                <ArtifactEditor v-model="draft" :name="props.artifact.name" :readonly="saving" @save="save" />
+            </template>
+        </div>
+        <template v-if="loading">
+            <div class="absolute inset-0 bg-default">
+                <Empty
+                    icon="i-hugeicons:file-01"
+                    title="Loading file"
+                    description="Fetching the artifact contents"
+                    :loading="true"
+                />
+            </div>
+        </template>
+    </div>
+</template>
+
+<script lang="ts" setup>
+const props = defineProps({
+    artifact: {
+        type: Object as PropType<Artifact>,
+        required: true,
+    },
+});
+
+const { execute: executeDownload, loading } = useStoreAction(artifactStore, "downloadById", {
+    isolated: true,
+});
+
+const actions = useArtifactActions();
+
+const text = ref("");
+const draft = ref("");
+const imageUrl = ref<MaybeString>();
+
+const view = computed(() => {
+    return isImageFile(props.artifact.name) ? "media" : "editor";
+});
+
+const dirty = computed(() => {
+    return draft.value !== text.value;
+});
+
+const saving = computed(() => {
+    return actions.isBusy(props.artifact.identity);
+});
+
+function release() {
+    if (imageUrl.value) {
+        URL.revokeObjectURL(imageUrl.value);
+        imageUrl.value = null;
+    }
+}
+
+async function load() {
+    release();
+
+    text.value = "";
+    draft.value = "";
+
+    try {
+        const result = await executeDownload({
+            payload: {
+                identity: props.artifact.identity,
+            },
+        });
+
+        if (result) {
+            if (view.value === "media") {
+                imageUrl.value = URL.createObjectURL(result.blob);
+            } else {
+                text.value = await result.blob.text();
+                draft.value = text.value;
+            }
+        }
+    } catch (error) {
+        dangerToast(`Failed to open '${props.artifact.name}'`, error as Error);
+    }
+}
+
+async function save() {
+    if (!dirty.value || saving.value) {
+        return;
+    }
+
+    const saved = await actions.save(props.artifact, draft.value);
+    if (saved) {
+        text.value = draft.value;
+    }
+}
+
+onMounted(() => {
+    load();
+});
+
+onBeforeUnmount(() => {
+    release();
+});
+</script>

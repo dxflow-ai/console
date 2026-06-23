@@ -1,4 +1,5 @@
 import { ViewClone, ActionConcurrent } from "@diphyx/harlemify/runtime";
+import { saveAs } from "file-saver";
 import { sleep } from "radash";
 
 export const artifactStore = createStore({
@@ -34,11 +35,31 @@ export const artifactStore = createStore({
         };
     },
     action({ handler }) {
-        const get = handler<unknown, Artifact[]>(
-            async ({ model }) => {
+        const get = handler<
+            {
+                directory?: string;
+                pattern?: string;
+                all?: boolean;
+                depth?: number;
+                offset?: number;
+                limit?: number;
+            },
+            Artifact[]
+        >(
+            async ({ model, payload }) => {
                 const { call, read } = newHttpRequest("/api/artifact/");
 
-                const callError = await call();
+                const callError = await call({
+                    query: {
+                        directory: payload?.directory,
+                        pattern: payload?.pattern,
+                        all: payload?.all,
+                        depth: payload?.depth,
+                        offset: payload?.offset,
+                        limit: payload?.limit,
+                    },
+                });
+
                 if (callError) {
                     throw callError;
                 }
@@ -59,6 +80,54 @@ export const artifactStore = createStore({
                 }
 
                 return artifacts;
+            },
+            {
+                concurrent: ActionConcurrent.SKIP,
+            },
+        );
+
+        const list = handler<{ directory: string; pattern?: string }, Artifact[]>(
+            async ({ model, view, payload }) => {
+                const { call, read } = newHttpRequest("/api/artifact/");
+
+                const callError = await call({
+                    query: {
+                        directory: payload.directory,
+                        pattern: payload.pattern,
+                    },
+                });
+
+                if (callError) {
+                    throw callError;
+                }
+
+                const children: Artifact[] = [];
+                const readError = await read((chunk) => {
+                    if (chunk.isEntity) {
+                        children.push(chunk.payload);
+                    }
+                });
+
+                if (readError) {
+                    throw readError;
+                }
+
+                let directory = payload.directory;
+                if (children.length) {
+                    directory = parentOf(children[0].identity);
+                }
+
+                const stale = view.list.value.filter((item) => {
+                    return parentOf(item.identity) === directory;
+                });
+
+                if (stale.length) {
+                    model.list.remove(stale);
+                }
+
+                model.list.add(children);
+
+                return children;
             },
             {
                 concurrent: ActionConcurrent.SKIP,
@@ -144,8 +213,6 @@ export const artifactStore = createStore({
                 }
 
                 if (result) {
-                    // Preserve the existing entity's fields (permission/size/modified_at) so the
-                    // renamed row stays well-formed for the list view's sort comparator.
                     const existing = view.list.value.find((item) => {
                         return item.identity === payload.identity;
                     });
@@ -169,7 +236,7 @@ export const artifactStore = createStore({
         );
 
         const removeById = handler<{ identity: string }>(
-            async ({ model, payload }) => {
+            async ({ model, view, payload }) => {
                 const { call, read } = newHttpRequest("/api/artifact/");
 
                 const callError = await call({
@@ -188,48 +255,14 @@ export const artifactStore = createStore({
                     throw readError;
                 }
 
-                model.list.remove({
-                    identity: payload.identity,
+                const removable = view.list.value.filter(({ identity }) => {
+                    return identity === payload.identity || identity.startsWith(`${payload.identity}/`);
                 });
+
+                model.list.remove(removable);
             },
             {
                 concurrent: ActionConcurrent.BLOCK,
-            },
-        );
-
-        const removeBatch = handler<{ identities: string[] }, Array<{ identity: string; error?: string }>>(
-            async ({ model, payload }) => {
-                const { call, read } = newHttpRequest("/api/artifact/batch/");
-
-                const callError = await call({
-                    method: "DELETE",
-                    body: {
-                        identities: payload.identities,
-                    },
-                });
-
-                if (callError) {
-                    throw callError;
-                }
-
-                const results: Array<{ identity: string; error?: string }> = [];
-                const readError = await read((chunk) => {
-                    if (chunk.isEntity) {
-                        results.push(chunk.payload);
-
-                        if (!chunk.payload.error) {
-                            model.list.remove({
-                                identity: chunk.payload.identity,
-                            });
-                        }
-                    }
-                });
-
-                if (readError) {
-                    throw readError;
-                }
-
-                return results;
             },
         );
 
@@ -366,47 +399,15 @@ export const artifactStore = createStore({
             return result;
         });
 
-        const share = handler<
-            {
-                identities: string[];
-                lifetime?: string;
-                writable?: boolean;
-            },
-            ArtifactShareResult[]
-        >(
-            async ({ payload }) => {
-                const { call, read } = newHttpRequest("/api/artifact/share/");
+        const cleanup = handler<{ match: (artifact: Artifact) => boolean }>(async ({ model, view, payload }) => {
+            const removable = view.list.value.filter((item) => {
+                return payload.match(item);
+            });
 
-                const callError = await call({
-                    method: "PUT",
-                    body: {
-                        identities: payload.identities,
-                        lifetime: payload.lifetime,
-                        writable: payload.writable,
-                    },
-                });
-
-                if (callError) {
-                    throw callError;
-                }
-
-                const results: ArtifactShareResult[] = [];
-                const readError = await read((chunk) => {
-                    if (chunk.isEntity) {
-                        results.push(chunk.payload);
-                    }
-                });
-
-                if (readError) {
-                    throw readError;
-                }
-
-                return results;
-            },
-            {
-                concurrent: ActionConcurrent.BLOCK,
-            },
-        );
+            if (removable.length) {
+                model.list.remove(removable);
+            }
+        });
 
         const reset = handler(async ({ model }) => {
             model.list.reset();
@@ -414,31 +415,130 @@ export const artifactStore = createStore({
 
         return {
             get,
+            list,
             create,
-            renameById,
             upload,
+            renameById,
             downloadById,
             zipById,
             unzipById,
-            share,
             removeById,
-            removeBatch,
+            cleanup,
             reset,
         };
     },
     compose({ action }) {
-        async function uploadAndRefresh(payload: {
-            identity: string;
-            file: File;
-            force?: boolean;
-            onProgress?: (progress: number) => void;
-        }) {
-            await action.upload({ payload });
-            await action.get();
+        async function refreshDirectory(directory: string) {
+            await action.list({
+                payload: {
+                    directory,
+                },
+            });
+        }
+
+        async function createDirectory(identity: string) {
+            await action.create({
+                payload: {
+                    identity,
+                    directory: true,
+                },
+            });
+
+            await refreshDirectory(parentOf(identity));
+        }
+
+        async function renameAndRefresh(identity: string, newIdentity: string) {
+            await action.renameById({
+                payload: {
+                    identity,
+                    new_identity: newIdentity,
+                },
+            });
+
+            await refreshDirectory(parentOf(identity));
+        }
+
+        async function removeAndRefresh(identity: string) {
+            await action.removeById({
+                payload: {
+                    identity,
+                },
+            });
+
+            await refreshDirectory(parentOf(identity));
+        }
+
+        async function zipAndRefresh(identity: string) {
+            await action.zipById({
+                payload: {
+                    identity,
+                    quiet: true,
+                },
+            });
+
+            await refreshDirectory(parentOf(identity));
+        }
+
+        async function unzipAndRefresh(identity: string) {
+            await action.unzipById({
+                payload: {
+                    identity,
+                    quiet: true,
+                },
+            });
+
+            await refreshDirectory(parentOf(identity));
+        }
+
+        async function downloadAndSave(identity: string) {
+            const result = await action.downloadById({
+                payload: {
+                    identity,
+                },
+            });
+
+            if (result) {
+                saveAs(result.blob, result.name);
+            }
+        }
+
+        async function saveFile(identity: string, name: string, content: string) {
+            const file = new File([content], name, {
+                type: "text/plain",
+            });
+
+            await action.upload({
+                payload: {
+                    identity,
+                    file,
+                    force: true,
+                },
+            });
+        }
+
+        async function uploadDirectory(directory: string, files: File[]) {
+            for (const file of files) {
+                await action.upload({
+                    payload: {
+                        identity: `${directory}/${file.name}`,
+                        file,
+                        force: true,
+                    },
+                });
+            }
+
+            await refreshDirectory(directory);
         }
 
         return {
-            uploadAndRefresh,
+            createDirectory,
+            renameAndRefresh,
+            removeAndRefresh,
+            zipAndRefresh,
+            unzipAndRefresh,
+            downloadAndSave,
+            saveFile,
+            uploadDirectory,
         };
     },
 });

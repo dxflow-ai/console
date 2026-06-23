@@ -8,7 +8,6 @@
             }"
             :clear="{
                 size: 'sm',
-                color: 'zodiac',
                 variant: 'soft',
                 label: 'Back',
             }"

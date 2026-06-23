@@ -1,8 +1,9 @@
 export default defineAppConfig({
     ui: {
         colors: {
-            primary: "zodiac",
-            neutral: "slate",
+            primary: "iris",
+            secondary: "azure",
+            neutral: "zinc",
         },
         icons: {
             arrowDown: "i-mingcute-arrow-down-fill",
@@ -47,6 +48,23 @@ export default defineAppConfig({
             tip: "i-mingcute-bulb-fill",
             upload: "i-mingcute-upload-2-fill",
             warning: "i-mingcute-warning-fill",
+        },
+        toaster: {
+            slots: {
+                viewport: "bottom-12!",
+            },
+        },
+        badge: {
+            variants: {
+                size: {
+                    xs: {
+                        base: "text-xs px-1 py-0.25 gap-1 rounded-sm",
+                    },
+                    sm: {
+                        base: "text-xs px-1.5 py-0.5 gap-1 rounded-sm",
+                    },
+                },
+            },
         },
     },
 });

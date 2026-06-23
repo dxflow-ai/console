@@ -1,0 +1,11 @@
+@import "@xterm/xterm/css/xterm.css";
+
+.xterm {
+    -webkit-user-select: text;
+    user-select: text;
+}
+
+.xterm-viewport,
+.xterm-screen {
+    cursor: text !important;
+}
