@@ -266,47 +266,6 @@ export const artifactStore = createStore({
             },
         );
 
-        const removeBatch = handler<{ identities: string[] }, Array<{ identity: string; error?: string }>>(
-            async ({ model, view, payload }) => {
-                const { call, read } = newHttpRequest("/api/artifact/batch/");
-
-                const callError = await call({
-                    method: "DELETE",
-                    body: {
-                        identities: payload.identities,
-                    },
-                });
-
-                if (callError) {
-                    throw callError;
-                }
-
-                const results: Array<{ identity: string; error?: string }> = [];
-                const readError = await read((chunk) => {
-                    if (chunk.isEntity) {
-                        results.push(chunk.payload);
-
-                        if (!chunk.payload.error) {
-                            const removable = view.list.value.filter(({ identity }) => {
-                                return (
-                                    identity === chunk.payload.identity ||
-                                    identity.startsWith(`${chunk.payload.identity}/`)
-                                );
-                            });
-
-                            model.list.remove(removable);
-                        }
-                    }
-                });
-
-                if (readError) {
-                    throw readError;
-                }
-
-                return results;
-            },
-        );
-
         const upload = handler<{
             identity: string;
             file: File;
@@ -440,6 +399,16 @@ export const artifactStore = createStore({
             return result;
         });
 
+        const cleanup = handler<{ match: (artifact: Artifact) => boolean }>(async ({ model, view, payload }) => {
+            const removable = view.list.value.filter((item) => {
+                return payload.match(item);
+            });
+
+            if (removable.length) {
+                model.list.remove(removable);
+            }
+        });
+
         const reset = handler(async ({ model }) => {
             model.list.reset();
         });
@@ -454,7 +423,7 @@ export const artifactStore = createStore({
             zipById,
             unzipById,
             removeById,
-            removeBatch,
+            cleanup,
             reset,
         };
     },

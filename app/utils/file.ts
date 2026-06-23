@@ -20,6 +20,9 @@ const fileIcons: Record<string, string> = {
     tsv: "i-hugeicons:csv-01",
     pdf: "i-hugeicons:pdf-01",
     txt: "i-hugeicons:txt-01",
+    log: "i-hugeicons:txt-01",
+    out: "i-hugeicons:txt-01",
+    err: "i-hugeicons:txt-01",
     // source code (file-code)
     js: "i-hugeicons:file-code",
     mjs: "i-hugeicons:file-code",
@@ -238,6 +241,8 @@ const textExtensions = new Set([
     "adoc",
     "txt",
     "log",
+    "out",
+    "err",
     "ipynb",
     "rmd",
     "diff",
