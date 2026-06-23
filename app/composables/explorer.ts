@@ -5,9 +5,15 @@ const expandedExplorers = useLocalStorage("explorer-expanded", new Set<ExplorerK
 });
 
 export function useExplorer() {
-    function toggle(key: ExplorerKey) {
+    function toggle(key: ExplorerKey, available?: ExplorerKey[]) {
         if (expandedExplorers.value.has(key)) {
-            if (expandedExplorers.value.size > 1) {
+            const openCount = available
+                ? available.filter((item) => {
+                      return expandedExplorers.value.has(item);
+                  }).length
+                : expandedExplorers.value.size;
+
+            if (openCount > 1) {
                 expandedExplorers.value.delete(key);
             }
         } else {

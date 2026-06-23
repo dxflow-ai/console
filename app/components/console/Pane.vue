@@ -5,10 +5,12 @@
                 ref="toolbar-element"
                 class="flex h-8 shrink-0 items-center gap-1.5 bg-muted/50 border-b border-default px-3"
             >
-                <UiIcon
-                    class="size-3.5 shrink-0"
-                    :name="props.position === 'primary' ? 'i-mingcute:target-line' : 'i-mingcute:inbox-line'"
-                />
+                <template v-if="!isMobile">
+                    <UiIcon
+                        class="size-3.5 shrink-0"
+                        :name="props.position === 'primary' ? 'i-mingcute:target-line' : 'i-mingcute:inbox-line'"
+                    />
+                </template>
                 <div ref="strip-element" class="relative flex min-w-0 flex-1 items-center gap-1 overflow-hidden">
                     <template v-for="tab in visibleTabs" :key="tab.key">
                         <UiBadge
@@ -97,8 +99,8 @@ const props = defineProps({
 });
 
 const { scale } = useScale();
+const { isMobile, secondaryFull, toggleSecondaryFull } = useWorkspace();
 const { tabs, activeKey, closeTab, setActive } = useTabs();
-const { secondaryFull, toggleSecondaryFull } = useWorkspace();
 
 const toolbarElement = useTemplateRef<HTMLDivElement>("toolbar-element");
 const stripElement = useTemplateRef<HTMLDivElement>("strip-element");

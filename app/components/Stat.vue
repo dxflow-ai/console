@@ -18,7 +18,12 @@
                 </template>
             </div>
         </div>
-        <div class="h-12 text-primary">
+        <div
+            class="h-12 text-primary"
+            :class="{
+                'h-6!': isMobile,
+            }"
+        >
             <Sparkline :points="props.points" fill />
         </div>
     </div>
@@ -57,4 +62,6 @@ const props = defineProps({
         },
     },
 });
+
+const { isMobile } = useWorkspace();
 </script>

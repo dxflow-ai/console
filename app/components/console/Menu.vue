@@ -39,7 +39,7 @@
         <UiButton size="sm" variant="ghost" color="neutral" label="View" />
     </UiDropdownMenu>
     <UiDropdownMenu
-        :items="workflowItems"
+        :items="resourceItems"
         :modal="false"
         :content="{
             align: 'start',
@@ -51,37 +51,7 @@
         }"
         arrow
     >
-        <UiButton size="sm" variant="ghost" color="neutral" label="Workflow" />
-    </UiDropdownMenu>
-    <UiDropdownMenu
-        :items="artifactItems"
-        :modal="false"
-        :content="{
-            align: 'start',
-            side: 'bottom',
-            sideOffset: -0.5,
-        }"
-        :ui="{
-            content: 'rounded-t-none',
-        }"
-        arrow
-    >
-        <UiButton size="sm" variant="ghost" color="neutral" label="Artifact" />
-    </UiDropdownMenu>
-    <UiDropdownMenu
-        :items="shellItems"
-        :modal="false"
-        :content="{
-            align: 'start',
-            side: 'bottom',
-            sideOffset: -0.5,
-        }"
-        :ui="{
-            content: 'rounded-t-none',
-        }"
-        arrow
-    >
-        <UiButton size="sm" variant="ghost" color="neutral" label="Shell" />
+        <UiButton size="sm" variant="ghost" color="neutral" label="Resources" />
     </UiDropdownMenu>
     <UiModal
         v-model:open="systemOpen"
@@ -108,28 +78,12 @@ import type { DropdownMenuItem } from "@nuxt/ui";
 const colorMode = useColorMode();
 
 const { scale } = useScale();
-
+const { isMobile } = useWorkspace();
 const { openShell } = useTabs();
 
-const { data: workflows } = useStoreView(workflowStore, "list");
-
-const { data: artifacts } = useStoreView(artifactStore, "list", (items) => {
-    const identities = new Set(
-        items.map((item) => {
-            return item.identity;
-        }),
-    );
-
-    return items.filter((item) => {
-        return !identities.has(parentOf(item.identity));
-    });
-});
-
-const { data: shells } = useStoreView(shellStore, "list");
-
-const { create: createWorkflow, prune: pruneWorkflows } = useWorkflowActions();
-const { create: createArtifact, createDirectory } = useArtifactActions();
-const { create: createShell, prune: pruneShells } = useShellActions();
+const { create: createWorkflow } = useWorkflowActions();
+const { create: createArtifact } = useArtifactActions();
+const { create: createShell } = useShellActions();
 
 const workflowDialog = useWorkflowFileDialog();
 const artifactDialog = useArtifactFileDialog();
@@ -166,86 +120,65 @@ const brandItems = computed(() => {
 });
 
 const viewItems = computed(() => {
-    const output: DropdownMenuItem[][] = [
-        [
-            {
-                label: colorMode.value === "dark" ? "Light Theme" : "Dark Theme",
-                onSelect() {
-                    toggleTheme();
-                },
-            },
-        ],
-        [
-            {
-                label: "Interface Scale",
-                ui: {
-                    content: "rounded-t-md",
-                },
-                children: [
-                    {
-                        label: "Small · 100%",
-                        icon: "i-mingcute:check-fill",
-                        ui: {
-                            itemLeadingIcon: ["size-2.5 mt-0.75", scale.value !== 1 && "opacity-0"],
-                        },
-                        onSelect() {
-                            scale.value = 1;
-                        },
-                    },
-                    {
-                        label: "Medium · 125%",
-                        icon: "i-mingcute:check-fill",
-                        ui: {
-                            itemLeadingIcon: ["size-2.5 mt-0.75", scale.value !== 1.25 && "opacity-0"],
-                        },
-                        onSelect() {
-                            scale.value = 1.25;
-                        },
-                    },
-                    {
-                        label: "Large · 150%",
-                        icon: "i-mingcute:check-fill",
-                        ui: {
-                            itemLeadingIcon: ["size-2.5 mt-0.75", scale.value !== 1.5 && "opacity-0"],
-                        },
-                        onSelect() {
-                            scale.value = 1.5;
-                        },
-                    },
-                ],
-            },
-        ],
-    ];
-
-    return output;
-});
-
-const workflowItems = computed(() => {
-    const output: DropdownMenuItem[][] = [
-        [
-            {
-                label: "New workflow",
-                onSelect() {
-                    workflowDialog.open();
-                },
-            },
-        ],
-        [
-            {
-                label: "Prune all",
-                disabled: !workflows.value.length,
-                onSelect() {
-                    pruneWorkflows();
-                },
-            },
-        ],
-    ];
-
-    return output;
-});
-
-const artifactItems = computed(() => {
     const output: DropdownMenuItem[] = [
+        {
+            label: colorMode.value === "dark" ? "Light Theme" : "Dark Theme",
+            onSelect() {
+                toggleTheme();
+            },
+        },
+        {
+            label: "Interface Scale",
+            disabled: isMobile.value,
+            ui: {
+                content: "rounded-t-md",
+            },
+            children: [
+                {
+                    label: "Small · 100%",
+                    icon: "i-mingcute:check-fill",
+                    ui: {
+                        itemLeadingIcon: ["size-2.5 mt-0.75", scale.value !== 1 && "opacity-0"],
+                    },
+                    onSelect() {
+                        scale.value = 1;
+                    },
+                },
+                {
+                    label: "Medium · 125%",
+                    icon: "i-mingcute:check-fill",
+                    ui: {
+                        itemLeadingIcon: ["size-2.5 mt-0.75", scale.value !== 1.25 && "opacity-0"],
+                    },
+                    onSelect() {
+                        scale.value = 1.25;
+                    },
+                },
+                {
+                    label: "Large · 150%",
+                    icon: "i-mingcute:check-fill",
+                    ui: {
+                        itemLeadingIcon: ["size-2.5 mt-0.75", scale.value !== 1.5 && "opacity-0"],
+                    },
+                    onSelect() {
+                        scale.value = 1.5;
+                    },
+                },
+            ],
+        },
+    ];
+
+    return output;
+});
+
+const resourceItems = computed(() => {
+    const output: DropdownMenuItem[] = [
+        {
+            label: "New workflow",
+            onSelect() {
+                workflowDialog.open();
+            },
+        },
         {
             label: "New Artifact",
             onSelect() {
@@ -253,35 +186,12 @@ const artifactItems = computed(() => {
             },
         },
         {
-            label: "New directory",
+            label: "New shell",
+            disabled: isMobile.value,
             onSelect() {
-                createDirectory(".", artifacts.value);
+                newShell();
             },
         },
-    ];
-
-    return output;
-});
-
-const shellItems = computed(() => {
-    const output: DropdownMenuItem[][] = [
-        [
-            {
-                label: "New shell",
-                onSelect() {
-                    newShell();
-                },
-            },
-        ],
-        [
-            {
-                label: "Prune all",
-                disabled: !shells.value.length,
-                onSelect() {
-                    pruneShells();
-                },
-            },
-        ],
     ];
 
     return output;
@@ -293,11 +203,8 @@ function toggleTheme() {
 
 async function newShell() {
     const shell = await createShell();
-
     if (shell) {
-        openShell({
-            shell,
-        });
+        openShell({ shell });
     }
 }
 

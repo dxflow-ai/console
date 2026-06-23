@@ -22,10 +22,10 @@
 </template>
 
 <script lang="ts" setup>
-const { sidebarOpen, secondaryOpen, secondaryFull } = useWorkspace();
+const { isMobile, sidebarOpen, secondaryOpen, secondaryFull } = useWorkspace();
 const { tabs } = useTabs();
 
 const secondaryVisible = computed(() => {
-    return secondaryOpen.value && tabs.secondary.length > 0;
+    return !isMobile.value && secondaryOpen.value && tabs.secondary.length > 0;
 });
 </script>

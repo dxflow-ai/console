@@ -1,10 +1,16 @@
-const sidebarOpen = ref(true);
+const isMobile = useMediaQuery("(max-width: 767px)");
+
+const sidebarOpen = ref(!isMobile.value);
 const secondaryOpen = ref(false);
 const secondaryFull = ref(false);
 
 export function useWorkspace() {
     function toggleSidebar() {
         sidebarOpen.value = !sidebarOpen.value;
+    }
+
+    function closeSidebar() {
+        sidebarOpen.value = false;
     }
 
     function openSecondary() {
@@ -24,10 +30,12 @@ export function useWorkspace() {
     }
 
     return {
+        isMobile,
         sidebarOpen,
         secondaryOpen,
         secondaryFull,
         toggleSidebar,
+        closeSidebar,
         openSecondary,
         toggleSecondary,
         toggleSecondaryFull,

@@ -1,5 +1,5 @@
 <template>
-    <template v-if="props.items?.length">
+    <template v-if="!isMobile && props.items?.length">
         <UiContextMenu
             size="xs"
             :items="props.items"
@@ -28,4 +28,6 @@ const props = defineProps({
         },
     },
 });
+
+const { isMobile } = useWorkspace();
 </script>

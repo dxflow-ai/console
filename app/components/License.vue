@@ -9,7 +9,7 @@
                 <span class="truncate text-muted">{{ license.owner || "—" }}</span>
             </div>
         </div>
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div class="flex flex-col gap-1 rounded-md bg-elevated/40 p-3">
                 <span class="text-xs tracking-wide text-dimmed uppercase">Starts</span>
                 <span class="text-default">
