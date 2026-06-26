@@ -164,12 +164,20 @@ class HttpRequest {
     }
 
     async call(options?: FetchOptions<"stream", any>, delay: number = 1200): Promise<MaybeError> {
-        this.response = await tryAwait({
-            delay,
-            handler: () => {
-                return this.fetchClient(String(this.path), options);
-            },
-        });
+        try {
+            this.response = await tryAwait({
+                delay,
+                handler: () => {
+                    return this.fetchClient(String(this.path), options);
+                },
+            });
+        } catch (error: any) {
+            if (options?.signal?.aborted) {
+                return new Error(error?.message || error);
+            }
+
+            throw error;
+        }
 
         return null;
     }
