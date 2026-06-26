@@ -39,13 +39,9 @@
                                 <WorkflowStep
                                     :step="step"
                                     :definition="definitions[step.identity]"
-                                    :startable="canStart && step.index === firstStepIndex"
-                                    :stoppable="canStop && step.index === latestRunningIndex"
-                                    :starting="actions.isBusyWith(current.identity, 'start')"
-                                    :stopping="actions.isBusyWith(current.identity, 'stop')"
-                                    :busy="busy"
-                                    @start="actions.start(current)"
-                                    @stop="actions.stop(current)"
+                                    :workflow="current"
+                                    :first-step-index="firstStepIndex"
+                                    :latest-running-index="latestRunningIndex"
                                 />
                             </template>
                         </div>
@@ -63,8 +59,6 @@ const props = defineProps({
         required: true,
     },
 });
-
-const actions = useWorkflowActions();
 
 const viewport = useTemplateRef<HTMLElement>("viewport-element");
 const content = useTemplateRef<HTMLElement>("content-element");
@@ -90,24 +84,16 @@ const current = computed(() => {
     return match ?? props.workflow;
 });
 
-const busy = computed(() => {
-    return actions.isBusy(props.workflow.identity);
-});
-
-const canStart = computed(() => {
-    return canStartWorkflow(current.value.status);
-});
-
-const canStop = computed(() => {
-    return canStopWorkflow(current.value.status);
-});
-
 const firstStepIndex = computed(() => {
     const indexes = steps.value.map((step) => {
         return step.index;
     });
 
-    return indexes.length ? Math.min(...indexes) : null;
+    if (indexes.length) {
+        return Math.min(...indexes);
+    }
+
+    return null;
 });
 
 const latestRunningIndex = computed(() => {

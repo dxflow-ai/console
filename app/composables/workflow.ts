@@ -249,7 +249,7 @@ export function useWorkflowSteps(identity: string) {
 }
 
 export function useWorkflowActions() {
-    const { closeTabsWhere, openWorkflow } = useTabs();
+    const { closeTabsWhere, openWorkflow, openShell } = useTabs();
 
     const { data: artifacts } = useStoreView(artifactStore, "list");
 
@@ -266,6 +266,10 @@ export function useWorkflowActions() {
     });
 
     const { execute: executeRemove } = useStoreAction(workflowStore, "removeById", {
+        isolated: true,
+    });
+
+    const { execute: executeShell, loading: shelling } = useStoreAction(shellStore, "createForWorkflow", {
         isolated: true,
     });
 
@@ -429,8 +433,28 @@ export function useWorkflowActions() {
         }
     }
 
+    async function shell(workflow: Workflow, step: WorkflowStep) {
+        try {
+            const created = await executeShell({
+                payload: {
+                    identity: workflow.identity,
+                    step: step.index,
+                },
+            });
+
+            if (created) {
+                openShell({
+                    shell: created,
+                });
+            }
+        } catch (error) {
+            dangerToast("Failed to open container shell", error as Error);
+        }
+    }
+
     return {
         creating,
+        shelling,
         pruning,
         isBusy,
         isBusyWith,
@@ -438,6 +462,7 @@ export function useWorkflowActions() {
         start,
         stop,
         remove,
+        shell,
         prune,
     };
 }

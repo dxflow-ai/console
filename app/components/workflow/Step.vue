@@ -3,26 +3,23 @@
         class="flex min-w-72 max-w-80 flex-col gap-2.5 rounded-xl border border-default bg-default p-3 transition-colors"
     >
         <div class="flex items-start gap-2.5">
-            <div class="flex size-9 shrink-0 items-center justify-center rounded-lg transition-all" :class="badgeClass">
-                <UiIcon
-                    class="size-5"
-                    :name="icon"
-                    :class="{
-                        'animate-spin': running,
-                    }"
-                />
+            <div
+                class="flex size-9.5 shrink-0 items-center justify-center rounded-lg transition-all"
+                :class="badgeClass"
+            >
+                <UiIcon class="size-5" :name="icon" />
             </div>
-            <div class="flex min-w-0 flex-1 flex-col gap-0.5">
+            <div class="flex min-w-0 flex-1 flex-col">
                 <div class="flex items-center gap-2">
                     <span class="truncate text-sm font-medium text-highlighted">{{ title(props.step.name) }}</span>
-                    <template v-if="config.platform">
-                        <UiBadge size="sm" variant="soft" color="neutral" class="shrink-0 capitalize">
-                            <span>{{ config.platform }}</span>
-                        </UiBadge>
-                    </template>
-                    <span class="ml-auto shrink-0 font-mono text-xs text-dimmed">#{{ props.step.index }}</span>
+                    <UiBadge size="xs" variant="soft" color="neutral">
+                        <span class="capitalize">{{ config.platform || "unknown" }}</span>
+                    </UiBadge>
+                    <div class="flax flex-1 j text-right">
+                        <span class="font-mono text-xs text-dimmed">#{{ props.step.index }}</span>
+                    </div>
                 </div>
-                <span class="truncate font-mono text-xs text-dimmed">
+                <span class="truncate font-mono text-xs text-dimmed -mt-1">
                     <span>{{ config.image || "unknown" }}</span>
                 </span>
             </div>
@@ -49,38 +46,23 @@
                 </template>
             </div>
         </template>
-        <template v-if="props.startable">
-            <div class="flex justify-end pt-2.5">
-                <UiButton
-                    size="xs"
-                    color="neutral"
-                    variant="solid"
-                    label="Start"
-                    icon="i-mingcute:play-fill"
-                    :loading="props.starting"
-                    :disabled="props.busy"
-                    :ui="{
-                        leadingIcon: 'size-3',
-                    }"
-                    @click="start()"
-                />
-            </div>
-        </template>
-        <template v-if="props.stoppable">
-            <div class="flex justify-end pt-2.5">
-                <UiButton
-                    size="xs"
-                    color="neutral"
-                    variant="solid"
-                    label="Stop"
-                    icon="i-mingcute:pause-fill"
-                    :loading="props.stopping"
-                    :disabled="props.busy"
-                    :ui="{
-                        leadingIcon: 'size-3',
-                    }"
-                    @click="stop()"
-                />
+        <template v-if="controls.length">
+            <div class="flex justify-end gap-2 pt-2.5">
+                <template v-for="control in controls" :key="control.key">
+                    <UiButton
+                        size="xs"
+                        color="neutral"
+                        :variant="control.variant"
+                        :label="control.label"
+                        :icon="control.icon"
+                        :loading="control.loading"
+                        :disabled="busy"
+                        :ui="{
+                            leadingIcon: 'size-3',
+                        }"
+                        @click="control.handler()"
+                    />
+                </template>
             </div>
         </template>
     </div>
@@ -98,36 +80,21 @@ const props = defineProps({
         type: Object as PropType<WorkflowStepDefinition>,
         default: undefined,
     },
-    startable: {
-        type: Boolean,
-        default: false,
+    workflow: {
+        type: Object as PropType<Workflow>,
+        required: true,
     },
-    stoppable: {
-        type: Boolean,
-        default: false,
+    firstStepIndex: {
+        type: Number as PropType<number | null>,
+        default: null,
     },
-    starting: {
-        type: Boolean,
-        default: false,
-    },
-    stopping: {
-        type: Boolean,
-        default: false,
-    },
-    busy: {
-        type: Boolean,
-        default: false,
+    latestRunningIndex: {
+        type: Number as PropType<number | null>,
+        default: null,
     },
 });
 
-const emit = defineEmits({
-    start() {
-        return true;
-    },
-    stop() {
-        return true;
-    },
-});
+const actions = useWorkflowActions();
 
 const now = useNow({
     interval: 1000,
@@ -145,12 +112,74 @@ const config = computed<Partial<WorkflowStepDefinition>>(() => {
     return props.definition ?? {};
 });
 
+const busy = computed(() => {
+    return actions.isBusy(props.workflow.identity);
+});
+
+const startable = computed(() => {
+    return canStartWorkflow(props.workflow.status) && props.step.index === props.firstStepIndex;
+});
+
+const stoppable = computed(() => {
+    return canStopWorkflow(props.workflow.status) && props.step.index === props.latestRunningIndex;
+});
+
+const canShell = computed(() => {
+    return running.value;
+});
+
+const controls = computed(() => {
+    const list: Array<{
+        key: string;
+        label: string;
+        icon: string;
+        variant: "soft" | "solid";
+        loading: boolean;
+        handler: () => void;
+    }> = [];
+
+    if (canShell.value) {
+        list.push({
+            key: "shell",
+            label: "Shell",
+            icon: "i-mingcute:terminal-box-fill",
+            variant: "soft",
+            loading: actions.shelling.value,
+            handler: shell,
+        });
+    }
+
+    if (startable.value) {
+        list.push({
+            key: "start",
+            label: "Start",
+            icon: "i-mingcute:play-fill",
+            variant: "solid",
+            loading: actions.isBusyWith(props.workflow.identity, "start"),
+            handler: start,
+        });
+    }
+
+    if (stoppable.value) {
+        list.push({
+            key: "stop",
+            label: "Stop",
+            icon: "i-mingcute:stop-fill",
+            variant: "solid",
+            loading: actions.isBusyWith(props.workflow.identity, "stop"),
+            handler: stop,
+        });
+    }
+
+    return list;
+});
+
 const badgeClass = computed(() => {
-    if (props.step.status === WorkflowStepStatus.RUNNING) {
+    if (running.value) {
         return "bg-blue-500/10 text-blue-500";
     }
 
-    if (props.step.status === WorkflowStepStatus.EXITED) {
+    if (exited.value) {
         return props.step.exit_code ? "bg-red-500/10 text-red-500" : "bg-green-500/10 text-green-500";
     }
 
@@ -158,11 +187,11 @@ const badgeClass = computed(() => {
 });
 
 const dotClass = computed(() => {
-    if (props.step.status === WorkflowStepStatus.RUNNING) {
+    if (running.value) {
         return "bg-blue-500";
     }
 
-    if (props.step.status === WorkflowStepStatus.EXITED) {
+    if (exited.value) {
         return props.step.exit_code ? "bg-red-500" : "bg-green-500";
     }
 
@@ -170,11 +199,11 @@ const dotClass = computed(() => {
 });
 
 const icon = computed(() => {
-    if (props.step.status === WorkflowStepStatus.RUNNING) {
-        return "i-mingcute:loading-3-fill";
+    if (running.value) {
+        return "i-mingcute:flash-circle-line";
     }
 
-    if (props.step.status === WorkflowStepStatus.EXITED) {
+    if (exited.value) {
         return props.step.exit_code ? "i-mingcute:close-circle-line" : "i-mingcute:check-circle-line";
     }
 
@@ -197,27 +226,19 @@ const duration = computed(() => {
 });
 
 const bindings = computed(() => {
-    const rows: string[] = [];
+    const ports = config.value.ports ?? [];
+    const volumes = config.value.volumes ?? [];
+    const env = config.value.env ?? [];
 
-    if (config.value.ports?.length) {
-        for (const port of config.value.ports ?? []) {
-            rows.push(`${port.host}:${port.container}`);
-        }
-    }
-
-    if (config.value.volumes?.length) {
-        for (const volume of config.value.volumes ?? []) {
-            rows.push(`${volume.host}:${volume.container}`);
-        }
-    }
-
-    if (config.value.env?.length) {
-        for (const entry of config.value.env ?? []) {
-            rows.push(entry);
-        }
-    }
-
-    return rows;
+    return [
+        ...ports.map((port) => {
+            return `${port.host}:${port.container}`;
+        }),
+        ...volumes.map((volume) => {
+            return `${volume.host}:${volume.container}`;
+        }),
+        ...env,
+    ];
 });
 
 function endTime() {
@@ -255,10 +276,14 @@ function formatDuration(milliseconds: number) {
 }
 
 function start() {
-    emit("start");
+    actions.start(props.workflow);
 }
 
 function stop() {
-    emit("stop");
+    actions.stop(props.workflow);
+}
+
+function shell() {
+    actions.shell(props.workflow, props.step);
 }
 </script>
