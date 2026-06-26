@@ -140,6 +140,48 @@ export function useWorkflowLogs() {
     };
 }
 
+export function useWorkflowDefinition(identity: string) {
+    const definitions = ref<Record<string, WorkflowStepDefinition>>({});
+
+    const { execute } = useStoreAction(artifactStore, "downloadById", {
+        isolated: true,
+    });
+
+    async function load() {
+        try {
+            const result = await execute({
+                payload: {
+                    identity: `${identity}/workflow.json`,
+                },
+            });
+
+            if (!result) {
+                return;
+            }
+
+            const source = await result.blob.text();
+            const parsed = JSON.parse(source) as {
+                steps?: Array<{ identity: string; definition?: WorkflowStepDefinition }>;
+            };
+
+            const map: Record<string, WorkflowStepDefinition> = {};
+            for (const step of parsed.steps ?? []) {
+                if (step.identity && step.definition) {
+                    map[step.identity] = step.definition;
+                }
+            }
+
+            definitions.value = map;
+        } catch {}
+    }
+
+    onMounted(load);
+
+    return {
+        definitions,
+    };
+}
+
 export function useWorkflowSteps(identity: string) {
     const { data } = useStoreView(workflowStore, "steps", (record) => {
         return record[identity] ?? [];

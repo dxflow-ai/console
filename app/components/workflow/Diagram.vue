@@ -26,7 +26,7 @@
                 @pointerleave="onPointerUp"
                 @wheel="onWheel"
             >
-                <div ref="content-element" class="flex w-max items-center p-4" :style="style">
+                <div ref="content-element" class="flex w-max items-start p-4" :style="style">
                     <template v-for="(phase, phaseIndex) in phases" :key="phase.phase">
                         <div
                             class="flex shrink-0 flex-col gap-2"
@@ -36,61 +36,17 @@
                         >
                             <span class="text-xs font-medium text-dimmed">Phase {{ phase.phase }}</span>
                             <template v-for="step in phase.steps" :key="step.identity">
-                                <div class="relative rounded-lg bg-default">
-                                    <UiAlert
-                                        class="min-w-72"
-                                        variant="soft"
-                                        orientation="horizontal"
-                                        :color="stepColor(step)"
-                                        :ui="{
-                                            title: 'flex items-center gap-2',
-                                        }"
-                                    >
-                                        <template #title>
-                                            <UiIcon
-                                                :name="stepIcon(step)"
-                                                :class="{
-                                                    'animate-spin': step.status === WorkflowStepStatus.RUNNING,
-                                                }"
-                                            />
-                                            <span>{{ title(step.name) }}</span>
-                                        </template>
-                                        <template #description>
-                                            <span>{{ title(step.status) }}</span>
-                                            <template v-if="step.pid">
-                                                <span> - pid {{ step.pid }}</span>
-                                            </template>
-                                            <template v-if="step.exit_code">
-                                                <span> - exit {{ step.exit_code }}</span>
-                                            </template>
-                                        </template>
-                                        <template #actions>
-                                            <template v-if="canStart && step.index === firstStepIndex">
-                                                <UiButton
-                                                    size="md"
-                                                    color="neutral"
-                                                    variant="link"
-                                                    icon="i-mingcute:play-circle-fill"
-                                                    :loading="actions.isBusyWith(current.identity, 'start')"
-                                                    :disabled="busy"
-                                                    @click="actions.start(current)"
-                                                    square
-                                                />
-                                            </template>
-                                            <template v-if="canStop && step.index === latestRunningIndex">
-                                                <UiButton
-                                                    size="md"
-                                                    color="neutral"
-                                                    variant="link"
-                                                    icon="i-mingcute:pause-circle-fill"
-                                                    :loading="actions.isBusyWith(current.identity, 'stop')"
-                                                    :disabled="busy"
-                                                    @click="actions.stop(current)"
-                                                />
-                                            </template>
-                                        </template>
-                                    </UiAlert>
-                                </div>
+                                <WorkflowStep
+                                    :step="step"
+                                    :definition="definitions[step.identity]"
+                                    :startable="canStart && step.index === firstStepIndex"
+                                    :stoppable="canStop && step.index === latestRunningIndex"
+                                    :starting="actions.isBusyWith(current.identity, 'start')"
+                                    :stopping="actions.isBusyWith(current.identity, 'stop')"
+                                    :busy="busy"
+                                    @start="actions.start(current)"
+                                    @stop="actions.stop(current)"
+                                />
                             </template>
                         </div>
                     </template>
@@ -101,10 +57,6 @@
 </template>
 
 <script lang="ts" setup>
-import { title } from "radash";
-
-import type { AlertProps } from "@nuxt/ui";
-
 const props = defineProps({
     workflow: {
         type: Object as PropType<Workflow>,
@@ -119,6 +71,7 @@ const content = useTemplateRef<HTMLElement>("content-element");
 
 const { data: list } = useStoreView(workflowStore, "list");
 
+const { definitions } = useWorkflowDefinition(props.workflow.identity);
 const { data: steps, loading } = useWorkflowSteps(props.workflow.identity);
 
 const { panning, style, onWheel, onPointerDown, onPointerMove, onPointerUp, center } = useViewport({
@@ -212,30 +165,6 @@ watchDebounced(
         debounce: 250,
     },
 );
-
-function stepColor(step: WorkflowStep): AlertProps["color"] {
-    if (step.status === WorkflowStepStatus.RUNNING) {
-        return "blue";
-    }
-
-    if (step.status === WorkflowStepStatus.EXITED) {
-        return step.exit_code ? "yellow" : "green";
-    }
-
-    return "neutral";
-}
-
-function stepIcon(step: WorkflowStep) {
-    if (step.status === WorkflowStepStatus.RUNNING) {
-        return "i-mingcute:loading-3-fill";
-    }
-
-    if (step.status === WorkflowStepStatus.EXITED) {
-        return step.exit_code ? "i-mingcute:close-circle-line" : "i-mingcute:check-circle-line";
-    }
-
-    return "i-mingcute:time-line";
-}
 </script>
 
 <style scoped>
