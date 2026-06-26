@@ -19,7 +19,7 @@
             </div>
         </div>
         <div
-            class="h-12 text-primary"
+            class="h-8 text-primary"
             :class="{
                 'h-6!': isMobile,
             }"

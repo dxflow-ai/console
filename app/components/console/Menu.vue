@@ -58,14 +58,21 @@
         title="Engine Monitor"
         :transition="false"
         :ui="{
-            content: 'sm:max-w-3xl',
+            content: 'sm:max-w-xl',
         }"
     >
         <template #body>
             <Overview />
         </template>
     </UiModal>
-    <UiModal v-model:open="licenseOpen" title="Engine License" :transition="false">
+    <UiModal
+        v-model:open="licenseOpen"
+        title="Engine License"
+        :ui="{
+            content: 'sm:max-w-sm',
+        }"
+        :transition="false"
+    >
         <template #body>
             <License />
         </template>
