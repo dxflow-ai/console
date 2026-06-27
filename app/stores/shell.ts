@@ -98,6 +98,46 @@ export const shellStore = createStore({
             },
         );
 
+        const createForWorkflow = handler<{ identity: string; step: number }, Shell | null>(
+            async ({ model, payload }) => {
+                const { call, read } = newHttpRequest("/api/workflow/shell/");
+
+                const callError = await call({
+                    method: "POST",
+                    body: {
+                        identity: payload.identity,
+                        step: payload.step,
+                    },
+                });
+
+                if (callError) {
+                    throw callError;
+                }
+
+                let shell: Shell | null = null;
+                const readError = await read((chunk) => {
+                    if (chunk.isEntity) {
+                        shell = chunk.payload;
+                    }
+                });
+
+                if (readError) {
+                    throw readError;
+                }
+
+                if (shell) {
+                    model.list.add(shell, {
+                        prepend: true,
+                    });
+                }
+
+                return shell;
+            },
+            {
+                concurrent: ActionConcurrent.BLOCK,
+            },
+        );
+
         const resizeById = handler<{ identity: string; columns: number; rows: number }>(
             async ({ model, payload }) => {
                 const { call, read } = newHttpRequest("/api/shell/resize/");
@@ -265,6 +305,7 @@ export const shellStore = createStore({
         return {
             get,
             create,
+            createForWorkflow,
             resizeById,
             executeById,
             killById,
