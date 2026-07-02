@@ -6,7 +6,7 @@
         "dev": "nuxt dev",
         "generate": "NODE_OPTIONS=--max-old-space-size=4096 nuxt generate",
         "lint": "tsc --noEmit && eslint --fix .",
-        "format": "prettier --write . '!.output' '!.nuxt' `!pnpm-lock.yaml`",
+        "format": "prettier --write . '!.output' '!.nuxt' '!pnpm-lock.yaml'",
         "postinstall": "nuxt prepare"
     },
     "dependencies": {
