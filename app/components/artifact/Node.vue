@@ -59,9 +59,11 @@
                         @contextmenu.stop.prevent
                     />
                 </div>
-                <small v-if="!isDirectory" class="shrink-0 text-muted">
-                    {{ prettyBytes(props.artifact.size) }}
-                </small>
+                <template v-if="!isDirectory">
+                    <small class="shrink-0 text-muted">
+                        {{ prettyBytes(props.artifact.size) }}
+                    </small>
+                </template>
             </div>
         </ContextMenu>
         <template v-if="isDirectory && expanded">
