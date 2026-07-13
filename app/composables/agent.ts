@@ -1,6 +1,3 @@
-// In-memory conversation state for the agent sidekick, keyed by session identity.
-// Sessions come from the agent store; history and prompting go through useAgentActions.
-
 const activeId = ref<string>();
 const busy = ref(false);
 const draft = ref("");
@@ -76,6 +73,16 @@ export function useAgentActions() {
         isolated: true,
     });
 
+    const { execute: executeWorkflows } = useStoreAction(workflowStore, "get", {
+        isolated: true,
+    });
+
+    const { execute: executeArtifacts } = useStoreAction(artifactStore, "list", {
+        isolated: true,
+    });
+
+    const { openWorkflow } = useTabs();
+
     function isBusy(identity: string) {
         return busyIdentities.value.has(identity);
     }
@@ -98,63 +105,111 @@ export function useAgentActions() {
     }
 
     async function refreshUsage(identity: string) {
+        try {
+            const session = await executeGetById({
+                payload: {
+                    identity,
+                },
+            });
+
+            if (session) {
+                applyUsage(identity, session.usage);
+            }
+        } catch {}
+    }
+
+    async function openCreatedWorkflow(identity: string, workflows: Workflow[]) {
         const session = await executeGetById({
             payload: {
                 identity,
             },
         });
 
-        if (session) {
-            applyUsage(identity, session.usage);
+        const workflow = workflows.find((item) => {
+            return item.identity === session?.workflow;
+        });
+
+        if (workflow) {
+            openWorkflow({
+                workflow,
+            });
         }
     }
 
-    function createReplyHandler(list: AgentMessage[]) {
-        let current: AgentMessage | undefined;
+    async function runToolHook(identity: string, name: string) {
+        try {
+            switch (name) {
+                case "upload": {
+                    await executeArtifacts({
+                        payload: {
+                            directory: ".",
+                        },
+                    });
 
-        function appendAssistant(content: string) {
-            list.push({
-                id: nextId("message"),
-                role: "assistant",
-                content,
-                timestamp: Date.now(),
-            });
+                    break;
+                }
+                case "create":
+                case "start":
+                case "stop": {
+                    const workflows = await executeWorkflows();
 
-            current = list[list.length - 1];
+                    if (name === "create" && workflows) {
+                        await openCreatedWorkflow(identity, workflows);
+                    }
 
-            return current;
+                    break;
+                }
+            }
+        } catch {
+            // workflow and artifact updates are best-effort
+        }
+    }
+
+    function appendAssistant(list: AgentMessage[], content: string) {
+        list.push({
+            id: nextId("message"),
+            role: "assistant",
+            content,
+            timestamp: Date.now(),
+        });
+
+        return list[list.length - 1];
+    }
+
+    function applyReply(list: AgentMessage[], identity: string, reply: AgentReply) {
+        if (reply.type === "message") {
+            if (reply.message) {
+                appendAssistant(list, reply.message);
+            }
+
+            return;
         }
 
-        return (reply: AgentReply) => {
-            if (reply.type === "message") {
-                if (reply.message) {
-                    appendAssistant(reply.message);
-                }
+        const last = list[list.length - 1];
+        const message = last?.role === "assistant" ? last : appendAssistant(list, "");
 
-                return;
-            }
+        if (!message.tools) {
+            message.tools = [];
+        }
 
-            const message = current ?? appendAssistant("");
+        if (reply.type === "tool_run") {
+            message.tools.push({
+                id: nextId("tool"),
+                name: reply.tool ?? "",
+                status: "running",
+            });
 
-            if (!message.tools) {
-                message.tools = [];
-            }
+            return;
+        }
 
-            if (reply.type === "tool_run") {
-                message.tools.push({
-                    id: nextId("tool"),
-                    name: reply.tool ?? "",
-                    status: "running",
-                });
+        const tool = message.tools[message.tools.length - 1];
+        if (tool) {
+            tool.status = reply.type === "tool_failed" ? "failed" : "success";
+        }
 
-                return;
-            }
-
-            const tool = message.tools[message.tools.length - 1];
-            if (tool) {
-                tool.status = reply.type === "tool_failed" ? "failed" : "success";
-            }
-        };
+        if (reply.type === "tool_success" && reply.tool) {
+            void runToolHook(identity, reply.tool);
+        }
     }
 
     async function send(text: string) {
@@ -177,8 +232,6 @@ export function useAgentActions() {
             timestamp: Date.now(),
         });
 
-        const handleReply = createReplyHandler(list);
-
         draft.value = "";
         busy.value = true;
 
@@ -187,7 +240,9 @@ export function useAgentActions() {
                 payload: {
                     identity,
                     message: content,
-                    onReply: handleReply,
+                    onReply(reply) {
+                        applyReply(list, identity, reply);
+                    },
                 },
             });
         } catch (error) {
@@ -195,11 +250,7 @@ export function useAgentActions() {
         } finally {
             busy.value = false;
 
-            try {
-                await refreshUsage(identity);
-            } catch {
-                // usage is refreshed again on the next load
-            }
+            await refreshUsage(identity);
         }
     }
 
@@ -215,18 +266,25 @@ export function useAgentActions() {
                 return;
             }
 
-            conversations.value[identity] = session.history
-                .filter((turn) => {
-                    return (turn.role === "user" || turn.role === "model") && Boolean(turn.content);
-                })
-                .map((turn) => {
-                    return {
-                        id: nextId("message"),
-                        role: turn.role === "user" ? "user" : "assistant",
-                        content: turn.content ?? "",
-                        timestamp: Date.now(),
-                    };
+            const messages: AgentMessage[] = [];
+            for (const turn of session.history) {
+                if (turn.role !== "user" && turn.role !== "model") {
+                    continue;
+                }
+
+                if (!turn.content) {
+                    continue;
+                }
+
+                messages.push({
+                    id: nextId("message"),
+                    role: turn.role === "user" ? "user" : "assistant",
+                    content: turn.content,
+                    timestamp: Date.now(),
                 });
+            }
+
+            conversations.value[identity] = messages;
 
             applyUsage(identity, session.usage);
         } catch (error) {
