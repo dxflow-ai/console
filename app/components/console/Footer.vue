@@ -19,9 +19,9 @@
                 <UiButton
                     size="xs"
                     variant="link"
+                    color="neutral"
                     icon="i-mingcute:layout-right-line"
                     class="pr-0!"
-                    :color="sidekickOpen ? 'primary' : 'neutral'"
                     @click="toggleSidekick()"
                     square
                 />

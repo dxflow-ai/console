@@ -21,12 +21,12 @@
             >
                 <div class="flex items-center gap-2 text-xs">
                     <span class="flex items-center gap-0.5">
-                        <UiIcon class="size-2.5 shrink-0" name="i-mingcute:arrow-up-line" />
-                        <span>{{ compact(usage.input) }}</span>
+                        <UiIcon class="size-2.25 shrink-0" name="i-mingcute:arrow-up-line" />
+                        <small>{{ compact(usage.input) }}</small>
                     </span>
                     <span class="flex items-center gap-0.5">
-                        <UiIcon class="size-2.5 shrink-0" name="i-mingcute:arrow-down-line" />
-                        <span>{{ compact(usage.output) }}</span>
+                        <UiIcon class="size-2.25 shrink-0" name="i-mingcute:arrow-down-line" />
+                        <small>{{ compact(usage.output) }}</small>
                     </span>
                 </div>
                 <div class="flex items-center gap-1 text-xs">

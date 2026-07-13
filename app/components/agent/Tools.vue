@@ -2,15 +2,13 @@
     <template v-if="busy && tools.length">
         <div class="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1">
             <template v-for="tool in tools" :key="tool.id">
-                <div class="animate-fade animate-duration-300 flex items-center gap-1.5 text-xs">
-                    <div class="relative size-3.5 shrink-0">
-                        <UiIcon
-                            :key="tool.status"
-                            class="absolute inset-0 size-3.5"
-                            :class="toolStatuses[tool.status].class"
-                            :name="toolStatuses[tool.status].icon"
-                        />
-                    </div>
+                <div class="flex items-center gap-1.5 text-xs">
+                    <UiIcon
+                        :key="tool.status"
+                        class="size-3 shrink-0"
+                        :class="toolStatuses[tool.status].class"
+                        :name="toolStatuses[tool.status].icon"
+                    />
                     <span class="transition-colors duration-300" :class="toolStatuses[tool.status].text">
                         {{ toolLabel(tool) }}
                     </span>
@@ -91,12 +89,12 @@ const toolStatuses: Record<AgentToolStatus, { icon: string; class: string; text:
         text: "text-muted",
     },
     success: {
-        icon: "i-mingcute:check-circle-fill",
+        icon: "i-mingcute:check-circle-line",
         class: "text-success",
         text: "text-default",
     },
     failed: {
-        icon: "i-mingcute:close-circle-fill",
+        icon: "i-mingcute:close-circle-line",
         class: "text-error",
         text: "text-error",
     },
