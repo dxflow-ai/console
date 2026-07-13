@@ -9,7 +9,10 @@
                 @click="open()"
             >
                 <span class="size-2 shrink-0 rounded-full" :class="statusColor" />
-                <span class="truncate">{{ props.workflow.name }}</span>
+                <span class="min-w-0 flex-1 truncate">{{ props.workflow.name }}</span>
+                <small class="shrink-0 text-muted">
+                    <RelativeTime :timestamp="props.workflow.created_at" />
+                </small>
             </div>
         </ContextMenu>
     </div>

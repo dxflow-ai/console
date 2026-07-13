@@ -1,8 +1,27 @@
 const isMobile = useMediaQuery("(max-width: 767px)");
 
-const sidebarOpen = ref(!isMobile.value);
 const secondaryOpen = ref(false);
 const secondaryFull = ref(false);
+
+const sidebarOpen = useLocalStorage(
+    "sidebar-open",
+    () => {
+        return !isMobile.value;
+    },
+    {
+        initOnMounted: true,
+    },
+);
+
+const sidekickOpen = useLocalStorage(
+    "sidekick-open",
+    () => {
+        return false
+    },
+    {
+        initOnMounted: true,
+    },
+);
 
 export function useWorkspace() {
     function toggleSidebar() {
@@ -29,15 +48,21 @@ export function useWorkspace() {
         secondaryFull.value = !secondaryFull.value;
     }
 
+    function toggleSidekick() {
+        sidekickOpen.value = !sidekickOpen.value;
+    }
+
     return {
         isMobile,
         sidebarOpen,
         secondaryOpen,
         secondaryFull,
+        sidekickOpen,
         toggleSidebar,
         closeSidebar,
         openSecondary,
         toggleSecondary,
         toggleSecondaryFull,
+        toggleSidekick,
     };
 }

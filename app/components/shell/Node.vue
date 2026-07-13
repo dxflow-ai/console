@@ -15,7 +15,10 @@
                     }"
                     :name="busy ? 'i-mingcute:loading-3-fill' : 'i-hugeicons:command-line'"
                 />
-                <span class="truncate">{{ props.shell.identity }}</span>
+                <span class="min-w-0 flex-1 truncate">{{ props.shell.identity }}</span>
+                <small class="shrink-0 text-muted">
+                    <RelativeTime :timestamp="props.shell.created_at" />
+                </small>
             </div>
         </ContextMenu>
     </div>

@@ -59,6 +59,11 @@
                         @contextmenu.stop.prevent
                     />
                 </div>
+                <template v-if="!isDirectory">
+                    <small class="shrink-0 text-muted">
+                        {{ prettyBytes(props.artifact.size) }}
+                    </small>
+                </template>
             </div>
         </ContextMenu>
         <template v-if="isDirectory && expanded">
@@ -71,6 +76,7 @@
 
 <script lang="ts" setup>
 import type { ContextMenuItem } from "@nuxt/ui";
+import prettyBytes from "pretty-bytes";
 import { sleep } from "radash";
 
 const props = defineProps({

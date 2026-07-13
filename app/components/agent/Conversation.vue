@@ -1,0 +1,69 @@
+<template>
+    <div class="flex flex-col gap-2 p-3">
+        <template v-for="message in messages" :key="message.id">
+            <div
+                class="flex flex-col items-stretch gap-1.5 select-text"
+                :class="{
+                    'items-end!': message.role === 'user',
+                }"
+            >
+                <template v-if="message.role === 'user'">
+                    <div
+                        class="max-w-[85%] rounded-lg rounded-br-sm bg-primary/10 my-2 px-3 py-1.5 text-xs whitespace-pre-wrap text-primary"
+                    >
+                        <span>{{ message.content }}</span>
+                    </div>
+                </template>
+                <template v-else-if="message.content">
+                    <div class="agent-markdown" v-html="render(message.content)" />
+                </template>
+            </div>
+        </template>
+        <div ref="anchor-element" />
+    </div>
+</template>
+
+<script lang="ts" setup>
+import { Marked } from "marked";
+
+const { messages } = useAgent();
+
+const anchorElement = useTemplateRef<HTMLDivElement>("anchor-element");
+
+watch(
+    () => {
+        const last = messages.value[messages.value.length - 1];
+
+        return `${messages.value.length}:${last?.content.length ?? 0}`;
+    },
+    async () => {
+        await nextTick();
+
+        anchorElement.value?.scrollIntoView({
+            block: "end",
+        });
+    },
+);
+
+const editor = newEditorWrapper();
+
+const markdown = new Marked({
+    async: false,
+    breaks: true,
+    gfm: true,
+    renderer: {
+        code({ text, lang }) {
+            const language = editor.language(lang ?? "");
+            const grammar = editor.grammar(language);
+            const highlighted = editor.highlight(text, grammar, language).replace(/\n+$/, "");
+            const className = language ? `language-${language}` : "language-none";
+
+            return `<pre class="editor"><code class="${className}">${highlighted}</code></pre>`;
+        },
+    },
+});
+
+function render(content: string) {
+    return markdown.parse(content) as string;
+}
+</script>

@@ -4,7 +4,7 @@
             <ConsoleSidebar />
         </template>
         <div class="flex min-w-0 flex-1 flex-col">
-            <template v-if="!secondaryFull || !secondaryVisible">
+            <template v-if="primaryVisible">
                 <div class="flex min-h-0 flex-1 flex-col">
                     <ConsolePane position="primary" />
                 </div>
@@ -18,14 +18,25 @@
                 </div>
             </template>
         </div>
+        <template v-if="sidekickVisible">
+            <ConsoleSidekick />
+        </template>
     </div>
 </template>
 
 <script lang="ts" setup>
-const { isMobile, sidebarOpen, secondaryOpen, secondaryFull } = useWorkspace();
+const { isMobile, sidebarOpen, secondaryOpen, secondaryFull, sidekickOpen } = useWorkspace();
 const { tabs } = useTabs();
+
+const primaryVisible = computed(() => {
+    return !secondaryFull.value || !secondaryVisible.value;
+});
 
 const secondaryVisible = computed(() => {
     return !isMobile.value && secondaryOpen.value && tabs.secondary.length > 0;
+});
+
+const sidekickVisible = computed(() => {
+    return !isMobile.value && sidekickOpen.value;
 });
 </script>
