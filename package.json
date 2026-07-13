@@ -2,7 +2,6 @@
     "name": "dxflow-console",
     "private": true,
     "type": "module",
-    "packageManager": "pnpm@11.9.0",
     "scripts": {
         "dev": "nuxt dev",
         "generate": "NODE_OPTIONS=--max-old-space-size=4096 nuxt generate",
@@ -54,5 +53,6 @@
         "prettier": "^3.8.4",
         "sass-embedded": "^1.100.0",
         "typescript": "^5.9.3"
-    }
+    },
+    "packageManager": "pnpm@11.9.0"
 }
