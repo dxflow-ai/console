@@ -6,21 +6,31 @@
         <template v-if="!isMobile">
             <div class="flex-1" />
             <ConsoleActivity />
-            <UiButton
-                size="xs"
-                variant="link"
-                color="neutral"
-                icon="i-mingcute:layout-bottom-line"
-                class="pr-0!"
-                :disabled="!tabs.secondary.length"
-                @click="toggleSecondary()"
-                square
-            />
+            <div class="flex items-center">
+                <UiButton
+                    size="xs"
+                    variant="link"
+                    color="neutral"
+                    icon="i-mingcute:layout-bottom-line"
+                    :disabled="!tabs.secondary.length"
+                    @click="toggleSecondary()"
+                    square
+                />
+                <UiButton
+                    size="xs"
+                    variant="link"
+                    icon="i-mingcute:layout-right-line"
+                    class="pr-0!"
+                    :color="sidekickOpen ? 'primary' : 'neutral'"
+                    @click="toggleSidekick()"
+                    square
+                />
+            </div>
         </template>
     </footer>
 </template>
 
 <script lang="ts" setup>
-const { isMobile, toggleSecondary } = useWorkspace();
+const { isMobile, toggleSecondary, sidekickOpen, toggleSidekick } = useWorkspace();
 const { tabs } = useTabs();
 </script>
