@@ -2,6 +2,7 @@
     "name": "dxflow-console",
     "private": true,
     "type": "module",
+    "packageManager": "pnpm@11.9.0",
     "scripts": {
         "dev": "nuxt dev",
         "generate": "NODE_OPTIONS=--max-old-space-size=4096 nuxt generate",
