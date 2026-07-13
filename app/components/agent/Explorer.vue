@@ -59,7 +59,17 @@
                             }"
                             :name="isBusy(session.identity) ? 'i-mingcute:loading-3-fill' : 'i-hugeicons:sparkles'"
                         />
-                        <span class="min-w-0 flex-1 truncate">{{ session.identity }}</span>
+                        <div class="flex min-w-0 flex-1 items-center gap-1.5">
+                            <span class="shrink-0 truncate">{{ session.identity }}</span>
+                            <template v-if="session.input">
+                                <span class="min-w-0 max-w-28 flex-1 truncate text-muted" :title="session.input">
+                                    {{ session.input }}
+                                </span>
+                            </template>
+                        </div>
+                        <small class="shrink-0 text-muted">
+                            <RelativeTime :timestamp="session.created_at" />
+                        </small>
                     </div>
                 </ContextMenu>
             </div>

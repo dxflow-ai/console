@@ -4,6 +4,8 @@ export const agentSessionShape = shape((factory) => {
     return {
         identity: factory.string().meta({ identifier: true }),
         workflow: factory.string().optional(),
+        model: factory.string().optional(),
+        input: factory.string().optional(),
         created_at: factory.number(),
     };
 });
