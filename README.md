@@ -5,8 +5,10 @@ The dxflow web console — manage and monitor your workflows, engines, and resou
 The console is the interface served by the dxflow engine. Launch your engine and open it in the browser to:
 
 - Create, run, and track workflows
-- Browse and deploy templates from the hub
-- Manage engines, resources, and shells
+- Browse and run templates from the hub
+- Inspect and edit generated artifacts
+- Open interactive engine shells
+- Build and operate workflows in natural language with the AI agent
 
 Learn more at [dxflow.ai](https://dxflow.ai) · Documentation: [dxflow.ai/docs](https://dxflow.ai/docs)
 
