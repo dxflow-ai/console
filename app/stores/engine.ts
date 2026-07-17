@@ -192,11 +192,42 @@ export const engineStore = createStore({
             },
         );
 
+        const getWelcome = handler<unknown, string>(
+            async () => {
+                const { call, read } = newHttpRequest("/api/console/welcome/");
+
+                const callError = await call({
+                    timeout: 2500,
+                });
+
+                if (callError) {
+                    throw callError;
+                }
+
+                let result = "";
+                const readError = await read((chunk) => {
+                    if (chunk.isEntity) {
+                        result = chunk.payload?.content ?? "";
+                    }
+                });
+
+                if (readError) {
+                    throw readError;
+                }
+
+                return result;
+            },
+            {
+                concurrent: ActionConcurrent.SKIP,
+            },
+        );
+
         return {
             getParameter,
             getAttribute,
             getLicense,
             getStat,
+            getWelcome,
         };
     },
     compose({ model, view, action }) {

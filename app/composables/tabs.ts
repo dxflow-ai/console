@@ -1,8 +1,15 @@
 export type PanePosition = "primary" | "secondary";
 
+export enum PaneTabKind {
+    ARTIFACT = "artifact",
+    WORKFLOW = "workflow",
+    SHELL = "shell",
+    WELCOME = "welcome",
+}
+
 export type PaneTab = {
     key: string;
-    kind: "artifact" | "workflow" | "shell";
+    kind: PaneTabKind;
     label: string;
     icon: string;
     payload: any;
@@ -17,6 +24,8 @@ const activeKey = reactive<Record<PanePosition, MaybeString>>({
     primary: undefined,
     secondary: undefined,
 });
+
+let welcomed = false;
 
 export function useTabs() {
     const { openSecondary } = useWorkspace();
@@ -74,10 +83,26 @@ export function useTabs() {
         }
     }
 
+    function openWelcome() {
+        if (welcomed) {
+            return;
+        }
+
+        welcomed = true;
+
+        openTab("primary", {
+            key: "welcome",
+            kind: PaneTabKind.WELCOME,
+            label: "Welcome",
+            icon: "i-hugeicons:rocket-01",
+            payload: {},
+        });
+    }
+
     function openWorkflow(payload: { workflow: Workflow }) {
         openTab("primary", {
             key: `workflow:${payload.workflow.identity}:diagram`,
-            kind: "workflow",
+            kind: PaneTabKind.WORKFLOW,
             label: payload.workflow.name,
             icon: "i-hugeicons:git-branch",
             payload: {
@@ -88,7 +113,7 @@ export function useTabs() {
 
         openTab("secondary", {
             key: `workflow:${payload.workflow.identity}:logs`,
-            kind: "workflow",
+            kind: PaneTabKind.WORKFLOW,
             label: payload.workflow.name,
             icon: "i-hugeicons:git-branch",
             payload: {
@@ -101,7 +126,7 @@ export function useTabs() {
     function openArtifact(payload: { artifact: Artifact }) {
         openTab("primary", {
             key: `artifact:${payload.artifact.identity}`,
-            kind: "artifact",
+            kind: PaneTabKind.ARTIFACT,
             label: payload.artifact.name,
             icon: fileIcon(payload.artifact.name),
             payload,
@@ -111,7 +136,7 @@ export function useTabs() {
     function openShell(payload: { shell: Shell }) {
         openTab("secondary", {
             key: `shell:${payload.shell.identity}`,
-            kind: "shell",
+            kind: PaneTabKind.SHELL,
             label: payload.shell.identity,
             icon: "i-hugeicons:command-line",
             payload,
@@ -128,5 +153,6 @@ export function useTabs() {
         openWorkflow,
         openArtifact,
         openShell,
+        openWelcome,
     };
 }

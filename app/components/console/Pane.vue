@@ -63,18 +63,21 @@
                 </template>
             </div>
             <div class="h-full min-h-0 flex-1 overflow-hidden">
-                <template v-if="activeTab?.kind === 'workflow'">
+                <template v-if="activeTab?.kind === PaneTabKind.WORKFLOW">
                     <WorkflowView
                         :key="activeTab.key"
                         :workflow="activeTab.payload.workflow"
                         :view="activeTab.payload.view"
                     />
                 </template>
-                <template v-if="activeTab?.kind === 'artifact'">
+                <template v-if="activeTab?.kind === PaneTabKind.ARTIFACT">
                     <ArtifactView :key="activeTab.key" :artifact="activeTab.payload.artifact" />
                 </template>
-                <template v-if="activeTab?.kind === 'shell'">
+                <template v-if="activeTab?.kind === PaneTabKind.SHELL">
                     <ShellView :key="activeTab.key" :identity="activeTab.payload.shell.identity" />
+                </template>
+                <template v-if="activeTab?.kind === PaneTabKind.WELCOME">
+                    <ConsoleWelcome :key="activeTab.key" />
                 </template>
             </div>
         </template>
@@ -176,11 +179,11 @@ watch(
 );
 
 function tabBusy(tab: PaneTab) {
-    if (tab.kind === "artifact") {
+    if (tab.kind === PaneTabKind.ARTIFACT) {
         return artifactActions.isBusy(tab.payload.artifact.identity);
     }
 
-    if (tab.kind === "shell") {
+    if (tab.kind === PaneTabKind.SHELL) {
         return shellActions.isBusy(tab.payload.shell.identity);
     }
 

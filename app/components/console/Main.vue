@@ -26,7 +26,7 @@
 
 <script lang="ts" setup>
 const { isMobile, sidebarOpen, secondaryOpen, secondaryFull, sidekickOpen } = useWorkspace();
-const { tabs } = useTabs();
+const { tabs, openWelcome } = useTabs();
 
 const primaryVisible = computed(() => {
     return !secondaryFull.value || !secondaryVisible.value;
@@ -38,5 +38,9 @@ const secondaryVisible = computed(() => {
 
 const sidekickVisible = computed(() => {
     return !isMobile.value && sidekickOpen.value;
+});
+
+onMounted(() => {
+    openWelcome();
 });
 </script>
