@@ -1,9 +1,12 @@
 <template>
-    <div class="flex min-h-0 flex-1 flex-col">
+    <div class="relative flex min-h-0 flex-1 flex-col">
         <template v-if="tabs[props.position].length">
             <div
                 ref="toolbar-element"
-                class="flex h-8 shrink-0 items-center gap-1.5 bg-muted/50 border-b border-default px-3"
+                class="flex h-[--spacing(8.125)] shrink-0 items-center gap-1.5 bg-muted/50 border-b border-default px-3"
+                :class="{
+                    'h-8!': props.position === 'secondary' && !props.fullscreen,
+                }"
             >
                 <template v-if="!isMobile">
                     <UiIcon
@@ -21,13 +24,15 @@
                             :color="tab.key === activeKey[props.position] ? 'primary' : 'neutral'"
                             @click="setActive(props.position, tab.key)"
                         >
-                            <UiIcon
-                                class="size-3 shrink-0"
-                                :class="{
-                                    'animate-spin': tabBusy(tab),
-                                }"
-                                :name="tabBusy(tab) ? 'i-mingcute:loading-3-fill' : tab.icon"
-                            />
+                            <template v-if="tab.icon">
+                                <UiIcon
+                                    class="size-3 shrink-0"
+                                    :class="{
+                                        'animate-spin': tabBusy(tab),
+                                    }"
+                                    :name="tabBusy(tab) ? 'i-mingcute:loading-3-fill' : tab.icon"
+                                />
+                            </template>
                             <span class="truncate">{{ tab.label }}</span>
                             <UiIcon
                                 name="i-mingcute:close-small-fill"
@@ -63,18 +68,21 @@
                 </template>
             </div>
             <div class="h-full min-h-0 flex-1 overflow-hidden">
-                <template v-if="activeTab?.kind === 'workflow'">
+                <template v-if="activeTab?.kind === PaneTabKind.WORKFLOW">
                     <WorkflowView
                         :key="activeTab.key"
                         :workflow="activeTab.payload.workflow"
                         :view="activeTab.payload.view"
                     />
                 </template>
-                <template v-if="activeTab?.kind === 'artifact'">
+                <template v-if="activeTab?.kind === PaneTabKind.ARTIFACT">
                     <ArtifactView :key="activeTab.key" :artifact="activeTab.payload.artifact" />
                 </template>
-                <template v-if="activeTab?.kind === 'shell'">
+                <template v-if="activeTab?.kind === PaneTabKind.SHELL">
                     <ShellView :key="activeTab.key" :identity="activeTab.payload.shell.identity" />
+                </template>
+                <template v-if="activeTab?.kind === PaneTabKind.WELCOME">
+                    <ConsoleWelcome :key="activeTab.key" />
                 </template>
             </div>
         </template>
@@ -91,6 +99,10 @@ const props = defineProps({
     position: {
         type: String as PropType<PanePosition>,
         required: true,
+    },
+    fullscreen: {
+        type: Boolean,
+        default: false,
     },
     fullscreenable: {
         type: Boolean,
@@ -176,11 +188,11 @@ watch(
 );
 
 function tabBusy(tab: PaneTab) {
-    if (tab.kind === "artifact") {
+    if (tab.kind === PaneTabKind.ARTIFACT) {
         return artifactActions.isBusy(tab.payload.artifact.identity);
     }
 
-    if (tab.kind === "shell") {
+    if (tab.kind === PaneTabKind.SHELL) {
         return shellActions.isBusy(tab.payload.shell.identity);
     }
 

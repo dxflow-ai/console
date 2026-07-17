@@ -1,74 +1,74 @@
-.agent-markdown {
+.markdown {
     color: var(--ui-text);
 
     font-size: 0.75rem;
     line-height: 1.625;
 }
 
-.agent-markdown > *:first-child {
+.markdown > *:first-child {
     margin-top: 0;
 }
 
-.agent-markdown > *:last-child {
+.markdown > *:last-child {
     margin-bottom: 0;
 }
 
-.agent-markdown p {
+.markdown p {
     margin: 0.5rem 0;
 }
 
-.agent-markdown h1,
-.agent-markdown h2,
-.agent-markdown h3,
-.agent-markdown h4 {
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4 {
     margin: 1rem 0 0.5rem;
 
     font-weight: 600;
     color: var(--ui-text-highlighted);
 }
 
-.agent-markdown h1 {
+.markdown h1 {
     font-size: 1rem;
 }
 
-.agent-markdown h2 {
+.markdown h2 {
     font-size: 0.9rem;
 }
 
-.agent-markdown h3,
-.agent-markdown h4 {
+.markdown h3,
+.markdown h4 {
     font-size: 0.8rem;
 }
 
-.agent-markdown ul,
-.agent-markdown ol {
+.markdown ul,
+.markdown ol {
     margin: 0.5rem 0;
     padding-left: 1.1rem;
 }
 
-.agent-markdown ul {
+.markdown ul {
     list-style: disc;
 }
 
-.agent-markdown ol {
+.markdown ol {
     list-style: decimal;
 }
 
-.agent-markdown li {
+.markdown li {
     margin: 0.2rem 0;
 }
 
-.agent-markdown a {
+.markdown a {
     color: var(--ui-text-highlighted);
     text-decoration: underline;
 }
 
-.agent-markdown strong {
+.markdown strong {
     font-weight: 600;
     color: var(--ui-text-highlighted);
 }
 
-.agent-markdown code {
+.markdown code {
     padding: 0.1rem 0.3rem;
     border-radius: var(--ui-radius);
     background: var(--ui-bg-elevated);
@@ -77,7 +77,7 @@
     font-size: 0.9em;
 }
 
-.agent-markdown pre {
+.markdown pre {
     margin: 0.5rem 0;
     padding: 0.6rem 0.7rem;
     border-radius: var(--ui-radius);
@@ -86,13 +86,13 @@
     overflow: auto;
 }
 
-.agent-markdown pre code {
+.markdown pre code {
     padding: 0;
     background: transparent;
     color: inherit;
 }
 
-.agent-markdown blockquote {
+.markdown blockquote {
     margin: 0.5rem 0;
     padding-left: 0.6rem;
     border-left: 2px solid var(--ui-border);
@@ -100,13 +100,13 @@
     color: var(--ui-text-muted);
 }
 
-.agent-markdown hr {
+.markdown hr {
     margin: 0.75rem 0;
     border: 0;
     border-top: 1px solid var(--ui-border);
 }
 
-.agent-markdown table {
+.markdown table {
     width: fit-content;
     max-width: 100%;
     margin: 0.5rem 0;
@@ -115,34 +115,34 @@
     border-spacing: 0;
 }
 
-.agent-markdown th,
-.agent-markdown td {
+.markdown th,
+.markdown td {
     padding: 0.25rem 0.5rem;
     border-right: 1px solid var(--ui-border);
     border-bottom: 1px solid var(--ui-border);
 }
 
-.agent-markdown th:first-child,
-.agent-markdown td:first-child {
+.markdown th:first-child,
+.markdown td:first-child {
     border-left: 1px solid var(--ui-border);
 }
 
-.agent-markdown thead th {
+.markdown thead th {
     border-top: 1px solid var(--ui-border);
 }
 
-.agent-markdown thead tr:first-child th:first-child {
+.markdown thead tr:first-child th:first-child {
     border-top-left-radius: var(--ui-radius);
 }
 
-.agent-markdown thead tr:first-child th:last-child {
+.markdown thead tr:first-child th:last-child {
     border-top-right-radius: var(--ui-radius);
 }
 
-.agent-markdown tbody tr:last-child td:first-child {
+.markdown tbody tr:last-child td:first-child {
     border-bottom-left-radius: var(--ui-radius);
 }
 
-.agent-markdown tbody tr:last-child td:last-child {
+.markdown tbody tr:last-child td:last-child {
     border-bottom-right-radius: var(--ui-radius);
 }

@@ -1,6 +1,6 @@
 .PHONY: init
 init:
-	pnpm install
+	pnpm install --config.pmOnFail=ignore
 
 .PHONY: dev
 dev:

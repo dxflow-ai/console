@@ -11,10 +11,13 @@
             </template>
             <template v-if="secondaryVisible">
                 <div
-                    class="flex shrink-0 flex-col"
-                    :class="secondaryFull ? 'min-h-0 flex-1' : 'h-1/3 border-t border-default'"
+                    class="relative flex shrink-0 flex-col"
+                    :class="{
+                        'min-h-0 flex-1': secondaryFull,
+                        'h-1/3 border-t border-default top-[-0.5px]': !secondaryFull,
+                    }"
                 >
-                    <ConsolePane position="secondary" fullscreenable />
+                    <ConsolePane position="secondary" :fullscreen="secondaryFull" fullscreenable />
                 </div>
             </template>
         </div>
@@ -26,7 +29,7 @@
 
 <script lang="ts" setup>
 const { isMobile, sidebarOpen, secondaryOpen, secondaryFull, sidekickOpen } = useWorkspace();
-const { tabs } = useTabs();
+const { tabs, openWelcome } = useTabs();
 
 const primaryVisible = computed(() => {
     return !secondaryFull.value || !secondaryVisible.value;
@@ -38,5 +41,9 @@ const secondaryVisible = computed(() => {
 
 const sidekickVisible = computed(() => {
     return !isMobile.value && sidekickOpen.value;
+});
+
+onMounted(() => {
+    openWelcome();
 });
 </script>
