@@ -21,13 +21,15 @@
                             :color="tab.key === activeKey[props.position] ? 'primary' : 'neutral'"
                             @click="setActive(props.position, tab.key)"
                         >
-                            <UiIcon
-                                class="size-3 shrink-0"
-                                :class="{
-                                    'animate-spin': tabBusy(tab),
-                                }"
-                                :name="tabBusy(tab) ? 'i-mingcute:loading-3-fill' : tab.icon"
-                            />
+                            <template v-if="tab.icon">
+                                <UiIcon
+                                    class="size-3 shrink-0"
+                                    :class="{
+                                        'animate-spin': tabBusy(tab),
+                                    }"
+                                    :name="tabBusy(tab) ? 'i-mingcute:loading-3-fill' : tab.icon"
+                                />
+                            </template>
                             <span class="truncate">{{ tab.label }}</span>
                             <UiIcon
                                 name="i-mingcute:close-small-fill"

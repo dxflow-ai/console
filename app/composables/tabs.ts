@@ -11,8 +11,8 @@ export type PaneTab = {
     key: string;
     kind: PaneTabKind;
     label: string;
-    icon: string;
-    payload: any;
+    icon?: string;
+    payload?: any;
 };
 
 const tabs = reactive<Record<PanePosition, PaneTab[]>>({
@@ -94,8 +94,6 @@ export function useTabs() {
             key: "welcome",
             kind: PaneTabKind.WELCOME,
             label: "Welcome",
-            icon: "i-hugeicons:rocket-01",
-            payload: {},
         });
     }
 
