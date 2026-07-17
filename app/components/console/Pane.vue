@@ -1,9 +1,12 @@
 <template>
-    <div class="flex min-h-0 flex-1 flex-col">
+    <div class="relative flex min-h-0 flex-1 flex-col">
         <template v-if="tabs[props.position].length">
             <div
                 ref="toolbar-element"
-                class="flex h-8 shrink-0 items-center gap-1.5 bg-muted/50 border-b border-default px-3"
+                class="flex h-[--spacing(8.125)] shrink-0 items-center gap-1.5 bg-muted/50 border-b border-default px-3"
+                :class="{
+                    'h-8!': props.position === 'secondary' && !props.fullscreen,
+                }"
             >
                 <template v-if="!isMobile">
                     <UiIcon
@@ -96,6 +99,10 @@ const props = defineProps({
     position: {
         type: String as PropType<PanePosition>,
         required: true,
+    },
+    fullscreen: {
+        type: Boolean,
+        default: false,
     },
     fullscreenable: {
         type: Boolean,
