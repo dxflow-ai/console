@@ -15,7 +15,7 @@
                     </div>
                 </template>
                 <template v-else-if="message.content">
-                    <div class="agent-markdown" v-html="render(message.content)" />
+                    <div class="markdown" v-html="render(message.content)" />
                 </template>
             </div>
         </template>
@@ -24,8 +24,6 @@
 </template>
 
 <script lang="ts" setup>
-import { Marked } from "marked";
-
 const { messages } = useAgent();
 
 const anchorElement = useTemplateRef<HTMLDivElement>("anchor-element");
@@ -45,25 +43,9 @@ watch(
     },
 );
 
-const editor = newEditorWrapper();
-
-const markdown = new Marked({
-    async: false,
-    breaks: true,
-    gfm: true,
-    renderer: {
-        code({ text, lang }) {
-            const language = editor.language(lang ?? "");
-            const grammar = editor.grammar(language);
-            const highlighted = editor.highlight(text, grammar, language).replace(/\n+$/, "");
-            const className = language ? `language-${language}` : "language-none";
-
-            return `<pre class="editor"><code class="${className}">${highlighted}</code></pre>`;
-        },
-    },
-});
+const markdown = newMarkdownWrapper();
 
 function render(content: string) {
-    return markdown.parse(content) as string;
+    return markdown.render(content);
 }
 </script>
