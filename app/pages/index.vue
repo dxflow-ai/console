@@ -59,7 +59,9 @@ function unload() {
 }
 
 onMounted(() => {
-    load();
+    if (authorized.value) {
+        load();
+    }
 });
 
 onBeforeUnmount(() => {
