@@ -7,7 +7,7 @@ export enum WorkflowStatus {
     EXITED = "exited",
 }
 
-export enum WorkflowStepPlatform {
+export enum WorkflowStepRuntime {
     DOCKER = "docker",
     PODMAN = "podman",
     SINGULARITY = "singularity",
@@ -58,11 +58,11 @@ export type WorkflowStepVolume = ShapeInfer<typeof workflowStepVolumeShape>;
 export const workflowStepDefinitionShape = shape((factory) => {
     return {
         name: factory.string(),
-        platform: factory.enum([
-            WorkflowStepPlatform.DOCKER,
-            WorkflowStepPlatform.PODMAN,
-            WorkflowStepPlatform.SINGULARITY,
-            WorkflowStepPlatform.APPTAINER,
+        runtime: factory.enum([
+            WorkflowStepRuntime.DOCKER,
+            WorkflowStepRuntime.PODMAN,
+            WorkflowStepRuntime.SINGULARITY,
+            WorkflowStepRuntime.APPTAINER,
         ]),
         mode: factory.enum([WorkflowStepMode.PARALLEL, WorkflowStepMode.SEQUENTIAL]),
         image: factory.string(),

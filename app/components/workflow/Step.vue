@@ -13,7 +13,7 @@
                 <div class="flex items-center gap-2">
                     <span class="truncate text-sm font-medium text-highlighted">{{ title(props.step.name) }}</span>
                     <UiBadge size="xs" variant="soft" color="neutral">
-                        <span class="capitalize">{{ config.platform || "unknown" }}</span>
+                        <span class="capitalize">{{ config.runtime || "unknown" }}</span>
                     </UiBadge>
                     <div class="flax flex-1 j text-right">
                         <span class="font-mono text-xs text-dimmed">#{{ props.step.index }}</span>
