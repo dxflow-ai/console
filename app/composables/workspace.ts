@@ -16,7 +16,7 @@ const sidebarOpen = useLocalStorage(
 const sidekickOpen = useLocalStorage(
     "sidekick-open",
     () => {
-        return false
+        return false;
     },
     {
         initOnMounted: true,
