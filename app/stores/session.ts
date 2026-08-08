@@ -86,6 +86,41 @@ export const sessionStore = createStore({
             return decodeToken(token);
         }
 
+        async function pair(code: string, requested?: () => void): Promise<Session> {
+            const pairRequest = newHttpRequest("/api/auth/pair/request/");
+            const pairCallError = await pairRequest.call({
+                method: "POST",
+                body: {
+                    code,
+                },
+            });
+
+            if (pairCallError) {
+                throw pairCallError;
+            }
+
+            let token = "";
+            const pairReadError = await pairRequest.read((chunk) => {
+                if (chunk.isEntityWithTag("requested")) {
+                    if (requested) {
+                        requested();
+                    }
+
+                    return;
+                }
+
+                if (chunk.isEntity) {
+                    token = chunk.payload.token;
+                }
+            });
+
+            if (pairReadError) {
+                throw pairReadError;
+            }
+
+            return decodeToken(token);
+        }
+
         const signinByFile = handler<{ file: File; lifetime: string }>(
             async ({ model, payload }) => {
                 const fileReaderWrapper = newFileReaderWrapper();
@@ -123,9 +158,19 @@ export const sessionStore = createStore({
             },
         );
 
+        const signinByCode = handler<{ code: string; requested?: () => void }>(
+            async ({ model, payload }) => {
+                model.session.set(await pair(payload.code, payload.requested));
+            },
+            {
+                concurrent: ActionConcurrent.BLOCK,
+            },
+        );
+
         return {
             signinByFile,
             signinByDatabase,
+            signinByCode,
         };
     },
     compose({ model }) {
