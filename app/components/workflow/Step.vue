@@ -36,6 +36,15 @@
                 <span class="font-mono text-error">exit {{ props.step.exit_code }}</span>
             </template>
         </div>
+        <template v-if="link">
+            <div class="flex items-center gap-2 border-t border-default pt-2.5 text-xs">
+                <UiIcon name="i-mingcute:link-line" class="size-3.5 shrink-0 text-muted" />
+                <button type="button" class="min-w-0 flex-1 truncate text-left font-mono text-primary" @click="open()">
+                    <span>{{ link }}</span>
+                </button>
+                <UiIcon name="i-mingcute:external-link-line" class="size-3.5 shrink-0 text-muted" />
+            </div>
+        </template>
         <template v-if="bindings.length">
             <div class="flex flex-col gap-1.5 border-t border-default pt-2.5 text-xs">
                 <template v-for="(binding, index) in bindings" :key="index">
@@ -92,9 +101,14 @@ const props = defineProps({
         type: Number as PropType<number | null>,
         default: null,
     },
+    linkable: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 const actions = useWorkflowActions();
+const links = useWorkflowLinks();
 
 const now = useNow({
     interval: 1000,
@@ -128,6 +142,18 @@ const canShell = computed(() => {
     return running.value;
 });
 
+const link = computed(() => {
+    if (!running.value) {
+        return null;
+    }
+
+    return props.step.link || null;
+});
+
+const publishable = computed(() => {
+    return startable.value && props.linkable && links.linkable.value;
+});
+
 const controls = computed(() => {
     const list: Array<{
         key: string;
@@ -146,6 +172,17 @@ const controls = computed(() => {
             variant: "soft",
             loading: actions.shelling.value,
             handler: shell,
+        });
+    }
+
+    if (publishable.value) {
+        list.push({
+            key: "publish",
+            label: "Start with link",
+            icon: "i-mingcute:link-line",
+            variant: "soft",
+            loading: actions.isBusyWith(props.workflow.identity, "start"),
+            handler: publish,
         });
     }
 
@@ -277,6 +314,14 @@ function formatDuration(milliseconds: number) {
 
 function start() {
     actions.start(props.workflow);
+}
+
+function publish() {
+    actions.start(props.workflow, true);
+}
+
+function open() {
+    links.open(props.step.link);
 }
 
 function stop() {

@@ -29,6 +29,13 @@
                 </span>
             </div>
         </div>
+        <template v-if="license.link">
+            <div class="flex flex-col gap-1 rounded-md bg-elevated/40 p-3">
+                <span class="text-xs tracking-wide text-dimmed uppercase">Links</span>
+                <span class="truncate font-mono text-default">{{ license.link.name }}</span>
+                <span class="text-muted">{{ license.link.count }} available for workflow steps</span>
+            </div>
+        </template>
         <template v-if="permissions.length">
             <div class="flex flex-col gap-2">
                 <span class="text-xs tracking-wide text-dimmed uppercase">Permissions</span>

@@ -182,6 +182,38 @@ export function useWorkflowDefinition(identity: string) {
     };
 }
 
+export function useWorkflowLinks() {
+    const { data: license } = useStoreView(engineStore, "license");
+
+    const capacity = computed(() => {
+        return license.value.link?.count ?? 0;
+    });
+
+    const linkable = computed(() => {
+        return capacity.value > 0;
+    });
+
+    function published(workflow: Workflow) {
+        return workflow.links ?? [];
+    }
+
+    function open(name: string) {
+        window.open(`${window.location.protocol}//${name}`, "_blank", "noopener");
+    }
+
+    function openLink(link: WorkflowLink) {
+        open(link.name);
+    }
+
+    return {
+        capacity,
+        linkable,
+        published,
+        open,
+        openLink,
+    };
+}
+
 export function useWorkflowSteps(identity: string) {
     const { data } = useStoreView(workflowStore, "steps", (record) => {
         return record[identity] ?? [];
@@ -232,7 +264,11 @@ export function useWorkflowSteps(identity: string) {
                 },
             });
 
-            if (signal.status === WorkflowStatus.STOPPED || signal.status === WorkflowStatus.EXITED) {
+            if (
+                signal.status === WorkflowStatus.STARTED ||
+                signal.status === WorkflowStatus.STOPPED ||
+                signal.status === WorkflowStatus.EXITED
+            ) {
                 reconcile();
             }
         });
@@ -368,12 +404,18 @@ export function useWorkflowActions() {
         }
     }
 
-    async function operate(workflow: Workflow, operation: "start" | "stop", execute: typeof executeStart) {
+    async function operate(
+        workflow: Workflow,
+        operation: "start" | "stop",
+        execute: typeof executeStart,
+        link?: boolean,
+    ) {
         try {
             await withBusy(workflow.identity, operation, () => {
                 return execute({
                     payload: {
                         identity: workflow.identity,
+                        link,
                         onError(message) {
                             throw new Error(message);
                         },
@@ -385,8 +427,8 @@ export function useWorkflowActions() {
         }
     }
 
-    function start(workflow: Workflow) {
-        return operate(workflow, "start", executeStart);
+    function start(workflow: Workflow, link = false) {
+        return operate(workflow, "start", executeStart, link);
     }
 
     function stop(workflow: Workflow) {

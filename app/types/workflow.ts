@@ -71,6 +71,7 @@ export const workflowStepDefinitionShape = shape((factory) => {
         volumes: factory.array(workflowStepVolumeShape),
         ports: factory.array(workflowStepPortShape),
         resources: workflowStepResourcesShape,
+        link: factory.string(),
     };
 });
 
@@ -89,6 +90,7 @@ export const workflowStepShape = shape((factory) => {
         exit_code: factory.number(),
         stderr_path: factory.string(),
         stdout_path: factory.string(),
+        link: factory.string(),
     };
 });
 
@@ -121,6 +123,17 @@ export const workflowLogShape = shape((factory) => {
 
 export type WorkflowLog = ShapeInfer<typeof workflowLogShape>;
 
+export const workflowLinkShape = shape((factory) => {
+    return {
+        step: factory.string(),
+        port: factory.string(),
+        name: factory.string(),
+        host: factory.string(),
+    };
+});
+
+export type WorkflowLink = ShapeInfer<typeof workflowLinkShape>;
+
 export const workflowShape = shape((factory) => {
     return {
         identity: factory.string().meta({ identifier: true }),
@@ -133,6 +146,7 @@ export const workflowShape = shape((factory) => {
             WorkflowStatus.EXITED,
         ]),
         created_at: factory.number(),
+        links: factory.array(workflowLinkShape).optional(),
     };
 });
 
