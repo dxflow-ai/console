@@ -67,6 +67,15 @@ export const engineAttributeShape = shape((factory) => {
 
 export type EngineAttribute = ShapeInfer<typeof engineAttributeShape>;
 
+export const engineLicenseLinkShape = shape((factory) => {
+    return {
+        name: factory.string(),
+        count: factory.number(),
+    };
+});
+
+export type EngineLicenseLink = ShapeInfer<typeof engineLicenseLinkShape>;
+
 export const engineLicenseShape = shape((factory) => {
     return {
         identity: factory.string(),
@@ -75,6 +84,7 @@ export const engineLicenseShape = shape((factory) => {
         starts: factory.string(),
         expires: factory.string(),
         permission: factory.record(factory.string(), factory.record(factory.string(), factory.any())),
+        link: engineLicenseLinkShape.nullish(),
         signature: factory.string(),
         issued: factory.string(),
     };

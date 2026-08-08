@@ -42,6 +42,7 @@
                                     :workflow="current"
                                     :first-step-index="firstStepIndex"
                                     :latest-running-index="latestRunningIndex"
+                                    :linkable="linkable"
                                 />
                             </template>
                         </div>
@@ -82,6 +83,12 @@ const current = computed(() => {
     });
 
     return match ?? props.workflow;
+});
+
+const linkable = computed(() => {
+    return Object.values(definitions.value).some((definition) => {
+        return Boolean(definition.link);
+    });
 });
 
 const firstStepIndex = computed(() => {
