@@ -5,3 +5,9 @@ export function canStartWorkflow(status: MaybeString) {
 export function canStopWorkflow(status: MaybeString) {
     return status === WorkflowStatus.STARTED;
 }
+
+export function isWorkflowDefinition(file: File) {
+    const name = file.name.toLowerCase();
+
+    return name.endsWith(".yaml") || name.endsWith(".yml");
+}

@@ -68,7 +68,8 @@ export const workflowStore = createStore({
         const create = handler<
             {
                 identity?: string;
-                source: string;
+                source?: string;
+                address?: string;
                 onMessage?: (message: string) => void;
                 onError?: (error: string) => void;
             },
@@ -81,6 +82,7 @@ export const workflowStore = createStore({
                     method: "POST",
                     query: {
                         identity: payload.identity,
+                        source: payload.address,
                     },
                     body: payload.source,
                 });

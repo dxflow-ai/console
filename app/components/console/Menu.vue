@@ -87,12 +87,11 @@ const colorMode = useColorMode();
 const { scale } = useScale();
 const { isMobile } = useWorkspace();
 const { openShell } = useTabs();
+const { openCreator } = useWorkflowCreator();
 
-const { create: createWorkflow } = useWorkflowActions();
 const { create: createArtifact } = useArtifactActions();
 const { create: createShell } = useShellActions();
 
-const workflowDialog = useWorkflowFileDialog();
 const artifactDialog = useArtifactFileDialog();
 
 const systemOpen = ref(false);
@@ -183,7 +182,7 @@ const resourceItems = computed(() => {
         {
             label: "New workflow",
             onSelect() {
-                workflowDialog.open();
+                openCreator();
             },
         },
         {
@@ -214,13 +213,6 @@ async function newShell() {
         openShell({ shell });
     }
 }
-
-workflowDialog.onChange((files) => {
-    const file = files?.[0];
-    if (file) {
-        createWorkflow(file);
-    }
-});
 
 artifactDialog.onChange((files) => {
     if (files?.length) {

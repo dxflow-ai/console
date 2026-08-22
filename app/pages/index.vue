@@ -4,6 +4,7 @@
             <ConsoleHeader />
             <ConsoleMain />
             <ConsoleFooter />
+            <WorkflowCreator />
         </template>
         <AuthOverlay />
     </div>
