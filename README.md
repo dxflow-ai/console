@@ -12,6 +12,10 @@ The console is the interface served by the dxflow engine. Launch your engine and
 
 Learn more at [dxflow.ai](https://dxflow.ai) · Documentation: [dxflow.ai/docs](https://dxflow.ai/docs)
 
+## Development
+
+`make dev` serves the console on `http://localhost:4545` and proxies `/api/` — HTTP and WebSocket alike — to an engine on port 80, so boot an engine first and sign in against it.
+
 ## Releases
 
 The console is released automatically in lockstep with the engine — there is no
