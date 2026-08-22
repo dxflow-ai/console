@@ -312,6 +312,7 @@ export function useWorkflowActions() {
     const { closeTabsWhere, openWorkflow, openShell } = useTabs();
 
     const { data: artifacts } = useStoreView(artifactStore, "list");
+    const { data: shells } = useStoreView(shellStore, "list");
 
     const { execute: executeCreate, loading: creating } = useStoreAction(workflowStore, "create", {
         isolated: true,
@@ -378,6 +379,20 @@ export function useWorkflowActions() {
     function closeTabs(identity: string) {
         closeTabsWhere((tab) => {
             return tab.key.startsWith(`workflow:${identity}:`);
+        });
+    }
+
+    function closeShellTabs(identity: string) {
+        const keys = shells.value
+            .filter((shell) => {
+                return isWorkflowShell(shell, identity);
+            })
+            .map((shell) => {
+                return `shell:${shell.identity}`;
+            });
+
+        closeTabsWhere((tab) => {
+            return keys.includes(tab.key);
         });
     }
 
@@ -498,6 +513,7 @@ export function useWorkflowActions() {
             });
 
             closeTabs(workflow.identity);
+            closeShellTabs(workflow.identity);
             cleanupArtifacts(workflow.identity);
         } catch (error) {
             dangerToast("Failed to remove workflow", error as Error);
@@ -515,6 +531,7 @@ export function useWorkflowActions() {
 
             removed?.forEach((identity) => {
                 closeTabs(identity);
+                closeShellTabs(identity);
                 cleanupArtifacts(identity);
             });
         } catch (error) {

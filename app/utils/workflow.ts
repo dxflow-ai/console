@@ -11,3 +11,11 @@ export function isWorkflowDefinition(file: File) {
 
     return name.endsWith(".yaml") || name.endsWith(".yml");
 }
+
+export function isWorkflowShell(shell: Shell, identity: string) {
+    const prefix = `${identity}-`;
+
+    return shell.args.some((arg) => {
+        return arg.startsWith(prefix);
+    });
+}
