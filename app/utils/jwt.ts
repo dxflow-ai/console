@@ -1,5 +1,7 @@
 import { jwtDecode } from "jwt-decode";
 
+const TOKEN_PARAMETER = "token";
+
 export function decodeToken(token: string, fallback: Session = sessionShape.defaults()): Session {
     if (!token) {
         return fallback;
@@ -20,4 +22,24 @@ export function decodeToken(token: string, fallback: Session = sessionShape.defa
         writable: payload.writable ?? fallback.writable,
         permissions: payload.permissions || fallback.permissions,
     };
+}
+
+export function takeUrlToken(): string {
+    const url = new URL(window.location.href);
+
+    const hash = new URLSearchParams(url.hash.replace(/^#/, ""));
+    const token = hash.get(TOKEN_PARAMETER) || url.searchParams.get(TOKEN_PARAMETER) || "";
+    if (!token) {
+        return "";
+    }
+
+    hash.delete(TOKEN_PARAMETER);
+    url.searchParams.delete(TOKEN_PARAMETER);
+
+    const remaining = hash.toString();
+    url.hash = remaining ? `#${remaining}` : "";
+
+    window.history.replaceState(window.history.state, "", url.toString());
+
+    return token;
 }

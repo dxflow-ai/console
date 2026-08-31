@@ -5,7 +5,14 @@ export const sessionStore = createStore({
     model({ one }) {
         const session = one(sessionShape, {
             default() {
-                return decodeToken(useTokenCookie().value);
+                const cookie = useTokenCookie();
+
+                const handed = takeUrlToken();
+                if (handed) {
+                    cookie.value = handed;
+                }
+
+                return decodeToken(cookie.value);
             },
             post({ mode, state }) {
                 if (mode === ModelOneMode.SET) {
