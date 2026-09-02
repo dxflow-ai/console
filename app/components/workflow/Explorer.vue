@@ -13,7 +13,7 @@
                 variant="link"
                 color="neutral"
                 class="pr-0!"
-                :loading="loading || creating || pruning"
+                :loading="loading || pruning"
                 :ui="{
                     leadingIcon: 'size-3.5',
                 }"
@@ -35,9 +35,8 @@
                         variant="link"
                         color="neutral"
                         label="New workflow"
-                        :loading="creating"
                         :disabled="loading"
-                        @click="fileDialog.open()"
+                        @click="openCreator()"
                     />
                 </template>
             </Empty>
@@ -75,16 +74,15 @@ const { execute: executeGet, loading } = useStoreAction(workflowStore, "get", {
     isolated: true,
 });
 
-const { create, creating, pruning } = useWorkflowActions();
-
-const fileDialog = useWorkflowFileDialog();
+const { pruning } = useWorkflowActions();
+const { openCreator } = useWorkflowCreator();
 
 const menu = computed(() => {
     const output: ContextMenuItem[] = [
         {
             label: "New workflow",
             onSelect() {
-                fileDialog.open();
+                openCreator();
             },
         },
     ];
@@ -111,13 +109,6 @@ async function load(delay?: number) {
         return dangerToast("Failed to load workflows", error as Error);
     }
 }
-
-fileDialog.onChange((files) => {
-    const file = files?.[0];
-    if (file) {
-        create(file);
-    }
-});
 
 onMounted(() => {
     load(500);

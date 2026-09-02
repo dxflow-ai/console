@@ -81,6 +81,9 @@ export default defineNuxtConfig({
     sourcemap: {
         client: "hidden",
     },
+    devServer: {
+        port: 4545,
+    },
     devtools: {
         enabled: false,
     },

@@ -1,8 +1,15 @@
+export type WorkflowCreatorSection = "upload" | "hub";
+
 type WorkflowSignalHandler = (signal: WorkflowSignal) => void;
 type WorkflowOperation = "start" | "stop" | "remove";
 
 const workflowSignalWatchers = new Map<string, { stream: LiveStream; handlers: Set<WorkflowSignalHandler> }>();
 const busyOperations = ref<Map<string, WorkflowOperation>>(new Map());
+const creatorOpen = ref(false);
+
+const creatorSection = useLocalStorage<WorkflowCreatorSection>("workflow-creator-section", "upload", {
+    initOnMounted: true,
+});
 
 function normalizeWorkflowSignal(payload: any): WorkflowSignal {
     return {
@@ -56,6 +63,23 @@ function watchWorkflowSignals(identity: string, handler: WorkflowSignalHandler) 
             current.stream.stop();
             workflowSignalWatchers.delete(identity);
         }
+    };
+}
+
+export function useWorkflowCreator() {
+    function openCreator() {
+        creatorOpen.value = true;
+    }
+
+    function closeCreator() {
+        creatorOpen.value = false;
+    }
+
+    return {
+        creatorOpen,
+        creatorSection,
+        openCreator,
+        closeCreator,
     };
 }
 
@@ -288,6 +312,7 @@ export function useWorkflowActions() {
     const { closeTabsWhere, openWorkflow, openShell } = useTabs();
 
     const { data: artifacts } = useStoreView(artifactStore, "list");
+    const { data: shells } = useStoreView(shellStore, "list");
 
     const { execute: executeCreate, loading: creating } = useStoreAction(workflowStore, "create", {
         isolated: true,
@@ -357,6 +382,20 @@ export function useWorkflowActions() {
         });
     }
 
+    function closeShellTabs(identity: string) {
+        const keys = shells.value
+            .filter((shell) => {
+                return isWorkflowShell(shell, identity);
+            })
+            .map((shell) => {
+                return `shell:${shell.identity}`;
+            });
+
+        closeTabsWhere((tab) => {
+            return keys.includes(tab.key);
+        });
+    }
+
     function cleanupArtifacts(identity: string) {
         artifactStore.action.cleanup({
             payload: {
@@ -379,13 +418,12 @@ export function useWorkflowActions() {
         });
     }
 
-    async function create(file: File) {
+    async function deploy(payload: { source?: string; address?: string }) {
         try {
-            const source = await file.text();
-
             const workflow = await executeCreate({
                 payload: {
-                    source,
+                    source: payload.source,
+                    address: payload.address,
                     onError(message) {
                         throw new Error(message);
                     },
@@ -399,9 +437,33 @@ export function useWorkflowActions() {
 
                 refreshArtifacts();
             }
+
+            return workflow;
         } catch (error) {
             dangerToast("Failed to create workflow", error as Error);
+
+            return null;
         }
+    }
+
+    async function create(file: File) {
+        try {
+            const source = await file.text();
+
+            return deploy({
+                source,
+            });
+        } catch (error) {
+            dangerToast("Failed to read workflow file", error as Error);
+
+            return null;
+        }
+    }
+
+    function createFromHub(name: string) {
+        return deploy({
+            address: `hub://${name}`,
+        });
     }
 
     async function operate(
@@ -451,6 +513,7 @@ export function useWorkflowActions() {
             });
 
             closeTabs(workflow.identity);
+            closeShellTabs(workflow.identity);
             cleanupArtifacts(workflow.identity);
         } catch (error) {
             dangerToast("Failed to remove workflow", error as Error);
@@ -468,6 +531,7 @@ export function useWorkflowActions() {
 
             removed?.forEach((identity) => {
                 closeTabs(identity);
+                closeShellTabs(identity);
                 cleanupArtifacts(identity);
             });
         } catch (error) {
@@ -501,6 +565,7 @@ export function useWorkflowActions() {
         isBusy,
         isBusyWith,
         create,
+        createFromHub,
         start,
         stop,
         remove,
