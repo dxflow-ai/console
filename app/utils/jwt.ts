@@ -1,7 +1,5 @@
 import { jwtDecode } from "jwt-decode";
 
-const TOKEN_PARAMETER = "token";
-
 export function decodeToken(token: string, fallback: Session = sessionShape.defaults()): Session {
     if (!token) {
         return fallback;
@@ -22,8 +20,4 @@ export function decodeToken(token: string, fallback: Session = sessionShape.defa
         writable: payload.writable ?? fallback.writable,
         permissions: payload.permissions || fallback.permissions,
     };
-}
-
-export function takeUrlToken(): string {
-    return takeUrlParameter(TOKEN_PARAMETER);
 }

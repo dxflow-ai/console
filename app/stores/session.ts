@@ -7,7 +7,7 @@ export const sessionStore = createStore({
             default() {
                 const cookie = useTokenCookie();
 
-                const handed = takeUrlToken();
+                const handed = readUrlParameter(TOKEN_PARAMETER);
                 if (handed) {
                     cookie.value = handed;
                 }
