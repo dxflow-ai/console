@@ -70,14 +70,14 @@ const menu = computed(() => {
             label: "Start",
             disabled: busy.value || !canStartWorkflow(props.workflow.status),
             onSelect() {
-                actions.start(props.workflow);
+                actions.start(props.workflow, true);
             },
         },
         {
             label: "Start with link",
             disabled: busy.value || !canStartWorkflow(props.workflow.status) || !links.linkable.value,
             onSelect() {
-                actions.start(props.workflow, true);
+                actions.start(props.workflow, true, true);
             },
         },
         {

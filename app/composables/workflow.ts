@@ -470,6 +470,7 @@ export function useWorkflowActions() {
         workflow: Workflow,
         operation: "start" | "stop",
         execute: typeof executeStart,
+        fit?: boolean,
         link?: boolean,
     ) {
         try {
@@ -477,6 +478,7 @@ export function useWorkflowActions() {
                 return execute({
                     payload: {
                         identity: workflow.identity,
+                        fit,
                         link,
                         onError(message) {
                             throw new Error(message);
@@ -489,8 +491,8 @@ export function useWorkflowActions() {
         }
     }
 
-    function start(workflow: Workflow, link = false) {
-        return operate(workflow, "start", executeStart, link);
+    function start(workflow: Workflow, fit = true, link = false) {
+        return operate(workflow, "start", executeStart, fit, link);
     }
 
     function stop(workflow: Workflow) {
