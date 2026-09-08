@@ -313,11 +313,11 @@ function formatDuration(milliseconds: number) {
 }
 
 function start() {
-    actions.start(props.workflow);
+    actions.start(props.workflow, true);
 }
 
 function publish() {
-    actions.start(props.workflow, true);
+    actions.start(props.workflow, true, true);
 }
 
 function open() {

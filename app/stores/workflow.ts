@@ -128,6 +128,7 @@ export const workflowStore = createStore({
         const startById = handler<
             {
                 identity: string;
+                fit?: boolean;
                 link?: boolean;
                 onMessage?: (message: string) => void;
                 onError?: (error: string) => void;
@@ -141,6 +142,7 @@ export const workflowStore = createStore({
                     method: "PUT",
                     body: {
                         identity: payload.identity,
+                        fit: payload.fit ?? false,
                         link: payload.link ?? false,
                     },
                 });

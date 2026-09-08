@@ -1,3 +1,6 @@
+export const THEME_PARAMETER = "theme";
+export const TOKEN_PARAMETER = "token";
+
 export function readUrlParameter(name: string): string {
     const url = new URL(window.location.href);
 
@@ -6,28 +9,28 @@ export function readUrlParameter(name: string): string {
     return hash.get(name) || url.searchParams.get(name) || "";
 }
 
-export function dropUrlParameter(name: string) {
+export function dropUrlParameter(...names: string[]): boolean {
     const url = new URL(window.location.href);
 
     const hash = new URLSearchParams(url.hash.replace(/^#/, ""));
-    if (!hash.has(name) && !url.searchParams.has(name)) {
-        return;
+
+    const dropped = names.filter((name) => {
+        return hash.has(name) || url.searchParams.has(name);
+    });
+
+    if (!dropped.length) {
+        return false;
     }
 
-    hash.delete(name);
-    url.searchParams.delete(name);
+    for (const name of dropped) {
+        hash.delete(name);
+        url.searchParams.delete(name);
+    }
 
     const remaining = hash.toString();
     url.hash = remaining ? `#${remaining}` : "";
 
     window.history.replaceState(window.history.state, "", url.toString());
-}
 
-export function takeUrlParameter(name: string): string {
-    const value = readUrlParameter(name);
-    if (value) {
-        dropUrlParameter(name);
-    }
-
-    return value;
+    return true;
 }

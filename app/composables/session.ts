@@ -1,3 +1,5 @@
+import { tryit } from "radash";
+
 export const useSharedTimestamp = createGlobalState(() => {
     return useTimestamp({
         interval: 1000,
@@ -77,5 +79,49 @@ export function useSessionActions() {
 
     return {
         signout,
+    };
+}
+
+export interface UseEngineChallengeOptions {
+    enabled?: () => boolean;
+}
+
+export function useEngineChallenge(options?: UseEngineChallengeOptions) {
+    const reachable = ref(false);
+    const pending = ref(false);
+    const probed = ref(false);
+
+    async function probe() {
+        pending.value = true;
+
+        const request = newHttpRequest("/api/auth/challenge/");
+
+        const [thrownError, returnedError] = await tryit(request.call)({ timeout: 2500 });
+        if (!thrownError && !returnedError) {
+            reachable.value = !(await request.read());
+        }
+
+        pending.value = false;
+        probed.value = true;
+    }
+
+    watch(
+        () => {
+            return options?.enabled ? options.enabled() : true;
+        },
+        (value) => {
+            if (value && !probed.value && !pending.value) {
+                probe();
+            }
+        },
+        {
+            immediate: true,
+        },
+    );
+
+    return {
+        reachable,
+        pending,
+        probed,
     };
 }

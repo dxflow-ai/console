@@ -1,21 +1,19 @@
 <template>
-    <UiModal
-        :open="!authorized"
-        :dismissible="false"
-        :transition="false"
-        :close="false"
-        :ui="{
-            content: 'max-w-2xs',
-        }"
-    >
-        <template #content>
-            <div class="flex w-full flex-col gap-5 rounded-md border border-default bg-default p-5">
-                <div class="flex items-center gap-3">
-                    <div class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-elevated">
-                        <BrandMark class="size-4" />
-                    </div>
-                    <div class="flex min-w-0 flex-col">
-                        <span class="truncate text-sm font-semibold text-default">{{ title }}</span>
+    <template v-if="!authorized">
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-default p-4">
+            <div
+                class="relative flex w-full max-w-80 flex-col gap-4 overflow-hidden rounded-lg border border-default bg-default p-4"
+            >
+                <div
+                    class="pointer-events-none absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-primary/60 to-transparent"
+                />
+                <div
+                    class="pointer-events-none absolute -top-20 left-1/2 h-40 w-80 -translate-x-1/2 rounded-full bg-primary/10 blur-[80px]"
+                />
+                <div class="relative flex flex-col items-center gap-3 text-center">
+                    <BrandMark class="size-8" />
+                    <div class="flex min-w-0 flex-col gap-1.5">
+                        <span class="text-sm font-semibold tracking-tight text-highlighted">{{ title }}</span>
                         <span class="truncate text-xs text-muted">
                             <template v-if="provided">
                                 <span>Expired</span>
@@ -27,109 +25,112 @@
                         </span>
                     </div>
                 </div>
-                <div class="flex flex-col gap-3">
-                    <div class="flex flex-col gap-1.5">
-                        <span class="text-xs text-muted">Method</span>
-                        <UiSelect
-                            v-model="method"
+                <div class="relative flex flex-col gap-2">
+                    <UiSelect
+                        v-model="method"
+                        class="w-full"
+                        size="sm"
+                        :disabled="signing"
+                        :items="[
+                            {
+                                label: 'Private key',
+                                value: 'key',
+                            },
+                            {
+                                label: 'Pairing code',
+                                value: 'code',
+                            },
+                        ]"
+                        :content="{
+                            position: 'item-aligned',
+                        }"
+                    />
+                    <template v-if="isCodeMethod">
+                        <UiInput
+                            v-model="code"
                             class="w-full"
+                            size="sm"
+                            placeholder="H7KP3XQA"
+                            :disabled="signing"
+                            :maxlength="9"
+                            :ui="{
+                                base: 'font-medium tracking-widest uppercase text-default',
+                            }"
+                            @keydown.enter="signin()"
+                        />
+                    </template>
+                    <template v-else>
+                        <UiSelect
+                            v-model="lifetime"
+                            class="w-full"
+                            size="sm"
                             :disabled="signing"
                             :items="[
                                 {
-                                    label: 'Private key',
-                                    value: 'key',
+                                    label: '1 hour',
+                                    value: '1h',
                                 },
                                 {
-                                    label: 'Pairing code',
-                                    value: 'code',
+                                    label: '24 hours',
+                                    value: '24h',
                                 },
                             ]"
                             :content="{
                                 position: 'item-aligned',
                             }"
                         />
-                    </div>
-                    <template v-if="isCodeMethod">
-                        <div class="flex flex-col gap-1.5">
-                            <span class="text-xs text-muted">Code</span>
-                            <UiInput
-                                v-model="code"
-                                class="w-full"
-                                placeholder="--------"
-                                :disabled="signing"
-                                :maxlength="9"
-                                :ui="{
-                                    base: 'font-medium tracking-widest uppercase text-default',
-                                }"
-                                @keydown.enter="signin()"
-                            />
-                        </div>
-                    </template>
-                    <template v-else>
-                        <div class="flex flex-col gap-1.5">
-                            <span class="text-xs text-muted">Duration</span>
-                            <UiSelect
-                                v-model="lifetime"
-                                class="w-full"
-                                :disabled="signing"
-                                :items="[
-                                    {
-                                        label: '1 hour',
-                                        value: '1h',
-                                    },
-                                    {
-                                        label: '24 hours',
-                                        value: '24h',
-                                    },
-                                ]"
-                                :content="{
-                                    position: 'item-aligned',
-                                }"
-                            />
-                        </div>
                     </template>
                 </div>
-                <div class="flex flex-col gap-2">
-                    <UiButton :loading="signing" :label="title" @click="signin()" block />
+                <div class="relative grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 rounded-lg bg-muted/50 p-3 text-xs">
+                    <span class="text-dimmed">Engine</span>
+                    <span class="truncate text-end font-mono text-muted">{{ engine }}</span>
+                    <template v-if="!isCodeMethod">
+                        <span class="text-dimmed">Signs in until</span>
+                        <span class="truncate text-end font-mono text-muted">
+                            <DateLabel hour="2-digit" minute="2-digit" :timestamp="until" :weekday="untilWeekday" />
+                        </span>
+                        <span class="text-dimmed">Stored key</span>
+                        <span class="truncate text-end font-mono text-muted">{{ storedKey }}</span>
+                    </template>
+                </div>
+                <div class="relative flex flex-col gap-2">
+                    <UiButton size="sm" :loading="signing" :label="title" @click="signin()" block autofocus />
                     <template v-if="hasStoredKey && !isCodeMethod">
                         <UiButton
-                            variant="soft"
+                            size="sm"
+                            variant="ghost"
                             color="neutral"
-                            label="Sign out & forget key"
+                            label="Forget key"
                             :disabled="signing"
                             @click="signout()"
                             block
                         />
                     </template>
                 </div>
-                <div class="flex items-start gap-2 rounded-md bg-elevated/40 p-3 text-xs">
-                    <UiIcon class="mt-px size-3.5 shrink-0 text-dimmed" :name="hintIcon" :class="hintIconClass" />
-                    <div class="flex min-w-0 flex-col gap-0.5">
-                        <template v-if="requested">
-                            <span class="truncate text-muted">Waiting for approval</span>
-                            <span class="truncate text-dimmed">Accept it on the engine</span>
-                        </template>
-                        <template v-else-if="isCodeMethod">
-                            <span class="truncate text-muted">Code works once</span>
-                            <span class="truncate text-dimmed">Run 'dxflow engine pair'</span>
-                        </template>
-                        <template v-else-if="provided">
-                            <span class="truncate text-muted">Using your saved key</span>
-                            <span class="truncate text-dimmed">Issues a fresh session</span>
-                        </template>
-                        <template v-else>
-                            <span class="truncate text-muted">Key stays on this device</span>
-                            <span class="truncate text-dimmed">Accepts .pem or .key</span>
-                        </template>
-                    </div>
+                <div class="relative flex items-center justify-center gap-2 text-xs">
+                    <UiIcon class="size-3.5 shrink-0 text-dimmed" :name="hintIcon" :class="hintIconClass" />
+                    <template v-if="requested">
+                        <span class="truncate text-dimmed">Waiting for approval on the engine</span>
+                    </template>
+                    <template v-else-if="isCodeMethod">
+                        <span class="truncate text-dimmed">Run 'dxflow engine pair' for a code</span>
+                    </template>
+                    <template v-else-if="provided">
+                        <span class="truncate text-dimmed">Using your saved key</span>
+                    </template>
+                    <template v-else>
+                        <span class="truncate text-dimmed">Key stays on this device</span>
+                    </template>
                 </div>
             </div>
-        </template>
-    </UiModal>
+        </div>
+    </template>
 </template>
 
 <script lang="ts" setup>
 const { provided, expiration, authorized } = useSession();
+
+const timestamp = useSharedTimestamp();
 const { loading: signingByFile, execute: executeSigninByFile } = useStoreAction(sessionStore, "signinByFile");
 
 const { loading: signingByDatabase, execute: executeSigninByDatabase } = useStoreAction(
@@ -159,6 +160,26 @@ const signing = computed(() => {
 
 const isCodeMethod = computed(() => {
     return method.value === "code";
+});
+
+const engine = computed(() => {
+    return window.location.host;
+});
+
+const untilHours = computed(() => {
+    return Number(lifetime.value.replace("h", "")) || 0;
+});
+
+const until = computed(() => {
+    return timestamp.value + untilHours.value * 3600000;
+});
+
+const untilWeekday = computed<"short" | undefined>(() => {
+    return untilHours.value >= 24 ? "short" : undefined;
+});
+
+const storedKey = computed(() => {
+    return hasStoredKey.value ? "on this device" : "none";
 });
 
 const title = computed(() => {
