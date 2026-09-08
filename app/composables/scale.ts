@@ -1,4 +1,4 @@
-const scale = useLocalStorage("scale", 1, {
+const scale = useLocalStorage("scale", 1.1, {
     shallow: true,
     initOnMounted: true,
 });

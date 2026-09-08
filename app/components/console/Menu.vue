@@ -141,7 +141,7 @@ const viewItems = computed(() => {
             },
             children: [
                 {
-                    label: "Small · 100%",
+                    label: "Compact · 100%",
                     icon: "i-mingcute:check-fill",
                     ui: {
                         itemLeadingIcon: ["size-2.5 mt-0.75", scale.value !== 1 && "opacity-0"],
@@ -151,23 +151,23 @@ const viewItems = computed(() => {
                     },
                 },
                 {
-                    label: "Medium · 125%",
+                    label: "Comfort · 110%",
                     icon: "i-mingcute:check-fill",
                     ui: {
-                        itemLeadingIcon: ["size-2.5 mt-0.75", scale.value !== 1.25 && "opacity-0"],
+                        itemLeadingIcon: ["size-2.5 mt-0.75", scale.value !== 1.1 && "opacity-0"],
                     },
                     onSelect() {
-                        scale.value = 1.25;
+                        scale.value = 1.1;
                     },
                 },
                 {
-                    label: "Large · 150%",
+                    label: "Clear · 130%",
                     icon: "i-mingcute:check-fill",
                     ui: {
-                        itemLeadingIcon: ["size-2.5 mt-0.75", scale.value !== 1.5 && "opacity-0"],
+                        itemLeadingIcon: ["size-2.5 mt-0.75", scale.value !== 1.3 && "opacity-0"],
                     },
                     onSelect() {
-                        scale.value = 1.5;
+                        scale.value = 1.3;
                     },
                 },
             ],
