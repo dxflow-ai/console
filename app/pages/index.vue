@@ -16,7 +16,6 @@ definePageMeta({
     layout: false,
 });
 
-const { styles } = useScale();
 const { provided, authorized } = useSession();
 
 const { execute: executeSignout } = useStoreCompose(sessionStore, "signout");
@@ -71,8 +70,5 @@ onBeforeUnmount(() => {
 
 useHead({
     title: "Console",
-    bodyAttrs: {
-        style: styles,
-    },
 });
 </script>

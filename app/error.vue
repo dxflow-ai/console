@@ -105,7 +105,7 @@ function reload() {
 }
 
 useHead({
-    bodyAttrs: {
+    htmlAttrs: {
         style: styles,
     },
 });

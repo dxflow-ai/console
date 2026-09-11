@@ -36,6 +36,9 @@
 }
 
 :root {
+    /* interface scale, useScale() sets --scale on <html> and every rem follows */
+    font-size: calc(100% * var(--scale, 1));
+
     --ui-radius: 0.25rem;
 
     --ui-primary: var(--color-iris-600);
