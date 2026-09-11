@@ -18,7 +18,7 @@
                     @toggle="expand('hub')"
                     first
                 >
-                    <HubCatalog :pending="pendingName" :disabled="creating" @create="onCreate" />
+                    <HubCatalog :disabled="creating" @create="onCreate" />
                 </WorkflowCreatorSection>
                 <WorkflowCreatorSection
                     title="Upload a definition"
@@ -39,7 +39,7 @@ const { create, createFromHub, creating } = useWorkflowActions();
 
 const fileDialog = useWorkflowFileDialog();
 
-const pendingName = ref<MaybeString>();
+const uploading = ref(false);
 
 const isUpload = computed(() => {
     return creatorSection.value === "upload";
@@ -47,10 +47,6 @@ const isUpload = computed(() => {
 
 const isHub = computed(() => {
     return creatorSection.value === "hub";
-});
-
-const uploading = computed(() => {
-    return creating.value && !pendingName.value;
 });
 
 function expand(section: WorkflowCreatorSection) {
@@ -74,9 +70,15 @@ async function submit(file: Maybe<File>) {
         return dangerToast("Unsupported file", "Pick a YAML workflow definition");
     }
 
-    const workflow = await create(file);
-    if (workflow) {
-        closeCreator();
+    uploading.value = true;
+
+    try {
+        const workflow = await create(file);
+        if (workflow) {
+            closeCreator();
+        }
+    } finally {
+        uploading.value = false;
     }
 }
 
@@ -84,17 +86,8 @@ function onSelect(payload: { file: File }) {
     submit(payload.file);
 }
 
-async function onCreate(payload: { workflow: HubWorkflow }) {
-    pendingName.value = payload.workflow.name;
-
-    try {
-        const workflow = await createFromHub(payload.workflow.name);
-        if (workflow) {
-            closeCreator();
-        }
-    } finally {
-        pendingName.value = undefined;
-    }
+function onCreate(payload: { workflow: HubWorkflow }) {
+    createFromHub(payload.workflow.name);
 }
 
 fileDialog.onChange((files) => {

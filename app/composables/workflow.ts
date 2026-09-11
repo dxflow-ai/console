@@ -1,10 +1,18 @@
 export type WorkflowCreatorSection = "upload" | "hub";
+export type WorkflowDeploymentStatus = "creating" | "created" | "failed";
+
+export type WorkflowDeployment = {
+    status: WorkflowDeploymentStatus;
+    message: string;
+    percent: MaybeNumber;
+};
 
 type WorkflowSignalHandler = (signal: WorkflowSignal) => void;
 type WorkflowOperation = "start" | "stop" | "remove";
 
 const workflowSignalWatchers = new Map<string, { stream: LiveStream; handlers: Set<WorkflowSignalHandler> }>();
 const busyOperations = ref<Map<string, WorkflowOperation>>(new Map());
+const deployments = ref<Map<string, WorkflowDeployment>>(new Map());
 const creatorOpen = ref(false);
 
 const creatorSection = ref<WorkflowCreatorSection>("hub");
@@ -66,6 +74,8 @@ function watchWorkflowSignals(identity: string, handler: WorkflowSignalHandler) 
 
 export function useWorkflowCreator() {
     function openCreator() {
+        deployments.value.clear();
+
         creatorSection.value = "hub";
         creatorOpen.value = true;
     }
@@ -79,6 +89,57 @@ export function useWorkflowCreator() {
         creatorSection,
         openCreator,
         closeCreator,
+    };
+}
+
+export function useWorkflowDeployment() {
+    function readDeployment(name: string) {
+        return deployments.value.get(name);
+    }
+
+    function patchDeployment(name: string, patch: Partial<WorkflowDeployment>) {
+        const deployment = readDeployment(name);
+        if (!deployment) {
+            return;
+        }
+
+        Object.assign(deployment, patch);
+    }
+
+    function startDeployment(name: string) {
+        deployments.value.set(name, {
+            status: "creating",
+            message: "",
+            percent: undefined,
+        });
+    }
+
+    function trackDeployment(name: string, message: string, percent: MaybeNumber) {
+        patchDeployment(name, {
+            message,
+            percent,
+        });
+    }
+
+    function finishDeployment(name: string) {
+        patchDeployment(name, {
+            status: "created",
+            percent: 100,
+        });
+    }
+
+    function failDeployment(name: string) {
+        patchDeployment(name, {
+            status: "failed",
+        });
+    }
+
+    return {
+        readDeployment,
+        startDeployment,
+        trackDeployment,
+        finishDeployment,
+        failDeployment,
     };
 }
 
@@ -309,6 +370,7 @@ export function useWorkflowSteps(identity: string) {
 
 export function useWorkflowActions() {
     const { closeTabsWhere, openWorkflow, openShell } = useTabs();
+    const { startDeployment, trackDeployment, finishDeployment, failDeployment } = useWorkflowDeployment();
 
     const { data: artifacts } = useStoreView(artifactStore, "list");
     const { data: shells } = useStoreView(shellStore, "list");
@@ -417,28 +479,40 @@ export function useWorkflowActions() {
         });
     }
 
-    async function deploy(payload: { source?: string; address?: string }) {
+    async function deploy(payload: { name: string; source?: string; address?: string }) {
+        const tracker = newWorkflowProgress();
+
+        startDeployment(payload.name);
+
         try {
             const workflow = await executeCreate({
                 payload: {
                     source: payload.source,
                     address: payload.address,
+                    onMessage(message) {
+                        trackDeployment(payload.name, message, tracker.read(message));
+                    },
                     onError(message) {
                         throw new Error(message);
                     },
                 },
             });
 
-            if (workflow) {
-                openWorkflow({
-                    workflow,
-                });
-
-                refreshArtifacts();
+            if (!workflow) {
+                throw new Error("Engine returned no workflow");
             }
+
+            openWorkflow({
+                workflow,
+            });
+
+            refreshArtifacts();
+            finishDeployment(payload.name);
 
             return workflow;
         } catch (error) {
+            failDeployment(payload.name);
+
             dangerToast("Failed to create workflow", error as Error);
 
             return null;
@@ -450,6 +524,7 @@ export function useWorkflowActions() {
             const source = await file.text();
 
             return deploy({
+                name: file.name,
                 source,
             });
         } catch (error) {
@@ -461,6 +536,7 @@ export function useWorkflowActions() {
 
     function createFromHub(name: string) {
         return deploy({
+            name,
             address: `hub://${name}`,
         });
     }
