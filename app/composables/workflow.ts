@@ -7,9 +7,7 @@ const workflowSignalWatchers = new Map<string, { stream: LiveStream; handlers: S
 const busyOperations = ref<Map<string, WorkflowOperation>>(new Map());
 const creatorOpen = ref(false);
 
-const creatorSection = useLocalStorage<WorkflowCreatorSection>("workflow-creator-section", "upload", {
-    initOnMounted: true,
-});
+const creatorSection = ref<WorkflowCreatorSection>("hub");
 
 function normalizeWorkflowSignal(payload: any): WorkflowSignal {
     return {
@@ -68,6 +66,7 @@ function watchWorkflowSignals(identity: string, handler: WorkflowSignalHandler) 
 
 export function useWorkflowCreator() {
     function openCreator() {
+        creatorSection.value = "hub";
         creatorOpen.value = true;
     }
 

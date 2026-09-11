@@ -2,7 +2,7 @@
     <UiModal
         v-model:open="creatorOpen"
         title="New Workflow"
-        description="Upload a definition, or deploy a ready-to-run template from the hub"
+        description="Deploy a ready-to-run template from the hub, or upload a definition"
         :transition="false"
         :dismissible="!creating"
         :ui="{
@@ -12,21 +12,21 @@
         <template #content>
             <div class="flex flex-col">
                 <WorkflowCreatorSection
-                    title="Upload a definition"
-                    icon="i-hugeicons:cloud-upload"
-                    :expanded="isUpload"
-                    @toggle="expand('upload')"
-                    first
-                >
-                    <WorkflowUploader :busy="uploading" :disabled="creating" @select="onSelect" @pick="onPick" />
-                </WorkflowCreatorSection>
-                <WorkflowCreatorSection
                     title="Deploy from the hub"
                     icon="i-hugeicons:package"
                     :expanded="isHub"
                     @toggle="expand('hub')"
+                    first
                 >
                     <HubCatalog :pending="pendingName" :disabled="creating" @create="onCreate" />
+                </WorkflowCreatorSection>
+                <WorkflowCreatorSection
+                    title="Upload a definition"
+                    icon="i-hugeicons:cloud-upload"
+                    :expanded="isUpload"
+                    @toggle="expand('upload')"
+                >
+                    <WorkflowUploader :busy="uploading" :disabled="creating" @select="onSelect" @pick="onPick" />
                 </WorkflowCreatorSection>
             </div>
         </template>
