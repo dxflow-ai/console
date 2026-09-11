@@ -4,12 +4,7 @@
         <div class="flex min-h-0 flex-1 flex-col overflow-y-auto">
             <template v-if="workflows.length">
                 <template v-for="workflow in workflows" :key="workflow.name">
-                    <HubEntry
-                        :workflow="workflow"
-                        :busy="props.pending === workflow.name"
-                        :disabled="props.disabled"
-                        @create="onCreate"
-                    />
+                    <HubEntry :workflow="workflow" :disabled="props.disabled" @create="onCreate" />
                 </template>
             </template>
             <template v-else>
@@ -26,10 +21,6 @@
 
 <script lang="ts" setup>
 const props = defineProps({
-    pending: {
-        type: String as PropType<MaybeString>,
-        default: undefined,
-    },
     disabled: {
         type: Boolean,
         default: false,
