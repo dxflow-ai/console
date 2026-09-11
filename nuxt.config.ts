@@ -61,7 +61,7 @@ export default defineNuxtConfig({
     fonts: {
         provider: "google",
         defaults: {
-            weights: [300, 700],
+            weights: [300, 400, 500, 600, 700, 900],
             styles: ["normal"],
         },
     },
